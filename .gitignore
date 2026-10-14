@@ -5,3 +5,4 @@ gradle.properties
 *.gradle.kts
 .github/
 setup.sh
+.claude/

@@ -60,9 +60,11 @@ console.log('\n[1] 단어 데이터 ' + A.WORDS.length + '개');
   for (const w of A.WORDS) {
     if (ids.has(w.id)) fail.push(`단어 중복 id: ${w.id}`);
     ids.add(w.id);
-    for (const k of ['term', 'ipa', 'meaningKo', 'pos', 'example', 'exampleKo', 'level'])
+    for (const k of ['term', 'meaningKo', 'pos', 'example', 'exampleKo', 'level', 'track'])
       if (!w[k]) fail.push(`${w.id}: ${k} 누락`);
-    if (!/^\/.+\/$/.test(w.ipa || '')) fail.push(`${w.id}: IPA 표기 오류 ${w.ipa}`);
+    // IPA는 확인된 표기만 넣는다. 직장인 트랙은 필수, 나머지는 없으면 비워 둔다(지어내지 않기)
+    if (w.track === 'work' && !w.ipa) fail.push(`${w.id}: ipa 누락`);
+    if (w.ipa && !/^\/.+\/$/.test(w.ipa)) fail.push(`${w.id}: IPA 표기 오류 ${w.ipa}`);
     const re = new RegExp('\\b' + w.term + '\\b', 'i');
     if (!re.test(w.example)) fail.push(`${w.id}: 예문에 기본형 '${w.term}' 없음 → 빈칸 문제 불가`);
     const cz = A.blankOut(w);
@@ -74,15 +76,19 @@ console.log('\n[1] 단어 데이터 ' + A.WORDS.length + '개');
     for (const c of w.confusions || []) {
       if (!ids.has(c.id)) fail.push(`${w.id}: 없는 참조 '${c.id}'`);
       if (c.id === w.id) fail.push(`${w.id}: 자기 자신을 오답으로 지정`);
+      const tgt = A.WORDS.find(x => x.id === c.id);
+      if (tgt && tgt.track !== w.track) fail.push(`${w.id}→${c.id}: 다른 트랙 단어를 오답으로 지정`);
       if ((c.note || '').length < 20) fail.push(`${w.id}→${c.id}: 해설이 너무 짧음`);
       // 예문에 오답 후보가 들어 있으면 빈칸 문제에서 소거 힌트가 된다
       const other = A.WORDS.find(x => x.id === c.id);
       if (other && new RegExp('\\b' + other.term + '\\b', 'i').test(w.example))
         fail.push(`${w.id}: 예문에 오답 후보 '${other.term}' 노출 → 힌트 유출`);
     }
-  const byLv = {};
-  A.WORDS.forEach(w => byLv[w.level] = (byLv[w.level] || 0) + 1);
-  note('레벨 분포 ' + JSON.stringify(byLv));
+  const byTr = {};
+  A.WORDS.forEach(w => byTr[w.track] = (byTr[w.track] || 0) + 1);
+  note('트랙 분포 ' + JSON.stringify(byTr));
+  for (const t of ['toddler','child','elem','mid','high','univ','work'])
+    if ((byTr[t] || 0) < 12) fail.push(`트랙 ${t}: 단어가 12개 미만 (보기 구성 불가 위험)`);
 }
 
 /* ---------- 2. 문법 데이터 ---------- */
@@ -91,6 +97,7 @@ console.log('\n[2] 문법 데이터 ' + A.GRAMMAR.length + '문항');
   const ids = new Set();
   for (const g of A.GRAMMAR) {
     if (ids.has(g.id)) fail.push(`문법 중복 id: ${g.id}`);
+    if (!g.track) fail.push(`${g.id}: track 누락`);
     ids.add(g.id);
     if (!g.sentence.includes('___')) fail.push(`${g.id}: 빈칸 없음`);
     if (g.options.length !== 4) fail.push(`${g.id}: 보기 ${g.options.length}개 (4개여야 함)`);
@@ -110,8 +117,8 @@ console.log('\n[2] 문법 데이터 ' + A.GRAMMAR.length + '문항');
     if ((g.tip || '').length < 12) fail.push(`${g.id}: 규칙 설명(tip) 부실`);
   }
   const byLv = {};
-  A.GRAMMAR.forEach(g => byLv[g.level] = (byLv[g.level] || 0) + 1);
-  note('레벨 분포 ' + JSON.stringify(byLv) +
+  A.GRAMMAR.forEach(g => byLv[g.track] = (byLv[g.track] || 0) + 1);
+  note('트랙 분포 ' + JSON.stringify(byLv) +
        ' · 주제 ' + new Set(A.GRAMMAR.map(g => g.topic)).size + '종');
 }
 
@@ -142,12 +149,14 @@ console.log('\n[4] 세션 시뮬레이션');
     if (open !== ok) fail.push(`${tag}: onclick 속성 파손 ${open}개 중 ${ok}개만 정상`);
     if (/undefined|\[object |NaN/.test(s)) fail.push(`${tag}: 템플릿 렌더 오류`);
   };
-  for (const [lv, cat] of [[0,'mix'],[1,'word'],[2,'grammar'],[3,'mix']]) {
-    A.setPick('level', lv); A.setPick('cat', cat);
+  const runs = [['work',0,'mix'],['work',1,'word'],['work',2,'grammar'],['work',3,'mix']];
+  for (const t of ['toddler','child','elem','mid','high','univ']) runs.push([t,0,'mix'],[t,0,'word'],[t,0,'grammar']);
+  for (const [track, lv, cat] of runs) {
+    A.setPick('track', track); A.setPick('level', lv); A.setPick('cat', cat);
     chk('home', A.home());
     A.start();
     const S = A.getS();
-    if (S.screen === 'home') { fail.push(`레벨${lv}/${cat}: 세션 생성 실패`); continue; }
+    if (S.screen === 'home') { fail.push(`${track}/레벨${lv}/${cat}: 세션 생성 실패`); continue; }
     let guard = 0;
     while (S.screen === 'study' && guard++ < 60) { chk('study', A.study()); S.si++; if (S.si >= S.deck.length) S.screen = 'quiz'; }
     guard = 0; let nw = 0, ng = 0;
@@ -163,7 +172,10 @@ console.log('\n[4] 세션 시뮬레이션');
       A.next();
     }
     chk('result', A.result());
-    note(`레벨${lv}/${cat}: 단어 ${nw} · 문법 ${ng} · 점수 ${S.score} · 정답 ${S.right}/${S.qs.length}`);
+    // 출제된 문제가 전부 선택한 트랙 것인지
+    if (S.qs.some(q => (q.kind === 'g' ? q.g : q.w).track !== track)) fail.push(`${track}: 다른 트랙 문제가 섞임`);
+    if (S.qs.some(q => q.opts.some(o => (q.kind === 'g' ? false : A.WORDS.find(x => x.id === o.id).track !== track)))) fail.push(`${track}: 보기에 다른 트랙 단어가 섞임`);
+    note(`${track}/레벨${lv}/${cat}: 단어 ${nw} · 문법 ${ng} · 점수 ${S.score} · 정답 ${S.right}/${S.qs.length}`);
   }
 }
 
@@ -180,12 +192,18 @@ console.log('\n[5] 통계와 학습 노트');
   A.openLibrary();
   const weak = A.library();
   if (weak.includes('아직 틀린 문제가 없습니다')) fail.push('약점 노트가 비어 있음 (통계 연결 실패)');
+  A.setPick('track', 'work');
   A.libTab('words');
   const wn = (A.library().match(/class="item"/g) || []).length;
-  if (wn !== A.WORDS.length) fail.push(`단어 목록 ${wn}행 (기대 ${A.WORDS.length})`);
+  const ewn = A.WORDS.filter(w => w.track === 'work').length;
+  if (wn !== ewn) fail.push(`단어 목록 ${wn}행 (기대 ${ewn})`);
   A.libTab('grammar');
   const gn = (A.library().match(/class="item"/g) || []).length;
-  if (gn !== A.GRAMMAR.length) fail.push(`문법 목록 ${gn}행 (기대 ${A.GRAMMAR.length})`);
+  const egn = A.GRAMMAR.filter(g => g.track === 'work').length;
+  if (gn !== egn) fail.push(`문법 목록 ${gn}행 (기대 ${egn})`);
+  A.setPick('track', 'toddler'); A.libTab('words');
+  const tn = (A.library().match(/class="item"/g) || []).length;
+  if (tn !== A.WORDS.filter(w => w.track === 'toddler').length) fail.push('유아 트랙 학습 노트 행 수 불일치');
   note(`단어 탭 ${wn}행 · 문법 탭 ${gn}행`);
 }
 
