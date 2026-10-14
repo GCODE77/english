@@ -161,6 +161,11 @@
   .trow .ct{font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap; text-align:right}
   .trow.on{border-color:var(--indigo); background:var(--chipbg)}
   .trow .ck{color:var(--indigo); font-weight:900}
+  .nav{display:flex; align-items:center; gap:8px}
+  .nav button{min-height:44px; min-width:44px; padding:0 14px; border-radius:22px; background:var(--surface);
+    border:1.5px solid var(--line); color:var(--muted); font-size:14px; font-weight:800}
+  .nav button:active{background:var(--chipbg)}
+  .nav .sp{flex:1}
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
 </style>
@@ -10966,6 +10971,26 @@ function setPick(field, value){
   render();
 }
 
+function goHome(){
+  if(S.screen === 'quiz' || S.screen === 'study'){
+    if(!confirm('홈으로 나갑니다. 지금까지 푼 기록은 저장돼요.')) return;
+  }
+  S = {screen:'home'}; render();
+}
+// ✕ 닫기: 여기까지 푼 것만으로 세션을 끝내고 결과를 보여 준다. 하나도 안 풀었으면 홈으로.
+function closeSession(){
+  if(S.screen === 'study'){ S = {screen:'home'}; render(); return; }
+  const done = S.i + (S.fb ? 1 : 0);
+  if(done <= 0){ S = {screen:'home'}; render(); return; }
+  if(!confirm('여기까지 푼 ' + done + '문제로 끝낼까요?')) return;
+  S.qs = S.qs.slice(0, done); S.fb = null; S.screen = 'result'; render();
+}
+const navBar = (extra) => `<div class="nav">
+    <button onclick="goHome()" aria-label="홈으로">🏠 홈</button>
+    <span class="sp"></span>${extra || ''}
+    <button onclick="closeSession()" aria-label="닫기">✕ 닫기</button>
+  </div>`;
+
 function toggleSheet(v){ UI.sheet = v; render(); }
 function pickTrack(id){ UI.sheet = false; setPick('track', id); }
 
@@ -11071,7 +11096,8 @@ function study(){
   const w = S.deck[S.si];
   setTimeout(()=>TTS.say(w.term), 60);
   return `
-  <div class="row" style="margin-bottom:14px">
+  ${navBar()}
+  <div class="row" style="margin:14px 0">
     <span class="meta">새 단어 ${S.si+1} / ${S.deck.length}</span>
     <button class="link" onclick="S.screen='quiz';render()">건너뛰고 퀴즈로</button>
   </div>
@@ -11158,8 +11184,9 @@ function quiz(){
 
   return `
   <div class="qhead">
-    <div class="row">
-      <span class="meta">문제 ${S.i+1} / ${S.qs.length} · <button class="link" style="padding:0" onclick="if(confirm('지금까지 푼 기록은 저장됩니다. 그만할까요?')){S={screen:'home'};render()}">그만하기</button></span>
+    ${navBar()}
+    <div class="row" style="margin-top:8px">
+      <span class="meta">문제 ${S.i+1} / ${S.qs.length}</span>
       <span class="sc">
         <span><em>점수</em><b style="color:var(--indigo)">${S.score}</b></span>
         <span><em>연속</em><b class="fire">${S.streak}${S.streak?'🔥':''}</b></span>
@@ -11196,6 +11223,7 @@ function result(){
        </div>`;
 
   return `
+  <div class="nav"><button onclick="goHome()" aria-label="홈으로">🏠 홈</button></div>
   <h1 style="color:${acc>=70?'var(--ok)':'var(--amber)'}">${title}</h1>
   <div class="card" style="margin-top:16px">
     <div class="stats">
