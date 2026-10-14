@@ -1,0 +1,4093 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Biz Vocab Quest</title>
+<meta name="theme-color" content="#4F46E5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Biz Vocab">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<style>
+  :root{
+    --indigo:#4F46E5; --indigo-d:#3730A3; --amber:#B45309;
+    --ok:#15803D; --ok-bg:#DCFCE7; --no:#B91C1C; --no-bg:#FEE2E2;
+    --ink:#0F172A; --muted:#475569; --cloud:#F4F5FD; --line:#E6E9F5;
+    --surface:#FFFFFF; --chipbg:#E0E7FF; --chipink:#312E81;
+    --shadow:0 1px 3px rgba(15,23,42,.07); --chippress:#C7D2FE; --toastbg:#0F172A;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --indigo:#A5B4FC; --indigo-d:#C7D2FE; --amber:#FBBF24;
+      --ok:#4ADE80; --ok-bg:#123021; --no:#F87171; --no-bg:#3A1618;
+      --ink:#F1F5F9; --muted:#A3AEC2; --cloud:#0E1017; --line:#232838;
+      --surface:#171B26; --chipbg:#2A3150; --chipink:#C7D2FE;
+      --shadow:0 1px 3px rgba(0,0,0,.4); --chippress:#3B4570; --toastbg:#2C3346;
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  body{margin:0; background:var(--cloud); color:var(--ink); font-size:17px; line-height:1.6;
+    font-family:-apple-system,"Noto Sans KR","Segoe UI",Roboto,sans-serif;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);}
+  #app{max-width:520px; margin:0 auto; padding:18px 18px 32px;}
+  h1{font-size:34px; font-weight:900; color:var(--indigo); margin:8px 0 4px; letter-spacing:-.5px}
+  .sub{color:var(--muted); font-size:15px; margin-bottom:20px}
+  .card{background:var(--surface); border-radius:22px; padding:20px; box-shadow:0 1px 3px rgba(17,24,39,.06)}
+  .row{display:flex; align-items:center; justify-content:space-between}
+  .stats{display:flex; justify-content:space-around; text-align:center}
+  .stat b{display:block; font-size:24px; font-weight:900}
+  .stat span{font-size:12px; color:var(--muted)}
+  button{font-family:inherit; border:none; cursor:pointer}
+  .primary{width:100%; min-height:60px; border-radius:20px; background:var(--indigo);
+    color:#fff; font-size:19px; font-weight:800; margin-top:18px}
+  .primary:active{background:var(--indigo-d)}
+  .ghost{width:100%; min-height:52px; border-radius:18px; background:transparent;
+    border:1.5px solid #D1D5DB; color:var(--muted); font-size:15px; font-weight:700; margin-top:10px}
+  .link{background:none; color:var(--muted); font-size:14px; text-decoration:underline; padding:8px}
+  .bar{height:12px; border-radius:6px; background:var(--line); overflow:hidden; margin-top:8px}
+  .qhead{position:sticky; top:0; z-index:20; background:var(--cloud); margin:0 -18px;
+    padding:10px 18px 12px}
+  .qhead .sc{display:flex; gap:16px; align-items:baseline}
+  .qhead .sc em{font-style:normal; font-size:12px; font-weight:700; color:var(--muted); margin-right:5px}
+  .qhead .sc b{font-size:20px; font-weight:900}
+  .bar > i{display:block; height:100%; background:var(--indigo); border-radius:5px; transition:width .3s}
+  .meta{font-size:14px; color:var(--muted); font-weight:700}
+  .ipa{display:inline-block; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px;
+    color:var(--ink); background:var(--line); border-radius:8px; padding:6px 11px; letter-spacing:.2px}
+  .term{font-size:38px; font-weight:900; color:var(--indigo); line-height:1.15; word-break:break-word}
+  .prompt{font-size:22px; font-weight:700; line-height:1.55}
+  .speak{min-height:52px; padding:0 18px; border-radius:26px; background:var(--chipbg);
+    color:var(--chipink); font-size:15px; font-weight:800; display:inline-flex;
+    align-items:center; gap:8px; margin:6px 8px 0 0}
+  .speak:active{background:var(--chippress)}
+  .speak[disabled]{opacity:.4}
+  .opt{width:100%; min-height:68px; text-align:left; background:var(--surface); border:2px solid var(--line);
+    border-radius:18px; padding:17px 18px; font-size:18px; font-weight:700; color:var(--ink); margin-top:12px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; transition:.15s}
+  .opt:active{transform:scale(.985)}
+  .opt.correct{background:var(--ok-bg); border-color:var(--ok); box-shadow:inset 5px 0 0 var(--ok)}
+  .opt.wrong{background:var(--no-bg); border-color:var(--no); box-shadow:inset 5px 0 0 var(--no)}
+  .opt.dim{opacity:.35}
+  .mark{font-size:22px; font-weight:900}
+  .fb{border-radius:20px; padding:18px; margin-top:18px}
+  .fb.ok{background:var(--ok-bg)} .fb.no{background:var(--no-bg)}
+  .fb h3{margin:0; font-size:21px; font-weight:900}
+  .fb h3.ok{color:var(--ok)} .fb h3.no{color:var(--no)}
+  .fb p{margin:10px 0 0; font-size:17px; line-height:1.7; color:var(--ink)}
+  .fb .ko{color:var(--muted)}
+  .notice{background:var(--line); border-radius:14px; padding:14px; font-size:14px;
+    color:var(--muted); line-height:1.7; margin-top:16px}
+  .wrongitem{background:var(--no-bg); border-radius:16px; padding:16px; margin-top:12px}
+  .wrongitem b{font-size:20px; font-weight:900; color:var(--no)}
+  .plus{color:var(--ok); font-weight:800; font-size:15px; margin-left:10px}
+  .fire{color:var(--amber)}
+  .install{width:100%; min-height:56px; border-radius:18px; background:var(--ok); color:#fff;
+    font-size:16px; font-weight:800; margin-top:10px}
+  .tabs{display:flex; gap:8px; margin:14px 0 12px}
+  .tab{flex:1; min-height:46px; border-radius:14px; background:var(--surface); border:1.5px solid var(--line);
+    color:var(--muted); font-size:14px; font-weight:800}
+  .tab.on{background:var(--indigo); border-color:var(--indigo); color:#fff}
+  .search{width:100%; min-height:50px; border-radius:14px; border:1.5px solid var(--line);
+    padding:0 16px; font-size:16px; font-family:inherit; background:var(--surface); color:var(--ink); margin-bottom:6px}
+  .search:focus{outline:none; border-color:var(--indigo)}
+  .item{background:var(--surface); border-radius:16px; padding:14px 16px; margin-top:10px}
+  .item .top{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .item b{font-size:18px; font-weight:800; color:var(--indigo)}
+  .badge{font-size:11px; font-weight:800; border-radius:999px; padding:4px 9px; white-space:nowrap}
+  .b-new{background:var(--line); color:var(--muted)}
+  .b-go{background:var(--chipbg); color:var(--chipink)}
+  .b-ok{background:var(--ok-bg); color:var(--ok)}
+  .b-bad{background:var(--no-bg); color:var(--no)}
+  .item .ko{font-size:15px; margin-top:6px}
+  .item .ex{font-size:15px; color:var(--muted); margin-top:6px; line-height:1.6}
+  .miniSpeak{min-height:40px; padding:0 12px; border-radius:20px; background:var(--chipbg);
+    color:var(--chipink); font-size:13px; font-weight:800; margin-top:10px}
+  .empty{text-align:center; color:var(--muted); font-size:15px; line-height:1.7; padding:40px 20px}
+  .chips{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
+  .chip{flex:1 1 0; min-width:78px; min-height:52px; border-radius:14px; background:var(--surface);
+    border:1.5px solid var(--line); color:var(--muted); font-size:14px; font-weight:700;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:6px}
+  .chip small{font-size:12px; font-weight:600; opacity:.85}
+  .chip.on{background:var(--indigo); border-color:var(--indigo); color:#fff}
+  .chip.on small{opacity:.9}
+  .label{font-size:13px; font-weight:800; color:var(--muted); margin-top:18px}
+  .topic{display:inline-block; background:var(--chipbg); color:var(--indigo-d); border-radius:8px;
+    padding:4px 10px; font-size:12px; font-weight:800}
+  .tip{background:var(--surface); border-radius:12px; padding:13px 15px; margin-top:12px;
+    font-size:15px; line-height:1.7; color:var(--ink); border-left:5px solid var(--indigo)}
+  .speak.busy{background:var(--indigo); color:#fff}
+  #toast{position:fixed; left:12px; right:12px; bottom:16px; margin:0 auto; max-width:496px;
+    background:var(--toastbg); color:#fff; border-radius:14px; padding:14px 16px; font-size:14px;
+    line-height:1.5; opacity:0; transform:translateY(12px); pointer-events:none;
+    transition:.22s; z-index:99; box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  #toast.show{opacity:1; transform:translateY(0)}
+  .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
+    font-size:15px; font-weight:800; margin-top:10px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<script>
+const WORDS = [
+  {
+    "id": "leverage",
+    "term": "leverage",
+    "ipa": "/ˈlevərɪdʒ/",
+    "meaningKo": "(가진 것을) 활용하다, 지렛대로 삼다",
+    "pos": "동사",
+    "example": "We can leverage our existing customer data for the new campaign.",
+    "exampleKo": "기존 고객 데이터를 새 캠페인에 활용할 수 있습니다.",
+    "confusions": [
+      {
+        "id": "delegate",
+        "note": "leverage는 이미 가진 자산·데이터·관계를 '써먹는' 것이고, delegate는 사람에게 일을 '넘기는' 것이다."
+      },
+      {
+        "id": "allocate",
+        "note": "leverage는 있는 것을 최대한 활용, allocate는 자원을 몫대로 '배정'. 활용 ≠ 배분."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "stakeholder",
+    "term": "stakeholder",
+    "ipa": "/ˈsteɪkˌhoʊldər/",
+    "meaningKo": "이해관계자",
+    "pos": "명사",
+    "example": "Let's align with every stakeholder before we finalize the budget.",
+    "exampleKo": "예산을 확정하기 전에 모든 이해관계자와 합을 맞춥시다.",
+    "confusions": [
+      {
+        "id": "shareholder",
+        "note": "stakeholder는 영향을 주고받는 모든 관계자(고객·직원·규제기관 포함), shareholder는 지분을 가진 주주. 주주는 이해관계자의 한 종류일 뿐이다."
+      },
+      {
+        "id": "deliverable",
+        "note": "stakeholder는 '사람', deliverable은 그 사람에게 내놓는 '결과물'이다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "shareholder",
+    "term": "shareholder",
+    "ipa": "/ˈʃerˌhoʊldər/",
+    "meaningKo": "주주",
+    "pos": "명사",
+    "example": "Every shareholder received a copy of the annual report.",
+    "exampleKo": "모든 주주가 연차 보고서를 받았습니다.",
+    "confusions": [
+      {
+        "id": "stakeholder",
+        "note": "shareholder는 지분 보유자에 한정되지만, stakeholder는 지분이 없어도 영향을 받는 모두를 포함한다."
+      },
+      {
+        "id": "liability",
+        "note": "shareholder는 회사의 '소유자', liability는 회사가 갚아야 할 '부채·책임'이다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "deliverable",
+    "term": "deliverable",
+    "ipa": "/dɪˈlɪvərəbl/",
+    "meaningKo": "산출물, 제출 결과물",
+    "pos": "명사",
+    "example": "The first deliverable is due at the end of this sprint.",
+    "exampleKo": "첫 산출물은 이번 스프린트 종료 시점까지 제출해야 합니다.",
+    "confusions": [
+      {
+        "id": "milestone",
+        "note": "deliverable은 실제로 넘기는 '물건'(문서·기능·보고서), milestone은 달성 '시점'이다."
+      },
+      {
+        "id": "stakeholder",
+        "note": "deliverable은 결과물, stakeholder는 그 결과물을 받는 사람이다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "feasible",
+    "term": "feasible",
+    "ipa": "/ˈfiːzəbl/",
+    "meaningKo": "실현 가능한",
+    "pos": "형용사",
+    "example": "A two-week timeline is not feasible with the current headcount.",
+    "exampleKo": "현재 인원으로 2주 일정은 실현 가능하지 않습니다.",
+    "confusions": [
+      {
+        "id": "scalable",
+        "note": "feasible은 '지금 이 조건에서 되느냐', scalable은 '규모가 커져도 버티느냐'를 묻는다."
+      },
+      {
+        "id": "contingency",
+        "note": "feasible은 가능성을 평가하는 형용사, contingency는 대비책이라는 명사다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "scalable",
+    "term": "scalable",
+    "ipa": "/ˈskeɪləbl/",
+    "meaningKo": "확장 가능한",
+    "pos": "형용사",
+    "example": "The architecture has to be scalable to a million users.",
+    "exampleKo": "이 구조는 사용자 100만 명까지 확장 가능해야 합니다.",
+    "confusions": [
+      {
+        "id": "feasible",
+        "note": "scalable은 커졌을 때의 문제, feasible은 지금 당장의 가능 여부다."
+      },
+      {
+        "id": "streamline",
+        "note": "scalable은 상태(형용사), streamline은 절차를 간소화하는 행위(동사)다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "mitigate",
+    "term": "mitigate",
+    "ipa": "/ˈmɪtɪɡeɪt/",
+    "meaningKo": "(위험·피해를) 완화하다, 줄이다",
+    "pos": "동사",
+    "example": "We added a buffer to mitigate the delivery risk.",
+    "exampleKo": "납기 리스크를 줄이려고 여유 기간을 넣었습니다.",
+    "confusions": [
+      {
+        "id": "escalate",
+        "note": "mitigate는 리스크를 '줄이는' 것, escalate는 위로 '올리거나' 상황을 '키우는' 것. 방향이 정반대다."
+      },
+      {
+        "id": "consolidate",
+        "note": "발음이 비슷하지만 mitigate는 '완화', consolidate는 '통합'이다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "escalate",
+    "term": "escalate",
+    "ipa": "/ˈeskəleɪt/",
+    "meaningKo": "상급자에게 넘기다, 격화되다",
+    "pos": "동사",
+    "example": "If the vendor misses the deadline again, we will escalate the issue.",
+    "exampleKo": "협력사가 또 기한을 넘기면 이 건을 위로 보고하겠습니다.",
+    "confusions": [
+      {
+        "id": "mitigate",
+        "note": "escalate는 문제를 키우거나 위로 올리는 것, mitigate는 반대로 가라앉히는 것이다."
+      },
+      {
+        "id": "delegate",
+        "note": "escalate는 '위로', delegate는 '아래로' 넘긴다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "allocate",
+    "term": "allocate",
+    "ipa": "/ˈæləkeɪt/",
+    "meaningKo": "(자원을) 배정하다, 할당하다",
+    "pos": "동사",
+    "example": "We need to allocate three engineers to the migration project.",
+    "exampleKo": "마이그레이션 프로젝트에 엔지니어 3명을 배정해야 합니다.",
+    "confusions": [
+      {
+        "id": "delegate",
+        "note": "allocate는 예산·인력 같은 '자원'을 나누는 것, delegate는 '사람'에게 업무·권한을 맡기는 것이다."
+      },
+      {
+        "id": "prioritize",
+        "note": "allocate는 자원을 나누는 것, prioritize는 순서를 정하는 것이다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "delegate",
+    "term": "delegate",
+    "ipa": "/ˈdelɪɡeɪt/",
+    "meaningKo": "(업무·권한을) 위임하다",
+    "pos": "동사",
+    "example": "You should delegate the reporting tasks to your team lead.",
+    "exampleKo": "보고서 업무는 팀 리드에게 위임하는 게 좋겠습니다.",
+    "confusions": [
+      {
+        "id": "allocate",
+        "note": "delegate의 대상은 사람과 책임, allocate의 대상은 예산·인력 같은 자원이다."
+      },
+      {
+        "id": "escalate",
+        "note": "delegate는 아래로 넘기는 것, escalate는 위로 올리는 것이다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "procurement",
+    "term": "procurement",
+    "ipa": "/prəˈkjʊrmənt/",
+    "meaningKo": "조달, 구매(부서)",
+    "pos": "명사",
+    "example": "Procurement needs two weeks to approve a new vendor.",
+    "exampleKo": "구매팀이 신규 협력사를 승인하는 데 2주가 필요합니다.",
+    "confusions": [
+      {
+        "id": "invoice",
+        "note": "procurement는 사들이는 '과정 전체', invoice는 그 과정에서 오가는 '청구서 한 장'이다."
+      },
+      {
+        "id": "compliance",
+        "note": "둘 다 승인 지연의 단골 원인이지만, procurement는 구매 절차, compliance는 규정 준수다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "compliance",
+    "term": "compliance",
+    "ipa": "/kəmˈplaɪəns/",
+    "meaningKo": "(법규·규정) 준수",
+    "pos": "명사",
+    "example": "The feature was delayed because of a compliance review.",
+    "exampleKo": "규정 준수 검토 때문에 해당 기능이 지연됐습니다.",
+    "confusions": [
+      {
+        "id": "audit",
+        "note": "compliance는 규정을 '지키고 있는 상태', audit은 잘 지켰는지 '검사하는 행위'다."
+      },
+      {
+        "id": "liability",
+        "note": "compliance를 어기면 liability(법적 책임)가 생긴다. 원인과 결과지 같은 말이 아니다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "forecast",
+    "term": "forecast",
+    "ipa": "/ˈfɔːrkæst/",
+    "meaningKo": "예측, 전망(치)",
+    "pos": "명사",
+    "example": "Our revenue forecast for Q3 was revised downward.",
+    "exampleKo": "3분기 매출 전망치가 하향 조정됐습니다.",
+    "confusions": [
+      {
+        "id": "budget",
+        "note": "forecast는 '이렇게 될 것 같다'는 예측, budget은 '이만큼 쓰겠다'고 확정한 계획이다."
+      },
+      {
+        "id": "benchmark",
+        "note": "forecast는 미래를 향한 예측, benchmark는 남과 비교하는 기준치다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "budget",
+    "term": "budget",
+    "ipa": "/ˈbʌdʒɪt/",
+    "meaningKo": "예산",
+    "pos": "명사",
+    "example": "The marketing budget was cut by fifteen percent this year.",
+    "exampleKo": "올해 마케팅 예산이 15% 삭감됐습니다.",
+    "confusions": [
+      {
+        "id": "forecast",
+        "note": "budget은 쓰기로 '정한' 돈, forecast는 그렇게 될 거라고 '보는' 수치다."
+      },
+      {
+        "id": "contingency",
+        "note": "budget은 전체 예산, contingency는 그 안에 남겨 두는 비상 예비분이다."
+      }
+    ],
+    "level": 1
+  },
+  {
+    "id": "benchmark",
+    "term": "benchmark",
+    "ipa": "/ˈbentʃmɑːrk/",
+    "meaningKo": "(비교의) 기준치, 벤치마크",
+    "pos": "명사",
+    "example": "We use their pricing as a benchmark for ours.",
+    "exampleKo": "우리 가격을 정할 때 그쪽 가격을 기준으로 삼습니다.",
+    "confusions": [
+      {
+        "id": "milestone",
+        "note": "benchmark는 남과 비교하는 '수준', milestone은 일정상의 '시점'이다."
+      },
+      {
+        "id": "forecast",
+        "note": "benchmark는 이미 존재하는 비교 대상, forecast는 아직 오지 않은 예측이다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "milestone",
+    "term": "milestone",
+    "ipa": "/ˈmaɪlstoʊn/",
+    "meaningKo": "중요 시점, 마일스톤",
+    "pos": "명사",
+    "example": "Beta launch is the next milestone on the roadmap.",
+    "exampleKo": "베타 출시가 로드맵상 다음 마일스톤입니다.",
+    "confusions": [
+      {
+        "id": "benchmark",
+        "note": "milestone은 '언제'에 대한 것, benchmark는 '얼마나'에 대한 것이다."
+      },
+      {
+        "id": "deliverable",
+        "note": "milestone에 도달하면 보통 deliverable(산출물)이 딸려 나온다. 시점과 물건의 차이다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "consolidate",
+    "term": "consolidate",
+    "ipa": "/kənˈsɑːlɪdeɪt/",
+    "meaningKo": "(여럿을) 하나로 통합하다",
+    "pos": "동사",
+    "example": "We plan to consolidate the three regional teams into one unit.",
+    "exampleKo": "3개 지역 팀을 하나의 조직으로 통합할 계획입니다.",
+    "confusions": [
+      {
+        "id": "streamline",
+        "note": "consolidate는 여러 개를 '합치는' 것, streamline은 절차를 '단순하게' 만드는 것. 합치지 않고도 간소화할 수 있다."
+      },
+      {
+        "id": "mitigate",
+        "note": "consolidate는 통합, mitigate는 완화. 발음만 비슷하다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "streamline",
+    "term": "streamline",
+    "ipa": "/ˈstriːmlaɪn/",
+    "meaningKo": "(절차를) 간소화하다, 효율화하다",
+    "pos": "동사",
+    "example": "The new tool will streamline the approval process.",
+    "exampleKo": "새 도구가 승인 절차를 간소화해 줄 겁니다.",
+    "confusions": [
+      {
+        "id": "consolidate",
+        "note": "streamline은 단계를 줄이는 것, consolidate는 대상을 하나로 묶는 것이다."
+      },
+      {
+        "id": "prioritize",
+        "note": "streamline은 과정 자체를 줄이고, prioritize는 무엇을 먼저 할지만 정한다."
+      }
+    ],
+    "level": 2
+  },
+  {
+    "id": "retention",
+    "term": "retention",
+    "ipa": "/rɪˈtenʃn/",
+    "meaningKo": "(고객·직원) 유지(율)",
+    "pos": "명사",
+    "example": "Customer retention improved after we redesigned the signup flow.",
+    "exampleKo": "가입 흐름을 개선한 뒤 고객 유지율이 올라갔습니다.",
+    "confusions": [
+      {
+        "id": "attrition",
+        "note": "retention은 '남아 있는' 비율, attrition은 '빠져나가는' 비율. 정확히 반대 지표다."
+      },
+      {
+        "id": "onboarding",
+        "note": "onboarding은 처음 적응시키는 절차, retention은 그 이후 계속 남게 만드는 결과다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "attrition",
+    "term": "attrition",
+    "ipa": "/əˈtrɪʃn/",
+    "meaningKo": "(인원의) 자연 감소, 이탈",
+    "pos": "명사",
+    "example": "The team lost four people to attrition last quarter.",
+    "exampleKo": "지난 분기에 자연 감소로 팀에서 4명이 빠졌습니다.",
+    "confusions": [
+      {
+        "id": "retention",
+        "note": "attrition이 올라가면 retention은 내려간다. 같은 현상을 반대편에서 본 말이다."
+      },
+      {
+        "id": "turnover",
+        "note": "turnover는 해고·이직을 포함한 전체 교체율, attrition은 나간 자리를 채우지 않는 감소를 가리킨다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "turnover",
+    "term": "turnover",
+    "ipa": "/ˈtɜːrnoʊvər/",
+    "meaningKo": "이직률 (영국 영어에서는 매출액)",
+    "pos": "명사",
+    "example": "High turnover in the support team is hurting response times.",
+    "exampleKo": "지원팀의 높은 이직률이 응대 속도를 떨어뜨리고 있습니다.",
+    "confusions": [
+      {
+        "id": "attrition",
+        "note": "turnover는 나가고 들어오는 '교체' 전체, attrition은 빠져나가기만 하는 감소다."
+      },
+      {
+        "id": "margin",
+        "note": "영국식으로 turnover가 '매출액'을 뜻할 때도 margin(이익률)과는 다르다. 매출은 규모, 마진은 비율이다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "overhead",
+    "term": "overhead",
+    "ipa": "/ˈoʊvərhed/",
+    "meaningKo": "간접비, 운영 관리비",
+    "pos": "명사",
+    "example": "Moving to a smaller office will cut our overhead significantly.",
+    "exampleKo": "사무실을 줄이면 간접비가 크게 절감됩니다.",
+    "confusions": [
+      {
+        "id": "margin",
+        "note": "overhead는 매출과 직접 연결되지 않는 '비용', margin은 매출에서 원가를 뺀 '이익률'이다. overhead가 늘면 margin이 준다."
+      },
+      {
+        "id": "liability",
+        "note": "overhead는 매달 나가는 운영비, liability는 갚아야 할 부채·법적 책임이다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "margin",
+    "term": "margin",
+    "ipa": "/ˈmɑːrdʒɪn/",
+    "meaningKo": "이익률, 마진",
+    "pos": "명사",
+    "example": "We cannot discount further without hurting our margin.",
+    "exampleKo": "마진을 해치지 않고서는 추가 할인이 어렵습니다.",
+    "confusions": [
+      {
+        "id": "overhead",
+        "note": "margin은 남는 비율, overhead는 나가는 비용이다."
+      },
+      {
+        "id": "turnover",
+        "note": "margin은 비율, turnover는 규모(이직률 또는 매출액)다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "liability",
+    "term": "liability",
+    "ipa": "/ˌlaɪəˈbɪləti/",
+    "meaningKo": "부채, 법적 책임",
+    "pos": "명사",
+    "example": "The lawsuit created a significant liability for the company.",
+    "exampleKo": "그 소송으로 회사에 상당한 법적 책임이 생겼습니다.",
+    "confusions": [
+      {
+        "id": "overhead",
+        "note": "liability는 대차대조표에 남는 '빚·책임', overhead는 손익계산서에 잡히는 '경비'다."
+      },
+      {
+        "id": "compliance",
+        "note": "compliance를 지키면 liability를 피할 수 있다. 준수와 책임은 다른 층위다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "audit",
+    "term": "audit",
+    "ipa": "/ˈɔːdɪt/",
+    "meaningKo": "감사, 점검(하다)",
+    "pos": "명사",
+    "example": "An external firm will audit our financial records in May.",
+    "exampleKo": "5월에 외부 회계법인이 우리 재무 기록을 감사합니다.",
+    "confusions": [
+      {
+        "id": "compliance",
+        "note": "audit은 '검사하는 행위', compliance는 '지키고 있는 상태'다."
+      },
+      {
+        "id": "discrepancy",
+        "note": "audit은 검사 그 자체, discrepancy는 검사에서 발견되는 불일치다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "invoice",
+    "term": "invoice",
+    "ipa": "/ˈɪnvɔɪs/",
+    "meaningKo": "청구서, 송장",
+    "pos": "명사",
+    "example": "Please send the invoice to accounts payable by Friday.",
+    "exampleKo": "금요일까지 청구서를 미지급금 담당에 보내 주세요.",
+    "confusions": [
+      {
+        "id": "receipt",
+        "note": "invoice는 '돈을 주세요'라고 보내는 청구서, receipt는 '돈을 받았습니다'라는 영수증. 방향이 반대다."
+      },
+      {
+        "id": "reimburse",
+        "note": "invoice는 외부에 대금을 청구하는 문서, reimburse는 직원이 먼저 쓴 돈을 회사가 돌려주는 행위다."
+      }
+    ],
+    "level": 1
+  },
+  {
+    "id": "receipt",
+    "term": "receipt",
+    "ipa": "/rɪˈsiːt/",
+    "meaningKo": "영수증",
+    "pos": "명사",
+    "example": "Attach the receipt when you submit the expense report.",
+    "exampleKo": "경비 보고서를 제출할 때 영수증을 첨부하세요.",
+    "confusions": [
+      {
+        "id": "invoice",
+        "note": "receipt는 결제가 끝난 뒤의 증빙, invoice는 결제 전에 보내는 청구다."
+      },
+      {
+        "id": "reimburse",
+        "note": "receipt는 '서류', reimburse는 그 서류를 근거로 돈을 돌려주는 '동작'이다."
+      }
+    ],
+    "level": 1
+  },
+  {
+    "id": "reimburse",
+    "term": "reimburse",
+    "ipa": "/ˌriːɪmˈbɜːrs/",
+    "meaningKo": "(쓴 비용을) 상환해 주다, 정산해 주다",
+    "pos": "동사",
+    "example": "The company will reimburse your travel expenses within thirty days.",
+    "exampleKo": "회사가 30일 이내에 출장 경비를 정산해 드립니다.",
+    "confusions": [
+      {
+        "id": "invoice",
+        "note": "reimburse는 내부 직원에게 돈을 돌려주는 것, invoice는 외부에 돈을 청구하는 것이다."
+      },
+      {
+        "id": "receipt",
+        "note": "reimburse는 동사, receipt는 그 근거가 되는 명사다."
+      }
+    ],
+    "level": 1
+  },
+  {
+    "id": "onboarding",
+    "term": "onboarding",
+    "ipa": "/ˈɑːnbɔːrdɪŋ/",
+    "meaningKo": "온보딩, 신규 적응 절차",
+    "pos": "명사",
+    "example": "Our onboarding process takes about two weeks.",
+    "exampleKo": "우리 온보딩 절차는 약 2주가 걸립니다.",
+    "confusions": [
+      {
+        "id": "retention",
+        "note": "onboarding은 들어온 직후의 절차, retention은 그 뒤로 계속 남아 있게 만드는 결과다."
+      },
+      {
+        "id": "procurement",
+        "note": "onboarding은 사람을 조직에 들이는 절차, procurement는 물건·서비스를 사들이는 절차다."
+      }
+    ],
+    "level": 1
+  },
+  {
+    "id": "prioritize",
+    "term": "prioritize",
+    "ipa": "/praɪˈɔːrətaɪz/",
+    "meaningKo": "우선순위를 정하다",
+    "pos": "동사",
+    "example": "Let's prioritize the bugs that block the release.",
+    "exampleKo": "출시를 막는 버그부터 우선순위를 매깁시다.",
+    "confusions": [
+      {
+        "id": "allocate",
+        "note": "prioritize는 '순서'를 정하고, allocate는 '자원'을 나눈다."
+      },
+      {
+        "id": "streamline",
+        "note": "prioritize는 할 일의 순서를 바꾸고, streamline은 할 일의 단계를 줄인다."
+      }
+    ],
+    "level": 1
+  },
+  {
+    "id": "contingency",
+    "term": "contingency",
+    "ipa": "/kənˈtɪndʒənsi/",
+    "meaningKo": "비상 대비책, 예비분",
+    "pos": "명사",
+    "example": "We set aside a ten percent contingency for unexpected costs.",
+    "exampleKo": "예상치 못한 비용에 대비해 10%를 예비분으로 남겨 뒀습니다.",
+    "confusions": [
+      {
+        "id": "discrepancy",
+        "note": "철자와 발음이 비슷하지만 contingency는 '비상 대비책', discrepancy는 '수치의 불일치'다."
+      },
+      {
+        "id": "budget",
+        "note": "contingency는 budget 안에 들어 있는 일부다. 전체와 부분의 관계다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "discrepancy",
+    "term": "discrepancy",
+    "ipa": "/dɪˈskrepənsi/",
+    "meaningKo": "(수치·기록의) 불일치, 차이",
+    "pos": "명사",
+    "example": "There is a discrepancy between the invoice and the purchase order.",
+    "exampleKo": "청구서와 발주서 사이에 불일치가 있습니다.",
+    "confusions": [
+      {
+        "id": "contingency",
+        "note": "discrepancy는 이미 벌어진 '차이', contingency는 아직 안 벌어진 일에 대한 '대비'다."
+      },
+      {
+        "id": "audit",
+        "note": "discrepancy는 발견되는 '문제', audit은 그것을 찾는 '절차'다."
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "deadline",
+    "term": "deadline",
+    "ipa": "/ˈdedlaɪn/",
+    "meaningKo": "마감 기한",
+    "pos": "명사",
+    "example": "The deadline for the proposal is next Tuesday.",
+    "exampleKo": "제안서 마감 기한은 다음 주 화요일입니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "milestone",
+        "note": "deadline은 넘기면 안 되는 '마지막 날', milestone은 진행을 확인하는 '중간 지점'이다."
+      },
+      {
+        "id": "timeline",
+        "note": "deadline은 한 시점, timeline은 전체 일정표다."
+      }
+    ]
+  },
+  {
+    "id": "agenda",
+    "term": "agenda",
+    "ipa": "/əˈdʒendə/",
+    "meaningKo": "(회의) 안건, 순서",
+    "pos": "명사",
+    "example": "Could you send the agenda before the meeting?",
+    "exampleKo": "회의 전에 안건을 보내 주시겠어요?",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "recap",
+        "note": "agenda는 회의 '전'에 무엇을 다룰지, recap은 회의 '후'에 무엇을 정했는지다."
+      },
+      {
+        "id": "proposal",
+        "note": "agenda는 논의할 항목 목록, proposal은 승인받으려는 제안 내용이다."
+      }
+    ]
+  },
+  {
+    "id": "attach",
+    "term": "attach",
+    "ipa": "/əˈtætʃ/",
+    "meaningKo": "첨부하다",
+    "pos": "동사",
+    "example": "Please attach the signed contract to your reply.",
+    "exampleKo": "답장에 서명한 계약서를 첨부해 주세요.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "submit",
+        "note": "attach는 파일을 메일에 '붙이는' 것, submit은 정식으로 '제출하는' 것이다."
+      },
+      {
+        "id": "enclose",
+        "note": "attach는 이메일 첨부, enclose는 종이 서류를 봉투에 동봉하는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "enclose",
+    "term": "enclose",
+    "ipa": "/ɪnˈkloʊz/",
+    "meaningKo": "(서류를) 동봉하다",
+    "pos": "동사",
+    "example": "We enclose a copy of the invoice for your records.",
+    "exampleKo": "기록용으로 청구서 사본을 동봉합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "attach",
+        "note": "enclose는 우편·봉투, attach는 이메일 파일이다. 이메일에 enclose를 쓰면 어색하다."
+      },
+      {
+        "id": "submit",
+        "note": "enclose는 함께 보내는 것, submit은 제출 절차를 밟는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "confirm",
+    "term": "confirm",
+    "ipa": "/kənˈfɜːrm/",
+    "meaningKo": "확정하다, 확인해 주다",
+    "pos": "동사",
+    "example": "Please confirm the meeting time by end of day.",
+    "exampleKo": "오늘 중으로 회의 시간을 확정해 주세요.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "clarify",
+        "note": "confirm은 '맞다'고 못 박는 것, clarify는 '무슨 뜻인지' 분명히 하는 것이다."
+      },
+      {
+        "id": "approve",
+        "note": "confirm은 사실 확인, approve는 권한을 가진 사람의 승인이다."
+      }
+    ]
+  },
+  {
+    "id": "postpone",
+    "term": "postpone",
+    "ipa": "/poʊstˈpoʊn/",
+    "meaningKo": "연기하다",
+    "pos": "동사",
+    "example": "We had to postpone the launch by two weeks.",
+    "exampleKo": "출시를 2주 연기해야 했습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "reschedule",
+        "note": "postpone은 '뒤로 미루는' 것, reschedule은 날짜를 '다시 잡는' 것이다. 앞당기는 것도 reschedule이다."
+      },
+      {
+        "id": "cancel",
+        "note": "postpone은 나중에 하겠다는 뜻, cancel은 아예 안 하겠다는 뜻이다."
+      }
+    ]
+  },
+  {
+    "id": "cancel",
+    "term": "cancel",
+    "ipa": "/ˈkænsl/",
+    "meaningKo": "취소하다",
+    "pos": "동사",
+    "example": "The client decided to cancel the order.",
+    "exampleKo": "고객이 주문을 취소하기로 했습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "postpone",
+        "note": "cancel은 완전히 없애는 것, postpone은 미루는 것이다."
+      },
+      {
+        "id": "refund",
+        "note": "cancel은 주문 자체를 없애는 것, refund는 이미 낸 돈을 돌려받는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "reschedule",
+    "term": "reschedule",
+    "ipa": "/ˌriːˈskedʒuːl/",
+    "meaningKo": "일정을 다시 잡다",
+    "pos": "동사",
+    "example": "Can we reschedule the call to Thursday morning?",
+    "exampleKo": "통화를 목요일 오전으로 다시 잡을 수 있을까요?",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "postpone",
+        "note": "reschedule은 새 날짜를 정하는 것까지 포함하고, postpone은 미루기만 한다."
+      },
+      {
+        "id": "cancel",
+        "note": "reschedule은 다시 하겠다는 뜻, cancel은 안 하겠다는 뜻이다."
+      }
+    ]
+  },
+  {
+    "id": "attend",
+    "term": "attend",
+    "ipa": "/əˈtend/",
+    "meaningKo": "참석하다",
+    "pos": "동사",
+    "example": "Three people from our team will attend the workshop.",
+    "exampleKo": "우리 팀에서 3명이 워크숍에 참석합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "chair",
+        "note": "attend는 자리에 가는 것, chair는 그 회의를 진행하는 것이다."
+      },
+      {
+        "id": "host",
+        "note": "attend는 참석하는 쪽, host는 주최하는 쪽이다."
+      }
+    ]
+  },
+  {
+    "id": "host",
+    "term": "host",
+    "ipa": "/hoʊst/",
+    "meaningKo": "주최하다",
+    "pos": "동사",
+    "example": "Our office will host the quarterly review this time.",
+    "exampleKo": "이번 분기 리뷰는 우리 사무실에서 주최합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "attend",
+        "note": "host는 여는 쪽, attend는 가는 쪽이다."
+      },
+      {
+        "id": "chair",
+        "note": "host는 행사를 여는 것, chair는 회의를 진행(사회)하는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "chair",
+    "term": "chair",
+    "ipa": "/tʃer/",
+    "meaningKo": "(회의를) 진행하다, 사회를 보다",
+    "pos": "동사",
+    "example": "Sarah will chair the meeting while I am away.",
+    "exampleKo": "제가 없는 동안 사라가 회의를 진행합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "host",
+        "note": "chair는 회의 진행자, host는 자리를 마련한 주최자다."
+      },
+      {
+        "id": "attend",
+        "note": "chair는 진행하는 사람, attend는 그냥 참석하는 사람이다."
+      }
+    ]
+  },
+  {
+    "id": "approve",
+    "term": "approve",
+    "ipa": "/əˈpruːv/",
+    "meaningKo": "승인하다",
+    "pos": "동사",
+    "example": "Finance needs to approve the purchase before we order.",
+    "exampleKo": "주문 전에 재무팀이 구매를 승인해야 합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "confirm",
+        "note": "approve는 권한자의 허가, confirm은 단순 확인이다."
+      },
+      {
+        "id": "review",
+        "note": "approve는 최종 허가를 내주는 것, review는 읽고 검토만 하는 것이다. 검토했다고 승인된 건 아니다."
+      }
+    ]
+  },
+  {
+    "id": "submit",
+    "term": "submit",
+    "ipa": "/səbˈmɪt/",
+    "meaningKo": "제출하다",
+    "pos": "동사",
+    "example": "Please submit your expense report by the fifth.",
+    "exampleKo": "5일까지 경비 보고서를 제출해 주세요.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "attach",
+        "note": "submit은 제출 행위, attach는 파일을 붙이는 동작이다."
+      },
+      {
+        "id": "approve",
+        "note": "submit은 내는 쪽, approve는 받아서 승인하는 쪽이다."
+      }
+    ]
+  },
+  {
+    "id": "draft",
+    "term": "draft",
+    "ipa": "/dræft/",
+    "meaningKo": "초안",
+    "pos": "명사",
+    "example": "I will share a draft of the contract this afternoon.",
+    "exampleKo": "오늘 오후에 계약서 초안을 공유하겠습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "revise",
+        "note": "draft는 아직 다듬지 않은 '초안', revise는 그것을 '고치는' 행위다."
+      },
+      {
+        "id": "proposal",
+        "note": "draft는 완성 전 단계, proposal은 상대에게 내놓는 정식 제안이다."
+      }
+    ]
+  },
+  {
+    "id": "revise",
+    "term": "revise",
+    "ipa": "/rɪˈvaɪz/",
+    "meaningKo": "수정하다, 고치다",
+    "pos": "동사",
+    "example": "We need to revise the numbers before the board meeting.",
+    "exampleKo": "이사회 전에 수치를 수정해야 합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "draft",
+        "note": "revise는 이미 있는 것을 고치는 것, draft는 처음 쓰는 것이다."
+      },
+      {
+        "id": "review",
+        "note": "revise는 실제로 고치는 것, review는 읽고 검토만 하는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "review",
+    "term": "review",
+    "ipa": "/rɪˈvjuː/",
+    "meaningKo": "검토하다",
+    "pos": "동사",
+    "example": "Could you review the slides before I send them out?",
+    "exampleKo": "보내기 전에 슬라이드를 검토해 주시겠어요?",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "revise",
+        "note": "review는 살펴보는 것, revise는 고치는 것이다. 검토했다고 수정한 건 아니다."
+      },
+      {
+        "id": "audit",
+        "note": "review는 일상적인 검토, audit은 공식 감사 절차다."
+      }
+    ]
+  },
+  {
+    "id": "clarify",
+    "term": "clarify",
+    "ipa": "/ˈklerəfaɪ/",
+    "meaningKo": "명확히 하다",
+    "pos": "동사",
+    "example": "Let me clarify what we agreed on last week.",
+    "exampleKo": "지난주에 합의한 내용을 명확히 하겠습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "confirm",
+        "note": "clarify는 애매한 것을 분명하게, confirm은 맞는지 확인하는 것이다."
+      },
+      {
+        "id": "summarize",
+        "note": "clarify는 오해를 푸는 것, summarize는 길게 말한 걸 짧게 줄이는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "summarize",
+    "term": "summarize",
+    "ipa": "/ˈsʌməraɪz/",
+    "meaningKo": "요약하다",
+    "pos": "동사",
+    "example": "Could you summarize the main points in three bullets?",
+    "exampleKo": "핵심을 세 줄로 요약해 주시겠어요?",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "clarify",
+        "note": "summarize는 줄이는 것, clarify는 분명하게 만드는 것이다."
+      },
+      {
+        "id": "recap",
+        "note": "summarize는 내용을 압축하는 행위 전반, recap은 특히 회의 끝에 정리하는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "inquiry",
+    "term": "inquiry",
+    "ipa": "/ˈɪnkwəri/",
+    "meaningKo": "문의",
+    "pos": "명사",
+    "example": "We received an inquiry about bulk pricing.",
+    "exampleKo": "대량 구매 가격에 대한 문의를 받았습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "quote",
+        "note": "inquiry는 고객이 묻는 것, quote는 그에 답해 보내는 견적이다."
+      },
+      {
+        "id": "complaint",
+        "note": "inquiry는 궁금해서 묻는 것, complaint는 불만을 제기하는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "complaint",
+    "term": "complaint",
+    "ipa": "/kəmˈpleɪnt/",
+    "meaningKo": "불만, 항의",
+    "pos": "명사",
+    "example": "Every complaint is logged in the support system.",
+    "exampleKo": "모든 불만은 지원 시스템에 기록됩니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "inquiry",
+        "note": "complaint는 문제 제기, inquiry는 단순 문의다."
+      },
+      {
+        "id": "discrepancy",
+        "note": "complaint는 사람이 제기하는 불만, discrepancy는 숫자·기록의 불일치다."
+      }
+    ]
+  },
+  {
+    "id": "quote",
+    "term": "quote",
+    "ipa": "/kwoʊt/",
+    "meaningKo": "견적(서)",
+    "pos": "명사",
+    "example": "Can you send us a quote by Friday?",
+    "exampleKo": "금요일까지 견적서를 보내 주실 수 있나요?",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "estimate",
+        "note": "quote는 그 가격에 하겠다는 '확정 제시', estimate는 대략 이 정도라는 '추정'이다."
+      },
+      {
+        "id": "invoice",
+        "note": "quote는 계약 전에 제시하는 가격, invoice는 일이 끝난 뒤 보내는 청구서다."
+      }
+    ]
+  },
+  {
+    "id": "estimate",
+    "term": "estimate",
+    "ipa": "/ˈestɪmət/",
+    "meaningKo": "추정치, 견적",
+    "pos": "명사",
+    "example": "This is a rough estimate, not a final price.",
+    "exampleKo": "이건 대략적인 추정치이지 최종 가격이 아닙니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "quote",
+        "note": "estimate는 바뀔 수 있는 추정, quote는 지키기로 한 제시 가격이다."
+      },
+      {
+        "id": "forecast",
+        "note": "estimate는 특정 건의 비용 추정, forecast는 앞으로의 실적 전망이다."
+      }
+    ]
+  },
+  {
+    "id": "shipment",
+    "term": "shipment",
+    "ipa": "/ˈʃɪpmənt/",
+    "meaningKo": "발송, 화물",
+    "pos": "명사",
+    "example": "The shipment will arrive at the warehouse on Monday.",
+    "exampleKo": "화물은 월요일에 창고에 도착합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "delivery",
+        "note": "shipment는 보내는 화물 자체, delivery는 고객 손에 닿는 배송 과정이다."
+      },
+      {
+        "id": "procurement",
+        "note": "shipment는 물건이 오가는 것, procurement는 사들이는 절차 전체다."
+      }
+    ]
+  },
+  {
+    "id": "delivery",
+    "term": "delivery",
+    "ipa": "/dɪˈlɪvəri/",
+    "meaningKo": "배송, 인도",
+    "pos": "명사",
+    "example": "We guarantee delivery within three business days.",
+    "exampleKo": "영업일 기준 3일 내 배송을 보장합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "shipment",
+        "note": "delivery는 도착까지, shipment는 보내는 화물 단위다."
+      },
+      {
+        "id": "deliverable",
+        "note": "delivery는 '배송', deliverable은 프로젝트에서 내놓는 '산출물'이다. 철자가 비슷하지만 전혀 다르다."
+      }
+    ]
+  },
+  {
+    "id": "warranty",
+    "term": "warranty",
+    "ipa": "/ˈwɔːrənti/",
+    "meaningKo": "품질 보증",
+    "pos": "명사",
+    "example": "The equipment comes with a two-year warranty.",
+    "exampleKo": "이 장비에는 2년 품질 보증이 포함됩니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "indemnity",
+        "note": "warranty는 제품이 정상이라는 보증, indemnity는 손해가 나면 물어주겠다는 약속이다."
+      },
+      {
+        "id": "refund",
+        "note": "warranty는 고쳐 주거나 바꿔 주는 것, refund는 돈을 돌려주는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "refund",
+    "term": "refund",
+    "ipa": "/ˈriːfʌnd/",
+    "meaningKo": "환불",
+    "pos": "명사",
+    "example": "The customer requested a full refund.",
+    "exampleKo": "고객이 전액 환불을 요청했습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "reimburse",
+        "note": "refund는 고객에게 돈을 돌려주는 것, reimburse는 직원이 쓴 돈을 회사가 정산해 주는 것이다."
+      },
+      {
+        "id": "discount",
+        "note": "refund는 이미 낸 돈을 돌려주는 것, discount는 낼 돈을 깎아 주는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "discount",
+    "term": "discount",
+    "ipa": "/ˈdɪskaʊnt/",
+    "meaningKo": "할인",
+    "pos": "명사",
+    "example": "We can offer a ten percent discount on bulk orders.",
+    "exampleKo": "대량 주문에는 10% 할인을 드릴 수 있습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "refund",
+        "note": "discount는 살 때 깎는 것, refund는 산 뒤 돌려받는 것이다."
+      },
+      {
+        "id": "margin",
+        "note": "discount를 늘리면 margin(이익률)이 줄어든다. 할인과 이익률은 반대로 움직인다."
+      }
+    ]
+  },
+  {
+    "id": "deposit",
+    "term": "deposit",
+    "ipa": "/dɪˈpɑːzɪt/",
+    "meaningKo": "보증금, 계약금",
+    "pos": "명사",
+    "example": "A thirty percent deposit is required to start production.",
+    "exampleKo": "생산을 시작하려면 30% 계약금이 필요합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "invoice",
+        "note": "deposit은 미리 내는 착수금, invoice는 대금을 청구하는 문서다."
+      },
+      {
+        "id": "expense",
+        "note": "deposit은 돌려받거나 대금에 충당되는 돈, expense는 그냥 나가는 비용이다."
+      }
+    ]
+  },
+  {
+    "id": "expense",
+    "term": "expense",
+    "ipa": "/ɪkˈspens/",
+    "meaningKo": "비용, 경비",
+    "pos": "명사",
+    "example": "Please keep every expense under fifty dollars per meal.",
+    "exampleKo": "식사당 경비를 50달러 이하로 유지해 주세요.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "overhead",
+        "note": "expense는 개별 비용 항목, overhead는 매출과 직접 연결되지 않는 고정 간접비다."
+      },
+      {
+        "id": "reimburse",
+        "note": "expense는 쓴 '돈', reimburse는 그걸 돌려주는 '행위'다."
+      }
+    ]
+  },
+  {
+    "id": "payroll",
+    "term": "payroll",
+    "ipa": "/ˈpeɪroʊl/",
+    "meaningKo": "급여, 급여 대장",
+    "pos": "명사",
+    "example": "Payroll is processed on the twenty-fifth of each month.",
+    "exampleKo": "급여는 매월 25일에 처리됩니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "overhead",
+        "note": "payroll은 인건비 그 자체, overhead는 임대료·관리비 등 간접비 전반이다."
+      },
+      {
+        "id": "expense",
+        "note": "payroll은 정기적으로 나가는 급여, expense는 그때그때 발생하는 경비다."
+      }
+    ]
+  },
+  {
+    "id": "overtime",
+    "term": "overtime",
+    "ipa": "/ˈoʊvərtaɪm/",
+    "meaningKo": "초과 근무",
+    "pos": "명사",
+    "example": "We approved overtime for the release week.",
+    "exampleKo": "출시 주간에는 초과 근무를 승인했습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "payroll",
+        "note": "overtime은 추가로 일한 시간, payroll은 그것까지 포함해 지급되는 급여다."
+      },
+      {
+        "id": "turnover",
+        "note": "overtime이 오래 계속되면 turnover(이직률)가 올라간다. 원인과 결과지 같은 말이 아니다."
+      }
+    ]
+  },
+  {
+    "id": "vacancy",
+    "term": "vacancy",
+    "ipa": "/ˈveɪkənsi/",
+    "meaningKo": "공석, 결원",
+    "pos": "명사",
+    "example": "We have a vacancy in the design team.",
+    "exampleKo": "디자인 팀에 공석이 하나 있습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "attrition",
+        "note": "vacancy는 비어 있는 '자리', attrition은 사람이 빠져나가는 '현상'이다."
+      },
+      {
+        "id": "applicant",
+        "note": "vacancy는 자리, applicant는 그 자리에 지원한 사람이다."
+      }
+    ]
+  },
+  {
+    "id": "applicant",
+    "term": "applicant",
+    "ipa": "/ˈæplɪkənt/",
+    "meaningKo": "지원자",
+    "pos": "명사",
+    "example": "Each applicant will complete a short written task.",
+    "exampleKo": "각 지원자는 짧은 서면 과제를 수행합니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "vacancy",
+        "note": "applicant는 사람, vacancy는 자리다."
+      },
+      {
+        "id": "colleague",
+        "note": "applicant는 아직 밖에 있는 지원자, colleague는 이미 같이 일하는 동료다."
+      }
+    ]
+  },
+  {
+    "id": "colleague",
+    "term": "colleague",
+    "ipa": "/ˈkɑːliːɡ/",
+    "meaningKo": "동료",
+    "pos": "명사",
+    "example": "I will introduce you to a colleague who handles logistics.",
+    "exampleKo": "물류를 담당하는 동료를 소개해 드리겠습니다.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "supervisor",
+        "note": "colleague는 같은 위치의 동료, supervisor는 관리하는 상사다."
+      },
+      {
+        "id": "stakeholder",
+        "note": "colleague는 같은 조직의 동료, stakeholder는 조직 밖까지 포함한 이해관계자다."
+      }
+    ]
+  },
+  {
+    "id": "supervisor",
+    "term": "supervisor",
+    "ipa": "/ˈsuːpərvaɪzər/",
+    "meaningKo": "상사, 관리자",
+    "pos": "명사",
+    "example": "Check with your supervisor before you approve it.",
+    "exampleKo": "승인하기 전에 상사에게 확인하세요.",
+    "level": 1,
+    "confusions": [
+      {
+        "id": "colleague",
+        "note": "supervisor는 결재 권한이 있는 상급자, colleague는 동등한 동료다."
+      },
+      {
+        "id": "delegate",
+        "note": "supervisor는 사람, delegate는 업무를 넘기는 행위(동사)다."
+      }
+    ]
+  },
+  {
+    "id": "proposal",
+    "term": "proposal",
+    "ipa": "/prəˈpoʊzl/",
+    "meaningKo": "제안서",
+    "pos": "명사",
+    "example": "Our proposal covers both design and implementation.",
+    "exampleKo": "우리 제안서는 설계와 구현을 모두 다룹니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "agenda",
+        "note": "proposal은 승인받으려는 제안 내용, agenda는 회의에서 다룰 항목 목록이다."
+      },
+      {
+        "id": "draft",
+        "note": "proposal은 상대에게 내는 정식 문서, draft는 그 전 단계의 초안이다."
+      }
+    ]
+  },
+  {
+    "id": "objective",
+    "term": "objective",
+    "ipa": "/əbˈdʒektɪv/",
+    "meaningKo": "목표",
+    "pos": "명사",
+    "example": "The objective is to cut response time in half.",
+    "exampleKo": "목표는 응대 시간을 절반으로 줄이는 것입니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "milestone",
+        "note": "objective는 '무엇을 이루려는가', milestone은 '언제 어디까지 왔는가'다."
+      },
+      {
+        "id": "scope",
+        "note": "objective는 목표, scope는 그 목표를 위해 어디까지 할지 정한 범위다."
+      }
+    ]
+  },
+  {
+    "id": "scope",
+    "term": "scope",
+    "ipa": "/skoʊp/",
+    "meaningKo": "(업무) 범위",
+    "pos": "명사",
+    "example": "Adding a mobile app is outside the scope of this contract.",
+    "exampleKo": "모바일 앱 추가는 이 계약 범위 밖입니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "objective",
+        "note": "scope는 '어디까지 하느냐', objective는 '무엇을 이루느냐'다."
+      },
+      {
+        "id": "timeline",
+        "note": "scope는 일의 범위, timeline은 그 일의 일정이다. 범위가 늘면 일정도 늘어난다."
+      }
+    ]
+  },
+  {
+    "id": "timeline",
+    "term": "timeline",
+    "ipa": "/ˈtaɪmlaɪn/",
+    "meaningKo": "일정, 일정표",
+    "pos": "명사",
+    "example": "Can you share the timeline for the next two quarters?",
+    "exampleKo": "다음 두 분기 일정을 공유해 주시겠어요?",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "deadline",
+        "note": "timeline은 전체 일정, deadline은 그중 한 마감 시점이다."
+      },
+      {
+        "id": "scope",
+        "note": "timeline은 언제까지, scope는 어디까지다."
+      }
+    ]
+  },
+  {
+    "id": "bottleneck",
+    "term": "bottleneck",
+    "ipa": "/ˈbɑːtlnek/",
+    "meaningKo": "병목(구간)",
+    "pos": "명사",
+    "example": "Legal review has become the main bottleneck.",
+    "exampleKo": "법무 검토가 주된 병목이 됐습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "blocker",
+        "note": "bottleneck은 속도를 늦추는 좁은 구간, blocker는 아예 진행을 막는 것이다."
+      },
+      {
+        "id": "streamline",
+        "note": "bottleneck은 문제, streamline은 그 문제를 푸는 방법이다."
+      }
+    ]
+  },
+  {
+    "id": "blocker",
+    "term": "blocker",
+    "ipa": "/ˈblɑːkər/",
+    "meaningKo": "(진행을 막는) 장애 요소",
+    "pos": "명사",
+    "example": "The missing API key is a blocker for the whole team.",
+    "exampleKo": "API 키 누락이 팀 전체의 장애 요소입니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "bottleneck",
+        "note": "blocker는 완전히 멈추게 하는 것, bottleneck은 느리게 만드는 것이다."
+      },
+      {
+        "id": "contingency",
+        "note": "blocker는 이미 터진 문제, contingency는 아직 안 터진 일에 대한 대비다."
+      }
+    ]
+  },
+  {
+    "id": "workflow",
+    "term": "workflow",
+    "ipa": "/ˈwɜːrkfloʊ/",
+    "meaningKo": "업무 흐름, 처리 절차",
+    "pos": "명사",
+    "example": "The new workflow removes two approval steps.",
+    "exampleKo": "새 업무 흐름은 승인 단계를 두 개 줄입니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "streamline",
+        "note": "workflow는 절차 그 자체, streamline은 그 절차를 간소화하는 행위다."
+      },
+      {
+        "id": "pipeline",
+        "note": "workflow는 일이 처리되는 순서, pipeline은 진행 중인 건들의 목록이다."
+      }
+    ]
+  },
+  {
+    "id": "pipeline",
+    "term": "pipeline",
+    "ipa": "/ˈpaɪplaɪn/",
+    "meaningKo": "진행 중인 건, 파이프라인",
+    "pos": "명사",
+    "example": "We have four deals in the pipeline this quarter.",
+    "exampleKo": "이번 분기에 진행 중인 건이 4건 있습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "workflow",
+        "note": "pipeline은 '무엇이 얼마나 있는가', workflow는 '어떤 순서로 처리하는가'다."
+      },
+      {
+        "id": "forecast",
+        "note": "pipeline은 지금 손에 있는 건들, forecast는 그로부터 예측한 실적이다."
+      }
+    ]
+  },
+  {
+    "id": "feedback",
+    "term": "feedback",
+    "ipa": "/ˈfiːdbæk/",
+    "meaningKo": "의견, 피드백",
+    "pos": "명사",
+    "example": "We collected feedback from twelve customers.",
+    "exampleKo": "고객 12명에게서 의견을 수집했습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "review",
+        "note": "feedback은 받은 의견, review는 검토하는 행위다."
+      },
+      {
+        "id": "recap",
+        "note": "feedback은 남이 준 의견, recap은 내가 정리한 요약이다."
+      }
+    ]
+  },
+  {
+    "id": "recap",
+    "term": "recap",
+    "ipa": "/ˈriːkæp/",
+    "meaningKo": "(회의 후) 요약 정리",
+    "pos": "명사",
+    "example": "I will send a recap with the action items tonight.",
+    "exampleKo": "오늘 밤에 실행 항목을 담은 요약을 보내겠습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "agenda",
+        "note": "recap은 회의 뒤 정리, agenda는 회의 전 안건이다."
+      },
+      {
+        "id": "summarize",
+        "note": "recap은 명사(요약본), summarize는 동사(요약하다)다."
+      }
+    ]
+  },
+  {
+    "id": "alignment",
+    "term": "alignment",
+    "ipa": "/əˈlaɪnmənt/",
+    "meaningKo": "방향 합의, 정렬",
+    "pos": "명사",
+    "example": "We need alignment on pricing before we talk to the client.",
+    "exampleKo": "고객과 얘기하기 전에 가격에 대한 합의가 필요합니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "consensus",
+        "note": "alignment는 방향이 같아진 상태, consensus는 모두가 동의한 결론이다. 합의 없이도 정렬은 가능하다."
+      },
+      {
+        "id": "compliance",
+        "note": "alignment는 내부 의견 일치, compliance는 외부 규정 준수다."
+      }
+    ]
+  },
+  {
+    "id": "consensus",
+    "term": "consensus",
+    "ipa": "/kənˈsensəs/",
+    "meaningKo": "합의",
+    "pos": "명사",
+    "example": "We reached consensus after two rounds of discussion.",
+    "exampleKo": "두 차례 논의 끝에 합의에 도달했습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "alignment",
+        "note": "consensus는 전원이 받아들인 결론, alignment는 방향만 맞춘 상태다."
+      },
+      {
+        "id": "concession",
+        "note": "consensus는 서로 도달한 결론, concession은 한쪽이 양보한 것이다."
+      }
+    ]
+  },
+  {
+    "id": "initiative",
+    "term": "initiative",
+    "ipa": "/ɪˈnɪʃətɪv/",
+    "meaningKo": "(새) 추진 과제",
+    "pos": "명사",
+    "example": "This initiative aims to reduce onboarding time.",
+    "exampleKo": "이 과제의 목표는 온보딩 시간 단축입니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "milestone",
+        "note": "initiative는 추진하는 '일 자체', milestone은 그 일의 '중간 지점'이다."
+      },
+      {
+        "id": "objective",
+        "note": "initiative는 무엇을 하는가, objective는 그것으로 무엇을 이루려는가다."
+      }
+    ]
+  },
+  {
+    "id": "deploy",
+    "term": "deploy",
+    "ipa": "/dɪˈplɔɪ/",
+    "meaningKo": "배포하다, 투입하다",
+    "pos": "동사",
+    "example": "We will deploy the update on Thursday night.",
+    "exampleKo": "목요일 밤에 업데이트를 배포합니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "implement",
+        "note": "deploy는 만든 것을 실제 환경에 '내보내는' 것, implement는 계획을 '실행에 옮기는' 것이다."
+      },
+      {
+        "id": "rollout",
+        "note": "deploy는 배포 행위(동사), rollout은 단계적 출시 계획(명사)이다."
+      }
+    ]
+  },
+  {
+    "id": "rollout",
+    "term": "rollout",
+    "ipa": "/ˈroʊlaʊt/",
+    "meaningKo": "단계적 출시",
+    "pos": "명사",
+    "example": "The rollout will start with two pilot offices.",
+    "exampleKo": "출시는 시범 사무소 두 곳에서 시작합니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "deploy",
+        "note": "rollout은 여러 단계에 걸친 계획, deploy는 한 번의 배포 동작이다."
+      },
+      {
+        "id": "milestone",
+        "note": "rollout은 진행 과정, milestone은 그 과정의 특정 시점이다."
+      }
+    ]
+  },
+  {
+    "id": "implement",
+    "term": "implement",
+    "ipa": "/ˈɪmplɪment/",
+    "meaningKo": "실행하다, 도입하다",
+    "pos": "동사",
+    "example": "It will take a month to implement the new policy.",
+    "exampleKo": "새 정책을 도입하는 데 한 달이 걸립니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "deploy",
+        "note": "implement는 제도·정책까지 포함한 실행, deploy는 주로 시스템을 내보내는 것이다."
+      },
+      {
+        "id": "execute",
+        "note": "implement는 계획을 현실로 만드는 것, execute는 정해진 것을 그대로 수행하는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "execute",
+    "term": "execute",
+    "ipa": "/ˈeksɪkjuːt/",
+    "meaningKo": "(계획을) 수행하다",
+    "pos": "동사",
+    "example": "The team can execute the plan without extra headcount.",
+    "exampleKo": "팀은 인원 추가 없이 계획을 수행할 수 있습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "implement",
+        "note": "execute는 이미 정해진 계획을 그대로 해내는 것, implement는 새로 도입하는 것이다."
+      },
+      {
+        "id": "delegate",
+        "note": "execute는 직접 해내는 것, delegate는 남에게 맡기는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "outsource",
+    "term": "outsource",
+    "ipa": "/ˈaʊtsɔːrs/",
+    "meaningKo": "외주를 주다",
+    "pos": "동사",
+    "example": "We decided to outsource the translation work.",
+    "exampleKo": "번역 작업을 외주로 돌리기로 했습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "delegate",
+        "note": "outsource는 회사 '밖'에 맡기는 것, delegate는 회사 '안'에서 넘기는 것이다."
+      },
+      {
+        "id": "procurement",
+        "note": "outsource는 일을 맡기는 행위, procurement는 물건·서비스를 사들이는 절차다."
+      }
+    ]
+  },
+  {
+    "id": "vendor",
+    "term": "vendor",
+    "ipa": "/ˈvendər/",
+    "meaningKo": "협력업체, 공급사",
+    "pos": "명사",
+    "example": "The vendor missed the delivery date twice this quarter.",
+    "exampleKo": "그 협력업체는 이번 분기에 납기를 두 번 놓쳤습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "stakeholder",
+        "note": "vendor는 돈을 받고 납품하는 외부 업체, stakeholder는 이해관계를 가진 모든 관계자다."
+      },
+      {
+        "id": "procurement",
+        "note": "vendor는 상대 업체, procurement는 그 업체를 고르고 계약하는 절차다."
+      }
+    ]
+  },
+  {
+    "id": "negotiate",
+    "term": "negotiate",
+    "ipa": "/nɪˈɡoʊʃieɪt/",
+    "meaningKo": "협상하다",
+    "pos": "동사",
+    "example": "We will negotiate the payment terms next week.",
+    "exampleKo": "다음 주에 지급 조건을 협상할 예정입니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "concession",
+        "note": "negotiate는 협상하는 과정, concession은 그 과정에서 내주는 양보다."
+      },
+      {
+        "id": "consensus",
+        "note": "negotiate는 밀고 당기는 과정, consensus는 그 끝에 나온 합의다."
+      }
+    ]
+  },
+  {
+    "id": "concession",
+    "term": "concession",
+    "ipa": "/kənˈseʃn/",
+    "meaningKo": "양보",
+    "pos": "명사",
+    "example": "We made one concession on delivery time to close the deal.",
+    "exampleKo": "계약을 성사시키려고 납기에서 한 가지 양보를 했습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "negotiate",
+        "note": "concession은 협상에서 내준 것, negotiate는 협상하는 행위다."
+      },
+      {
+        "id": "consensus",
+        "note": "concession은 한쪽이 물러선 것, consensus는 양쪽이 도달한 결론이다."
+      }
+    ]
+  },
+  {
+    "id": "headcount",
+    "term": "headcount",
+    "ipa": "/ˈhedkaʊnt/",
+    "meaningKo": "인원(수)",
+    "pos": "명사",
+    "example": "We cannot take on more projects without additional headcount.",
+    "exampleKo": "인원 추가 없이는 프로젝트를 더 맡을 수 없습니다.",
+    "level": 2,
+    "confusions": [
+      {
+        "id": "payroll",
+        "note": "headcount는 사람 수, payroll은 그들에게 나가는 급여다."
+      },
+      {
+        "id": "vacancy",
+        "note": "headcount는 승인된 총 인원, vacancy는 그중 아직 못 채운 자리다."
+      }
+    ]
+  },
+  {
+    "id": "revenue",
+    "term": "revenue",
+    "ipa": "/ˈrevənuː/",
+    "meaningKo": "매출",
+    "pos": "명사",
+    "example": "Revenue grew twelve percent year over year.",
+    "exampleKo": "매출이 전년 대비 12% 성장했습니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "margin",
+        "note": "revenue는 들어온 돈의 '규모', margin은 거기서 남는 '비율'이다. 매출이 늘어도 마진은 줄 수 있다."
+      },
+      {
+        "id": "profitability",
+        "note": "revenue는 매출 금액, profitability는 실제로 이익을 내는 능력이다."
+      }
+    ]
+  },
+  {
+    "id": "profitability",
+    "term": "profitability",
+    "ipa": "/ˌprɑːfɪtəˈbɪləti/",
+    "meaningKo": "수익성",
+    "pos": "명사",
+    "example": "The new product line improved profitability last quarter.",
+    "exampleKo": "신규 제품군이 지난 분기 수익성을 개선했습니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "revenue",
+        "note": "profitability는 얼마나 남기느냐, revenue는 얼마나 파느냐다."
+      },
+      {
+        "id": "margin",
+        "note": "profitability는 수익을 내는 능력 전반, margin은 그것을 나타내는 구체적 비율이다."
+      }
+    ]
+  },
+  {
+    "id": "equity",
+    "term": "equity",
+    "ipa": "/ˈekwəti/",
+    "meaningKo": "자기자본, 지분",
+    "pos": "명사",
+    "example": "The founders still hold sixty percent of the equity.",
+    "exampleKo": "창업자들이 여전히 지분 60%를 보유하고 있습니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "liability",
+        "note": "equity는 주주 몫, liability는 갚아야 할 빚이다. 자산에서 부채를 빼면 자기자본이 된다."
+      },
+      {
+        "id": "dividend",
+        "note": "equity는 보유한 지분, dividend는 그 지분에 따라 받는 배당금이다."
+      }
+    ]
+  },
+  {
+    "id": "dividend",
+    "term": "dividend",
+    "ipa": "/ˈdɪvɪdend/",
+    "meaningKo": "배당금",
+    "pos": "명사",
+    "example": "The board approved a quarterly dividend of fifty cents.",
+    "exampleKo": "이사회가 분기 배당금 50센트를 승인했습니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "equity",
+        "note": "dividend는 나눠 주는 돈, equity는 그 근거가 되는 지분이다."
+      },
+      {
+        "id": "revenue",
+        "note": "dividend는 이익에서 주주에게 나가는 돈, revenue는 회사로 들어오는 매출이다."
+      }
+    ]
+  },
+  {
+    "id": "valuation",
+    "term": "valuation",
+    "ipa": "/ˌvæljuˈeɪʃn/",
+    "meaningKo": "기업 가치 평가(액)",
+    "pos": "명사",
+    "example": "The valuation dropped after the funding round.",
+    "exampleKo": "투자 라운드 이후 기업 가치가 떨어졌습니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "benchmark",
+        "note": "valuation은 이 회사가 얼마짜리인가, benchmark는 남과 비교하는 기준치다."
+      },
+      {
+        "id": "equity",
+        "note": "valuation은 회사 전체의 값, equity는 그중 누가 얼마를 갖는지다."
+      }
+    ]
+  },
+  {
+    "id": "depreciation",
+    "term": "depreciation",
+    "ipa": "/dɪˌpriːʃiˈeɪʃn/",
+    "meaningKo": "감가상각",
+    "pos": "명사",
+    "example": "Depreciation on the equipment runs over five years.",
+    "exampleKo": "장비 감가상각은 5년에 걸쳐 이뤄집니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "overhead",
+        "note": "depreciation은 자산 가치가 줄어드는 회계 처리, overhead는 실제로 나가는 간접비다."
+      },
+      {
+        "id": "expense",
+        "note": "depreciation은 돈이 실제로 나가지 않는 비용 처리, expense는 실제 지출이다."
+      }
+    ]
+  },
+  {
+    "id": "merger",
+    "term": "merger",
+    "ipa": "/ˈmɜːrdʒər/",
+    "meaningKo": "합병",
+    "pos": "명사",
+    "example": "The merger will create the second largest player in the market.",
+    "exampleKo": "이 합병으로 시장 2위 사업자가 탄생합니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "acquisition",
+        "note": "merger는 두 회사가 하나로 합치는 것, acquisition은 한 회사가 다른 회사를 사들이는 것이다."
+      },
+      {
+        "id": "consolidate",
+        "note": "merger는 회사 간 합병(명사), consolidate는 조직·계정을 통합하는 행위(동사)다."
+      }
+    ]
+  },
+  {
+    "id": "acquisition",
+    "term": "acquisition",
+    "ipa": "/ˌækwɪˈzɪʃn/",
+    "meaningKo": "인수",
+    "pos": "명사",
+    "example": "The acquisition closed after six months of due diligence.",
+    "exampleKo": "6개월간의 실사 끝에 인수가 마무리됐습니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "merger",
+        "note": "acquisition은 사는 쪽과 팔리는 쪽이 명확하고, merger는 대등하게 합치는 형태다."
+      },
+      {
+        "id": "procurement",
+        "note": "acquisition은 회사를 사는 것, procurement는 물건·서비스를 사는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "diligence",
+    "term": "due diligence",
+    "ipa": "/ˌduː ˈdɪlɪdʒəns/",
+    "meaningKo": "실사, 사전 정밀 조사",
+    "pos": "명사",
+    "example": "We are running due diligence on the target company.",
+    "exampleKo": "인수 대상 회사에 대해 실사를 진행 중입니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "audit",
+        "note": "due diligence는 거래 전에 상대를 조사하는 것, audit은 이미 있는 기록을 검사하는 것이다."
+      },
+      {
+        "id": "acquisition",
+        "note": "due diligence는 인수 전 조사 단계, acquisition은 그 결과 이뤄지는 거래다."
+      }
+    ]
+  },
+  {
+    "id": "breach",
+    "term": "breach",
+    "ipa": "/briːtʃ/",
+    "meaningKo": "(계약·규정) 위반",
+    "pos": "명사",
+    "example": "Late payment is a breach of the agreement.",
+    "exampleKo": "지급 지연은 계약 위반에 해당합니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "compliance",
+        "note": "breach는 규정을 어긴 상태, compliance는 지킨 상태다. 정확히 반대다."
+      },
+      {
+        "id": "discrepancy",
+        "note": "breach는 약속을 어긴 것, discrepancy는 숫자·기록이 안 맞는 것이다."
+      }
+    ]
+  },
+  {
+    "id": "clause",
+    "term": "clause",
+    "ipa": "/klɔːz/",
+    "meaningKo": "(계약) 조항",
+    "pos": "명사",
+    "example": "The confidentiality clause applies for three years.",
+    "exampleKo": "비밀유지 조항은 3년간 적용됩니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "breach",
+        "note": "clause는 계약에 적힌 조항, breach는 그 조항을 어긴 행위다."
+      },
+      {
+        "id": "contingency",
+        "note": "clause는 계약서의 한 항목, contingency는 만일에 대비한 예비책이다."
+      }
+    ]
+  },
+  {
+    "id": "jurisdiction",
+    "term": "jurisdiction",
+    "ipa": "/ˌdʒʊrɪsˈdɪkʃn/",
+    "meaningKo": "관할권",
+    "pos": "명사",
+    "example": "Any dispute falls under the jurisdiction of Seoul courts.",
+    "exampleKo": "분쟁은 서울 법원의 관할에 속합니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "arbitration",
+        "note": "jurisdiction은 어느 법원이 다루느냐, arbitration은 법원 대신 중재로 푸는 방식이다."
+      },
+      {
+        "id": "compliance",
+        "note": "jurisdiction은 어느 법이 적용되는가, compliance는 그 법을 지키고 있는가다."
+      }
+    ]
+  },
+  {
+    "id": "arbitration",
+    "term": "arbitration",
+    "ipa": "/ˌɑːrbɪˈtreɪʃn/",
+    "meaningKo": "중재",
+    "pos": "명사",
+    "example": "The contract requires arbitration instead of litigation.",
+    "exampleKo": "계약상 소송 대신 중재를 거치도록 돼 있습니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "jurisdiction",
+        "note": "arbitration은 분쟁 해결 방식, jurisdiction은 어느 법원이 권한을 갖느냐다."
+      },
+      {
+        "id": "audit",
+        "note": "arbitration은 분쟁을 판단하는 절차, audit은 기록을 검사하는 절차다."
+      }
+    ]
+  },
+  {
+    "id": "indemnity",
+    "term": "indemnity",
+    "ipa": "/ɪnˈdemnəti/",
+    "meaningKo": "면책, 손해 배상 약정",
+    "pos": "명사",
+    "example": "The vendor agreed to an indemnity for data breaches.",
+    "exampleKo": "협력사가 데이터 유출에 대한 배상 약정에 동의했습니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "warranty",
+        "note": "indemnity는 손해가 나면 물어주겠다는 약속, warranty는 제품이 정상이라는 보증이다."
+      },
+      {
+        "id": "liability",
+        "note": "indemnity는 책임을 누가 지는지 정한 약정, liability는 그 책임 자체다."
+      }
+    ]
+  },
+  {
+    "id": "solvency",
+    "term": "solvency",
+    "ipa": "/ˈsɑːlvənsi/",
+    "meaningKo": "지급 능력, 재무 건전성",
+    "pos": "명사",
+    "example": "The bank questioned the solvency of the supplier.",
+    "exampleKo": "은행이 그 공급사의 지급 능력을 문제 삼았습니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "liquidity",
+        "note": "solvency는 장기적으로 빚을 갚을 수 있느냐, liquidity는 당장 현금이 있느냐다."
+      },
+      {
+        "id": "liability",
+        "note": "solvency는 갚을 능력, liability는 갚아야 할 빚이다."
+      }
+    ]
+  },
+  {
+    "id": "liquidity",
+    "term": "liquidity",
+    "ipa": "/lɪˈkwɪdəti/",
+    "meaningKo": "유동성, 현금 동원력",
+    "pos": "명사",
+    "example": "We need more liquidity to cover the next two quarters.",
+    "exampleKo": "다음 두 분기를 버티려면 유동성이 더 필요합니다.",
+    "level": 3,
+    "confusions": [
+      {
+        "id": "solvency",
+        "note": "liquidity는 지금 당장 쓸 현금, solvency는 장기적인 상환 능력이다. 흑자여도 유동성이 마르면 망한다."
+      },
+      {
+        "id": "equity",
+        "note": "liquidity는 현금 사정, equity는 소유 지분이다."
+      }
+    ]
+  }
+];
+const GRAMMAR = [
+  {
+    "id": "g101",
+    "level": 1,
+    "topic": "전치사",
+    "sentence": "Please submit the report ___ Friday.",
+    "answer": "by",
+    "options": [
+      "until",
+      "since",
+      "during",
+      "by"
+    ],
+    "ko": "금요일까지 보고서를 제출해 주세요.",
+    "tip": "by = 그 시점까지 '완료'. until = 그 시점까지 '계속'.",
+    "notes": {
+      "until": "until은 상태가 그때까지 이어질 때 쓴다. 제출은 한 번에 끝나는 동작이라 by를 쓴다. '금요일까지 계속 제출한다'는 뜻이 돼 버린다.",
+      "since": "since는 '~이후로'라는 과거 시작점을 가리킨다. 미래 기한에는 쓸 수 없다.",
+      "during": "during 뒤에는 기간을 나타내는 명사(during the week)가 온다. 특정 요일 하나에는 쓰지 않는다."
+    },
+    "full": "Please submit the report by Friday."
+  },
+  {
+    "id": "g102",
+    "level": 1,
+    "topic": "관사",
+    "sentence": "I attached ___ file you asked for yesterday.",
+    "answer": "the",
+    "options": [
+      "a",
+      "an",
+      "some",
+      "the"
+    ],
+    "ko": "어제 요청하신 파일을 첨부했습니다.",
+    "tip": "상대가 이미 아는 특정한 것에는 the를 쓴다.",
+    "notes": {
+      "a": "a는 여러 개 중 아무거나 하나일 때 쓴다. 상대가 콕 집어 요청한 파일이므로 특정된 것이다.",
+      "an": "an은 모음 소리 앞에 붙는 a의 형태다. file은 자음 소리로 시작하고, 애초에 특정된 것이라 the가 맞다.",
+      "some": "some은 복수나 불가산 명사에 쓴다. 단수 file 하나를 가리킬 때는 맞지 않는다."
+    },
+    "full": "I attached the file you asked for yesterday."
+  },
+  {
+    "id": "g103",
+    "level": 1,
+    "topic": "시제",
+    "sentence": "I ___ the invoice to accounting yesterday.",
+    "answer": "sent",
+    "options": [
+      "send",
+      "have sent",
+      "will send",
+      "sent"
+    ],
+    "ko": "어제 청구서를 회계팀에 보냈습니다.",
+    "tip": "yesterday처럼 끝난 시점이 있으면 단순 과거를 쓴다.",
+    "notes": {
+      "send": "현재형은 습관이나 일반적 사실에 쓴다. yesterday와 함께 쓸 수 없다.",
+      "have sent": "현재완료는 '언제'를 명시하는 표현과 함께 쓰지 못한다. yesterday가 있으면 과거형이다.",
+      "will send": "will은 미래다. yesterday와 정면으로 충돌한다."
+    },
+    "full": "I sent the invoice to accounting yesterday."
+  },
+  {
+    "id": "g104",
+    "level": 1,
+    "topic": "현재완료",
+    "sentence": "I ___ the client three times this week.",
+    "answer": "have called",
+    "options": [
+      "called",
+      "call",
+      "am calling",
+      "have called"
+    ],
+    "ko": "이번 주에 고객에게 세 번 전화했습니다.",
+    "tip": "this week처럼 '아직 끝나지 않은 기간'에는 현재완료를 쓴다.",
+    "notes": {
+      "called": "단순 과거는 끝난 기간에 쓴다. this week은 아직 진행 중이라 현재완료가 자연스럽다.",
+      "call": "현재형은 반복되는 습관을 뜻한다. 이번 주에 일어난 구체적 횟수에는 맞지 않는다.",
+      "am calling": "현재진행은 지금 통화 중이라는 뜻이다. 세 번이라는 횟수와 어울리지 않는다."
+    },
+    "full": "I have called the client three times this week."
+  },
+  {
+    "id": "g105",
+    "level": 1,
+    "topic": "조동사",
+    "sentence": "___ you send me the updated file, please?",
+    "answer": "Could",
+    "options": [
+      "Must",
+      "Should",
+      "Do you can",
+      "Could"
+    ],
+    "ko": "수정된 파일을 보내 주실 수 있을까요?",
+    "tip": "부탁할 때는 Could you / Would you가 가장 무난하다.",
+    "notes": {
+      "Must": "must는 의무를 강제하는 표현이다. 부탁이 아니라 명령이 된다.",
+      "Should": "Should you ~는 부탁이 아니라 조건('만약 ~한다면')을 뜻하는 딱딱한 표현이다.",
+      "Do you can": "조동사 can은 do와 같이 쓰지 않는다. 문법적으로 성립하지 않는 형태다."
+    },
+    "full": "Could you send me the updated file, please?"
+  },
+  {
+    "id": "g106",
+    "level": 1,
+    "topic": "부정사/동명사",
+    "sentence": "We decided ___ the launch until next month.",
+    "answer": "to postpone",
+    "options": [
+      "postponing",
+      "postpone",
+      "postponed",
+      "to postpone"
+    ],
+    "ko": "출시를 다음 달로 미루기로 결정했습니다.",
+    "tip": "decide 뒤에는 to부정사가 온다.",
+    "notes": {
+      "postponing": "decide는 동명사를 목적어로 받지 않는다. consider, avoid, suggest가 동명사를 받는 대표 동사다.",
+      "postpone": "동사 원형이 그대로 올 수 없다. decide와 다음 동사를 to가 이어 준다.",
+      "postponed": "과거형은 목적어 자리에 올 수 없다."
+    },
+    "full": "We decided to postpone the launch until next month."
+  },
+  {
+    "id": "g107",
+    "level": 1,
+    "topic": "동명사",
+    "sentence": "I look forward to ___ from you soon.",
+    "answer": "hearing",
+    "options": [
+      "hear",
+      "to hear",
+      "heard",
+      "hearing"
+    ],
+    "ko": "곧 연락 주시기를 기다리겠습니다.",
+    "tip": "look forward to의 to는 부정사가 아니라 전치사다. 뒤에 -ing가 온다.",
+    "notes": {
+      "hear": "전치사 to 뒤에는 동사 원형이 올 수 없다. 한국어 화자가 가장 자주 틀리는 지점이다.",
+      "to hear": "to가 두 번 나온다. 이미 있는 to가 전치사이므로 하나면 된다.",
+      "heard": "과거형은 전치사 뒤에 올 수 없다. to 뒤에는 명사 아니면 동명사(-ing)만 온다."
+    },
+    "full": "I look forward to hearing from you soon."
+  },
+  {
+    "id": "g108",
+    "level": 1,
+    "topic": "수 일치",
+    "sentence": "The team ___ working on the fix right now.",
+    "answer": "is",
+    "options": [
+      "are",
+      "were",
+      "be",
+      "is"
+    ],
+    "ko": "팀이 지금 수정 작업을 하고 있습니다.",
+    "tip": "미국 영어에서 team, staff 같은 집합명사는 하나의 단위로 보아 단수 취급한다.",
+    "notes": {
+      "are": "영국 영어에서는 가능하지만 미국식 비즈니스 문서에서는 is가 표준이다.",
+      "were": "과거형이라 right now와 맞지 않는다.",
+      "be": "원형은 주어 뒤에 바로 올 수 없다."
+    },
+    "full": "The team is working on the fix right now."
+  },
+  {
+    "id": "g109",
+    "level": 1,
+    "topic": "불가산명사",
+    "sentence": "We need more ___ about the delivery schedule.",
+    "answer": "information",
+    "options": [
+      "informations",
+      "an information",
+      "informative",
+      "information"
+    ],
+    "ko": "배송 일정에 대한 정보가 더 필요합니다.",
+    "tip": "information은 셀 수 없는 명사다. 복수형도 부정관사도 붙지 않는다.",
+    "notes": {
+      "informations": "information은 복수형이 없다. 개수를 세려면 pieces of information이라고 한다.",
+      "an information": "불가산명사에는 a/an을 붙이지 않는다.",
+      "informative": "informative는 '유익한'이라는 형용사다. more 뒤에 명사가 와야 한다."
+    },
+    "full": "We need more information about the delivery schedule."
+  },
+  {
+    "id": "g110",
+    "level": 1,
+    "topic": "수동태",
+    "sentence": "The contract ___ to the client last Friday.",
+    "answer": "was sent",
+    "options": [
+      "sent",
+      "is sent",
+      "has sent",
+      "was sent"
+    ],
+    "ko": "계약서는 지난 금요일에 고객에게 발송됐습니다.",
+    "tip": "계약서는 보내지는 대상이므로 수동태를 쓴다.",
+    "notes": {
+      "sent": "능동형이라 '계약서가 무언가를 보냈다'는 뜻이 된다.",
+      "is sent": "현재형이라 last Friday와 시제가 맞지 않는다.",
+      "has sent": "능동 현재완료다. 계약서가 보낸 주체가 되어 버린다."
+    },
+    "full": "The contract was sent to the client last Friday."
+  },
+  {
+    "id": "g111",
+    "level": 1,
+    "topic": "비교급",
+    "sentence": "This vendor is ___ than the one we used last year.",
+    "answer": "cheaper",
+    "options": [
+      "more cheap",
+      "cheapest",
+      "cheap",
+      "cheaper"
+    ],
+    "ko": "이 업체가 작년에 쓴 곳보다 저렴합니다.",
+    "tip": "짧은 형용사는 -er을 붙여 비교급을 만든다.",
+    "notes": {
+      "more cheap": "1음절 형용사에는 more를 쓰지 않는다. cheaper가 맞다.",
+      "cheapest": "최상급은 than과 함께 쓸 수 없다.",
+      "cheap": "원급은 than과 어울리지 않는다. as cheap as라면 가능하다."
+    },
+    "full": "This vendor is cheaper than the one we used last year."
+  },
+  {
+    "id": "g112",
+    "level": 1,
+    "topic": "전치사",
+    "sentence": "The kickoff meeting is ___ Monday at ten.",
+    "answer": "on",
+    "options": [
+      "in",
+      "at",
+      "during",
+      "on"
+    ],
+    "ko": "착수 회의는 월요일 10시입니다.",
+    "tip": "요일 앞에는 on, 시각 앞에는 at, 월·연도 앞에는 in.",
+    "notes": {
+      "in": "in은 월(in May)이나 연도(in 2026) 같은 긴 기간에 쓴다.",
+      "at": "at은 시각(at ten)이나 지점에 쓴다. 요일에는 쓰지 않는다.",
+      "during": "during 뒤에는 기간 명사가 온다. 특정 요일 하나에는 어색하다."
+    },
+    "full": "The kickoff meeting is on Monday at ten."
+  },
+  {
+    "id": "g201",
+    "level": 2,
+    "topic": "관계사",
+    "sentence": "The report ___ I sent you covers the second quarter.",
+    "answer": "that",
+    "options": [
+      "what",
+      "which it",
+      "who",
+      "that"
+    ],
+    "ko": "제가 보내 드린 보고서는 2분기를 다룹니다.",
+    "tip": "선행사가 사물이면 that 또는 which를 쓴다.",
+    "notes": {
+      "what": "what은 선행사를 포함한다. 앞에 report가 이미 있으므로 중복된다.",
+      "which it": "관계사 뒤에 목적어 it을 또 쓰면 안 된다. 관계사가 이미 그 자리를 대신한다.",
+      "who": "who는 사람을 받는다. report는 사물이다."
+    },
+    "full": "The report that I sent you covers the second quarter."
+  },
+  {
+    "id": "g202",
+    "level": 2,
+    "topic": "조건절",
+    "sentence": "If we ___ the deadline, the client will cancel the order.",
+    "answer": "miss",
+    "options": [
+      "will miss",
+      "missed",
+      "would miss",
+      "miss"
+    ],
+    "ko": "우리가 기한을 놓치면 고객이 주문을 취소할 겁니다.",
+    "tip": "시간·조건의 부사절에서는 미래 의미라도 현재형을 쓴다.",
+    "notes": {
+      "will miss": "if절 안에는 will을 쓰지 않는다. 한국어 화자가 자주 틀리는 지점이다.",
+      "missed": "과거형을 쓰면 가정법이 되어 '실제로는 안 놓칠 것'이라는 뉘앙스가 된다.",
+      "would miss": "would는 가정법에 쓴다. 주절이 will이므로 현재형이 맞다."
+    },
+    "full": "If we miss the deadline, the client will cancel the order."
+  },
+  {
+    "id": "g203",
+    "level": 2,
+    "topic": "가정법",
+    "sentence": "If we had more time, we ___ a stronger proposal.",
+    "answer": "could write",
+    "options": [
+      "can write",
+      "could wrote",
+      "will write",
+      "could write"
+    ],
+    "ko": "시간이 더 있다면 더 탄탄한 제안서를 쓸 수 있을 텐데요.",
+    "tip": "가정법 과거: If + 과거형, 주절은 would/could + 동사원형.",
+    "notes": {
+      "can write": "현재형 조동사를 쓰면 실제 가능한 상황이 된다. had가 이미 가정을 나타내므로 could가 맞다.",
+      "could wrote": "조동사 뒤에는 반드시 동사 원형이 온다.",
+      "will write": "will은 실제 미래에 쓴다. 가정법 주절에는 would/could를 쓴다."
+    },
+    "full": "If we had more time, we could write a stronger proposal."
+  },
+  {
+    "id": "g204",
+    "level": 2,
+    "topic": "완료시제",
+    "sentence": "By the time you arrive, we ___ the setup.",
+    "answer": "will have finished",
+    "options": [
+      "will finish",
+      "finished",
+      "have finished",
+      "will have finished"
+    ],
+    "ko": "도착하실 즈음이면 저희가 설치를 끝내 놓았을 겁니다.",
+    "tip": "미래의 어느 시점보다 먼저 끝날 일은 미래완료(will have p.p.)로 쓴다.",
+    "notes": {
+      "will finish": "단순 미래는 '그때 끝낸다'는 뜻이다. 그 전에 이미 끝나 있다는 의미가 빠진다.",
+      "finished": "과거형은 미래 시점 by the time you arrive와 맞지 않는다.",
+      "have finished": "현재완료는 지금까지를 가리킨다. 미래 시점 기준이 아니다."
+    },
+    "full": "By the time you arrive, we will have finished the setup."
+  },
+  {
+    "id": "g205",
+    "level": 2,
+    "topic": "전치사+동명사",
+    "sentence": "Our team is responsible for ___ the vendor relationships.",
+    "answer": "managing",
+    "options": [
+      "manage",
+      "to manage",
+      "managed",
+      "managing"
+    ],
+    "ko": "우리 팀이 협력사 관계 관리를 맡고 있습니다.",
+    "tip": "전치사 for 뒤에는 명사나 동명사가 온다.",
+    "notes": {
+      "manage": "전치사 뒤에 동사 원형은 올 수 없다.",
+      "to manage": "be responsible 뒤에는 for + -ing가 표준이다. to부정사는 쓰지 않는다.",
+      "managed": "과거형은 전치사 뒤에 올 수 없다. for 뒤에는 명사 또는 동명사만 가능하다."
+    },
+    "full": "Our team is responsible for managing the vendor relationships."
+  },
+  {
+    "id": "g206",
+    "level": 2,
+    "topic": "사역동사",
+    "sentence": "I will have the team ___ the deck before noon.",
+    "answer": "finish",
+    "options": [
+      "to finish",
+      "finishing",
+      "finished",
+      "finish"
+    ],
+    "ko": "정오 전까지 팀이 자료를 마치도록 하겠습니다.",
+    "tip": "have + 사람 + 동사원형 = ~에게 …하게 하다.",
+    "notes": {
+      "to finish": "사역동사 have 뒤에 사람이 오면 to 없는 원형을 쓴다.",
+      "finishing": "진행의 뉘앙스가 되어 '마치는 중인 팀을 가진다'는 이상한 뜻이 된다.",
+      "finished": "have + 사물 + p.p.는 가능하지만(have the deck finished), 사람이 주체일 때는 원형을 쓴다."
+    },
+    "full": "I will have the team finish the deck before noon."
+  },
+  {
+    "id": "g207",
+    "level": 2,
+    "topic": "분사구문",
+    "sentence": "___ the delay, we adjusted the delivery timeline.",
+    "answer": "Given",
+    "options": [
+      "Give",
+      "Giving",
+      "To give",
+      "Given"
+    ],
+    "ko": "지연을 고려해 납기 일정을 조정했습니다.",
+    "tip": "Given + 명사 = ~을 고려하면. 굳어진 표현이다.",
+    "notes": {
+      "Give": "명령형이 되어 '지연을 주어라'는 뜻이 된다.",
+      "Giving": "주어가 we이므로 '우리가 지연을 주면서'라는 엉뚱한 뜻이 된다.",
+      "To give": "목적을 나타내어 '지연을 주기 위해'가 된다."
+    },
+    "full": "Given the delay, we adjusted the delivery timeline."
+  },
+  {
+    "id": "g208",
+    "level": 2,
+    "topic": "so/such",
+    "sentence": "It was ___ a tight deadline that we had to outsource.",
+    "answer": "such",
+    "options": [
+      "so",
+      "very",
+      "too",
+      "such"
+    ],
+    "ko": "기한이 너무 촉박해서 외주를 줘야 했습니다.",
+    "tip": "such + a + 형용사 + 명사 / so + 형용사 (명사 없이).",
+    "notes": {
+      "so": "so 뒤에는 명사구가 오지 못한다. so tight a deadline은 가능하지만 어순이 다르다.",
+      "very": "very는 that절과 짝을 이루는 '너무 ~해서 …하다' 구문을 만들지 못한다.",
+      "too": "too ~ to 구문에는 that절이 오지 않는다."
+    },
+    "full": "It was such a tight deadline that we had to outsource."
+  },
+  {
+    "id": "g209",
+    "level": 2,
+    "topic": "상관접속사",
+    "sentence": "Neither the vendor nor the client ___ satisfied with the terms.",
+    "answer": "was",
+    "options": [
+      "were",
+      "are",
+      "be",
+      "was"
+    ],
+    "ko": "협력사도 고객도 그 조건에 만족하지 않았습니다.",
+    "tip": "neither A nor B에서 동사는 가까운 쪽(B)에 맞춘다. the client가 단수이므로 was.",
+    "notes": {
+      "were": "복수형이다. 가까운 주어 the client가 단수라 맞지 않는다.",
+      "are": "현재형이라 과거 상황 서술과 시제가 어긋난다.",
+      "be": "원형은 주어 뒤에 바로 올 수 없다."
+    },
+    "full": "Neither the vendor nor the client was satisfied with the terms."
+  },
+  {
+    "id": "g210",
+    "level": 2,
+    "topic": "전치사",
+    "sentence": "The budget was split ___ the three regional teams.",
+    "answer": "among",
+    "options": [
+      "between",
+      "along",
+      "within",
+      "among"
+    ],
+    "ko": "예산은 3개 지역 팀에 나뉘어 배정됐습니다.",
+    "tip": "셋 이상이면 among, 둘 사이면 between.",
+    "notes": {
+      "between": "between은 기본적으로 둘 사이에 쓴다. 셋 이상을 개별적으로 짚을 때만 예외적으로 쓴다.",
+      "along": "along은 길·선을 따라가는 방향에 쓴다. 분배에는 쓰지 않는다.",
+      "within": "within은 '~ 안에서'라는 범위다. 나눠 준다는 뜻이 없다."
+    },
+    "full": "The budget was split among the three regional teams."
+  },
+  {
+    "id": "g211",
+    "level": 2,
+    "topic": "used to",
+    "sentence": "We ___ working with that vendor, so the process feels natural now.",
+    "answer": "are used to",
+    "options": [
+      "used to",
+      "use to",
+      "are used",
+      "are used to"
+    ],
+    "ko": "우리는 그 협력사와 일하는 데 익숙해서 지금은 과정이 자연스럽습니다.",
+    "tip": "be used to + -ing = ~에 익숙하다 / used to + 원형 = 예전에 ~하곤 했다.",
+    "notes": {
+      "used to": "'예전에 그 업체와 일하곤 했다'는 뜻이 되어 지금은 안 한다는 의미가 된다.",
+      "use to": "의문문·부정문이 아니면 use to라는 형태는 쓰지 않는다.",
+      "are used": "수동태가 되어 '우리가 이용당한다'는 뜻이 된다."
+    },
+    "full": "We are used to working with that vendor, so the process feels natural now."
+  },
+  {
+    "id": "g212",
+    "level": 2,
+    "topic": "시제 일치",
+    "sentence": "She said she ___ the revised figures the next day.",
+    "answer": "would send",
+    "options": [
+      "will send",
+      "sends",
+      "is sending",
+      "would send"
+    ],
+    "ko": "그녀는 다음 날 수정된 수치를 보내겠다고 말했습니다.",
+    "tip": "주절이 과거면 종속절도 과거 계열로 맞춘다. will → would.",
+    "notes": {
+      "will send": "주절 said가 과거이므로 will을 그대로 두면 시제가 어긋난다.",
+      "sends": "현재형이라 과거 시점의 발언과 맞지 않는다.",
+      "is sending": "현재진행은 said와 시제가 충돌한다."
+    },
+    "full": "She said she would send the revised figures the next day."
+  },
+  {
+    "id": "g301",
+    "level": 3,
+    "topic": "도치",
+    "sentence": "Not only ___ the budget increase, but the timeline also slipped.",
+    "answer": "did",
+    "options": [
+      "was",
+      "it",
+      "the budget",
+      "did"
+    ],
+    "ko": "예산이 늘었을 뿐 아니라 일정도 밀렸습니다.",
+    "tip": "Not only가 문장 앞에 오면 주어와 조동사가 도치된다.",
+    "notes": {
+      "was": "뒤에 동사 increase가 원형으로 있으므로 be동사는 맞지 않는다.",
+      "it": "도치 구문에서는 조동사가 먼저 와야 한다. 대명사를 넣으면 도치가 성립하지 않는다.",
+      "the budget": "주어를 그대로 두면 도치가 아니다. Not only 뒤에는 조동사가 온다."
+    },
+    "full": "Not only did the budget increase, but the timeline also slipped."
+  },
+  {
+    "id": "g302",
+    "level": 3,
+    "topic": "가정법 과거완료",
+    "sentence": "Had we known about the clause, we ___ the contract.",
+    "answer": "would not have signed",
+    "options": [
+      "would not sign",
+      "did not sign",
+      "will not sign",
+      "would not have signed"
+    ],
+    "ko": "그 조항을 알았더라면 계약서에 서명하지 않았을 겁니다.",
+    "tip": "과거 사실의 반대: If we had known = Had we known, 주절은 would have p.p.",
+    "notes": {
+      "would not sign": "가정법 과거(현재 사실 반대)의 형태다. Had we known은 과거 사실의 반대이므로 have p.p.가 필요하다.",
+      "did not sign": "단순 과거는 가정법 주절에 쓰지 않는다. 실제로 일어난 사실이 된다.",
+      "will not sign": "미래형은 과거 사실을 뒤집는 가정과 맞지 않는다. 이미 서명한 뒤의 이야기다."
+    },
+    "full": "Had we known about the clause, we would not have signed the contract."
+  },
+  {
+    "id": "g303",
+    "level": 3,
+    "topic": "가정법 현재",
+    "sentence": "The board recommended that the CEO ___ the revised offer.",
+    "answer": "accept",
+    "options": [
+      "accepts",
+      "accepted",
+      "to accept",
+      "accept"
+    ],
+    "ko": "이사회는 CEO가 수정 제안을 수락할 것을 권고했습니다.",
+    "tip": "recommend, suggest, insist, demand 뒤 that절에서는 동사 원형을 쓴다.",
+    "notes": {
+      "accepts": "3인칭 단수라도 이 구문에서는 -s를 붙이지 않는다. 계약·회의록에서 흔히 틀리는 부분이다.",
+      "accepted": "과거형은 이 구문에 쓰지 않는다. 주절이 과거여도 원형을 유지한다.",
+      "to accept": "recommend는 that절 안에서 to부정사를 취하지 않는다."
+    },
+    "full": "The board recommended that the CEO accept the revised offer."
+  },
+  {
+    "id": "g304",
+    "level": 3,
+    "topic": "접속사",
+    "sentence": "___ the vendor breaches the contract, we cannot terminate early.",
+    "answer": "Unless",
+    "options": [
+      "If",
+      "Provided",
+      "Whether",
+      "Unless"
+    ],
+    "ko": "협력사가 계약을 위반하지 않는 한 조기 해지할 수 없습니다.",
+    "tip": "unless = if ... not. 부정 조건을 한 단어로 나타낸다.",
+    "notes": {
+      "If": "'위반하면 해지할 수 없다'가 되어 뜻이 정반대가 된다.",
+      "Provided": "provided that은 '~라는 조건이라면'이라는 긍정 조건이다. 여기서는 부정 조건이 필요하다.",
+      "Whether": "whether는 '~인지 아닌지'를 나타내며 조건절을 이끌지 않는다."
+    },
+    "full": "Unless the vendor breaches the contract, we cannot terminate early."
+  },
+  {
+    "id": "g305",
+    "level": 3,
+    "topic": "계속적 용법",
+    "sentence": "The merger, ___ was announced in May, closed last week.",
+    "answer": "which",
+    "options": [
+      "that",
+      "what",
+      "it",
+      "which"
+    ],
+    "ko": "5월에 발표된 그 합병은 지난주에 마무리됐습니다.",
+    "tip": "콤마가 있는 계속적 용법에는 that을 쓸 수 없다. which를 쓴다.",
+    "notes": {
+      "that": "that은 콤마 뒤 계속적 용법에 쓰지 못한다. 계약서·보고서에서 자주 지적되는 오류다.",
+      "what": "what은 선행사를 포함하므로 앞에 merger가 있으면 중복이다.",
+      "it": "대명사는 절을 이을 수 없다. 접속사 없이 문장이 두 개가 되어 버린다."
+    },
+    "full": "The merger, which was announced in May, closed last week."
+  },
+  {
+    "id": "g306",
+    "level": 3,
+    "topic": "관용 전치사",
+    "sentence": "The offer is subject ___ board approval.",
+    "answer": "to",
+    "options": [
+      "for",
+      "on",
+      "with",
+      "to"
+    ],
+    "ko": "이 제안은 이사회 승인을 조건으로 합니다.",
+    "tip": "subject to = ~을 조건으로 하는. 계약서 필수 표현이다.",
+    "notes": {
+      "for": "subject for라는 결합은 쓰지 않는다.",
+      "on": "subject on도 성립하지 않는다. 관용적으로 to가 고정이다.",
+      "with": "subject with 역시 쓰이지 않는 형태다."
+    },
+    "full": "The offer is subject to board approval."
+  },
+  {
+    "id": "g307",
+    "level": 3,
+    "topic": "대조 접속사",
+    "sentence": "Revenue grew twelve percent, ___ costs rose thirty percent.",
+    "answer": "whereas",
+    "options": [
+      "however",
+      "despite",
+      "although it",
+      "whereas"
+    ],
+    "ko": "매출은 12% 늘었지만 비용은 30% 올랐습니다.",
+    "tip": "whereas는 두 절을 대조로 잇는 접속사다.",
+    "notes": {
+      "however": "however는 접속부사라 두 절을 콤마 하나로 잇지 못한다. 세미콜론이나 마침표가 필요하다.",
+      "despite": "despite 뒤에는 명사가 온다. 절을 이끌 수 없다.",
+      "although it": "it을 넣으면 뒤의 주어 costs와 중복된다."
+    },
+    "full": "Revenue grew twelve percent, whereas costs rose thirty percent."
+  },
+  {
+    "id": "g308",
+    "level": 3,
+    "topic": "수동태",
+    "sentence": "The discrepancy ___ by the external auditor last month.",
+    "answer": "was flagged",
+    "options": [
+      "flagged",
+      "has flagged",
+      "was flagging",
+      "was flagged"
+    ],
+    "ko": "그 불일치는 지난달 외부 감사인이 지적했습니다.",
+    "tip": "지적을 당한 쪽이 주어이므로 수동태를 쓴다.",
+    "notes": {
+      "flagged": "능동형이라 '불일치가 무언가를 지적했다'는 뜻이 된다.",
+      "has flagged": "능동 현재완료인 데다 last month와 함께 쓸 수 없다.",
+      "was flagging": "과거진행 능동형이다. 주어가 행위자가 되어 버린다."
+    },
+    "full": "The discrepancy was flagged by the external auditor last month."
+  },
+  {
+    "id": "g309",
+    "level": 3,
+    "topic": "수 일치",
+    "sentence": "The number of complaints ___ decreasing steadily.",
+    "answer": "is",
+    "options": [
+      "are",
+      "have",
+      "were being",
+      "is"
+    ],
+    "ko": "불만 건수가 꾸준히 줄고 있습니다.",
+    "tip": "the number of + 복수명사는 단수 취급, a number of + 복수명사는 복수 취급.",
+    "notes": {
+      "are": "a number of complaints라면 복수지만, the number of는 '수치' 하나를 가리켜 단수다.",
+      "have": "have는 진행형을 만들지 못한다. be동사가 필요하다.",
+      "were being": "과거진행 수동 형태로 시제와 태가 모두 어긋난다."
+    },
+    "full": "The number of complaints is decreasing steadily."
+  },
+  {
+    "id": "g310",
+    "level": 3,
+    "topic": "would rather",
+    "sentence": "The client would rather we ___ the launch until the audit ends.",
+    "answer": "delayed",
+    "options": [
+      "delay",
+      "to delay",
+      "delaying",
+      "delayed"
+    ],
+    "ko": "고객은 감사가 끝날 때까지 출시를 미루기를 원합니다.",
+    "tip": "would rather + 주어 + 과거형 = (다른 사람이) ~하기를 바란다.",
+    "notes": {
+      "delay": "주어가 뒤따를 때는 과거형을 쓴다. 원형은 would rather 바로 뒤(주어 없이)에만 온다.",
+      "to delay": "would rather 뒤에는 to부정사가 오지 않는다.",
+      "delaying": "동명사는 이 구문에 쓰지 않는다. would rather 뒤에 주어가 오면 반드시 과거형 동사다."
+    },
+    "full": "The client would rather we delayed the launch until the audit ends."
+  },
+  {
+    "id": "g311",
+    "level": 3,
+    "topic": "도치 관용",
+    "sentence": "Hardly had we signed the deal ___ the market shifted.",
+    "answer": "when",
+    "options": [
+      "than",
+      "that",
+      "then",
+      "when"
+    ],
+    "ko": "계약을 체결하자마자 시장이 바뀌었습니다.",
+    "tip": "hardly ... when / no sooner ... than 이 짝이다. 섞어 쓰면 안 된다.",
+    "notes": {
+      "than": "than은 no sooner와 짝을 이룬다. hardly에는 when을 쓴다.",
+      "that": "that은 이 구문의 짝이 아니다. hardly에는 when, no sooner에는 than이 고정으로 붙는다.",
+      "then": "then은 부사라 두 절을 잇지 못한다."
+    },
+    "full": "Hardly had we signed the deal when the market shifted."
+  },
+  {
+    "id": "g312",
+    "level": 3,
+    "topic": "조건 도치",
+    "sentence": "Only if the payment terms improve ___ we proceed with the contract.",
+    "answer": "will",
+    "options": [
+      "we will",
+      "would",
+      "do",
+      "will"
+    ],
+    "ko": "지급 조건이 개선될 때에만 계약을 진행하겠습니다.",
+    "tip": "Only if로 시작하면 주절에서 조동사와 주어가 도치된다.",
+    "notes": {
+      "we will": "도치가 필요한 자리다. 주어를 먼저 쓰면 Only if 구문이 성립하지 않는다.",
+      "would": "가정의 뉘앙스가 되어 실제 진행 의사가 흐려진다. 조건이 충족되면 하겠다는 뜻이므로 will이다.",
+      "do": "뒤에 proceed 원형이 오지만 미래 의미를 담으려면 will이 맞다."
+    },
+    "full": "Only if the payment terms improve will we proceed with the contract."
+  },
+  {
+    "id": "g113",
+    "level": 1,
+    "topic": "there is/are",
+    "sentence": "There ___ several issues with the latest invoice.",
+    "answer": "are",
+    "options": [
+      "is",
+      "has",
+      "have",
+      "are"
+    ],
+    "ko": "최근 청구서에 몇 가지 문제가 있습니다.",
+    "tip": "There + be동사는 뒤에 오는 명사에 수를 맞춘다. issues가 복수이므로 are.",
+    "notes": {
+      "is": "there 뒤의 be동사는 뒤따르는 명사에 맞춘다. issues가 복수라 is는 맞지 않는다.",
+      "has": "there has라는 형태는 쓰지 않는다. 존재를 나타낼 때는 be동사를 쓴다.",
+      "have": "there have도 단독으로는 쓰지 않는다. there have been처럼 완료형이어야 한다."
+    },
+    "full": "There are several issues with the latest invoice."
+  },
+  {
+    "id": "g114",
+    "level": 1,
+    "topic": "수량 표현",
+    "sentence": "How ___ time do we have before the call?",
+    "answer": "much",
+    "options": [
+      "many",
+      "much of",
+      "a lot",
+      "much"
+    ],
+    "ko": "통화까지 시간이 얼마나 있나요?",
+    "tip": "셀 수 없는 명사에는 much, 셀 수 있는 복수 명사에는 many.",
+    "notes": {
+      "many": "many는 셀 수 있는 명사에 쓴다. time은 여기서 셀 수 없는 명사다.",
+      "much of": "of는 the나 소유격이 뒤따를 때만 쓴다. much of the time처럼 특정될 때다.",
+      "a lot": "a lot은 의문사 how와 함께 쓰지 않는다. How much가 고정 형태다."
+    },
+    "full": "How much time do we have before the call?"
+  },
+  {
+    "id": "g115",
+    "level": 1,
+    "topic": "전치사",
+    "sentence": "The final report is due ___ two weeks.",
+    "answer": "in",
+    "options": [
+      "after",
+      "within",
+      "for",
+      "in"
+    ],
+    "ko": "최종 보고서는 2주 뒤가 기한입니다.",
+    "tip": "지금부터 얼마 뒤를 말할 때는 in을 쓴다.",
+    "notes": {
+      "after": "after two weeks는 '2주가 지난 어느 시점'이라 기한이 흐려진다. 지금 기준 미래에는 in이 표준이다.",
+      "within": "within two weeks는 '2주 안에 언제든'이라는 뜻이다. 정확히 2주 뒤라는 의미가 아니다.",
+      "for": "for two weeks는 '2주 동안'이라는 지속 기간이다."
+    },
+    "full": "The final report is due in two weeks."
+  },
+  {
+    "id": "g116",
+    "level": 1,
+    "topic": "소유격",
+    "sentence": "The vendor missed ___ delivery deadline again.",
+    "answer": "its",
+    "options": [
+      "it's",
+      "their",
+      "its'",
+      "its"
+    ],
+    "ko": "그 협력업체가 또 납기를 놓쳤습니다.",
+    "tip": "its = 소유격(그것의), it's = it is의 줄임.",
+    "notes": {
+      "it's": "it's는 it is 또는 it has의 축약이다. '그 업체는 이다 납기'가 되어 문장이 성립하지 않는다.",
+      "their": "미국식에서 vendor는 단수 취급이라 its가 맞다. their를 쓰면 복수를 가리킨다.",
+      "its'": "its'라는 형태는 영어에 존재하지 않는다."
+    },
+    "full": "The vendor missed its delivery deadline again."
+  },
+  {
+    "id": "g117",
+    "level": 1,
+    "topic": "연어",
+    "sentence": "We need to ___ a decision before the board meeting.",
+    "answer": "make",
+    "options": [
+      "do",
+      "take",
+      "give",
+      "make"
+    ],
+    "ko": "이사회 전에 결정을 내려야 합니다.",
+    "tip": "make a decision이 고정 표현이다. do는 쓰지 않는다.",
+    "notes": {
+      "do": "do a decision은 쓰지 않는다. do는 do the work, do research처럼 정해진 짝이 따로 있다.",
+      "take": "take a decision은 영국식에서 간혹 쓰지만 미국 비즈니스 영어에서는 make가 표준이다.",
+      "give": "give a decision은 판정을 내려 준다는 뜻으로 이 맥락에 맞지 않는다."
+    },
+    "full": "We need to make a decision before the board meeting."
+  },
+  {
+    "id": "g118",
+    "level": 1,
+    "topic": "say/tell",
+    "sentence": "Could you ___ me the exact figure?",
+    "answer": "tell",
+    "options": [
+      "say",
+      "speak",
+      "talk",
+      "tell"
+    ],
+    "ko": "정확한 수치를 알려 주시겠어요?",
+    "tip": "tell은 사람을 바로 목적어로 받고, say는 받지 못한다.",
+    "notes": {
+      "say": "say me라는 형태는 쓰지 않는다. say to me처럼 전치사가 필요하다.",
+      "speak": "speak는 speak to me처럼 전치사를 쓴다. 목적어를 바로 두 개 받지 못한다.",
+      "talk": "talk도 talk to me 형태로만 쓴다."
+    },
+    "full": "Could you tell me the exact figure?"
+  },
+  {
+    "id": "g119",
+    "level": 1,
+    "topic": "few/little",
+    "sentence": "We have ___ time left, so let's skip the introduction.",
+    "answer": "little",
+    "options": [
+      "few",
+      "a few",
+      "fewer",
+      "little"
+    ],
+    "ko": "시간이 거의 없으니 서론은 건너뜁시다.",
+    "tip": "little = 셀 수 없는 명사에 '거의 없는', few = 셀 수 있는 명사에 '거의 없는'.",
+    "notes": {
+      "few": "few는 셀 수 있는 복수 명사에 쓴다. time은 셀 수 없는 명사다.",
+      "a few": "a few는 '조금 있다'는 긍정 의미이고, 셀 수 있는 명사에 쓴다. 뜻과 형태가 모두 맞지 않는다.",
+      "fewer": "fewer는 비교급이고 역시 셀 수 있는 명사에 쓴다."
+    },
+    "full": "We have little time left, so let's skip the introduction."
+  },
+  {
+    "id": "g120",
+    "level": 1,
+    "topic": "부사",
+    "sentence": "The support team responded ___ to the customer complaint.",
+    "answer": "quickly",
+    "options": [
+      "quick",
+      "more quick",
+      "quickest",
+      "quickly"
+    ],
+    "ko": "지원팀이 고객 불만에 신속히 대응했습니다.",
+    "tip": "동사를 꾸밀 때는 형용사가 아니라 부사를 쓴다.",
+    "notes": {
+      "quick": "quick은 형용사다. 동사 responded를 꾸미려면 부사 quickly가 필요하다.",
+      "more quick": "비교 대상이 없고, 애초에 quickly의 비교급은 more quickly다.",
+      "quickest": "최상급은 비교 대상이 있어야 하며 여기서는 문맥이 없다."
+    },
+    "full": "The support team responded quickly to the customer complaint."
+  },
+  {
+    "id": "g213",
+    "level": 2,
+    "topic": "양보",
+    "sentence": "___ the two-week delay, we still met the quarterly target.",
+    "answer": "Despite",
+    "options": [
+      "Although",
+      "Even",
+      "However",
+      "Despite"
+    ],
+    "ko": "2주 지연에도 불구하고 분기 목표는 달성했습니다.",
+    "tip": "despite + 명사 / although + 절. 뒤에 무엇이 오는지로 갈린다.",
+    "notes": {
+      "Although": "although 뒤에는 주어와 동사가 있는 절이 온다. 여기는 명사구뿐이다.",
+      "Even": "even은 단독으로 양보를 이끌지 못한다. even though 형태여야 절을 받는다.",
+      "However": "however는 접속부사라 콤마로 절을 잇지 못하고, 명사구도 받지 못한다."
+    },
+    "full": "Despite the two-week delay, we still met the quarterly target."
+  },
+  {
+    "id": "g214",
+    "level": 2,
+    "topic": "부정사",
+    "sentence": "We hired an outside consultant ___ the approval process.",
+    "answer": "to review",
+    "options": [
+      "for review",
+      "reviewing",
+      "review",
+      "to review"
+    ],
+    "ko": "승인 절차를 검토하기 위해 외부 컨설턴트를 고용했습니다.",
+    "tip": "목적을 나타낼 때는 to부정사를 쓴다.",
+    "notes": {
+      "for review": "for 뒤에 목적어 the approval process가 또 오면 어색하다. for reviewing이면 가능하다.",
+      "reviewing": "동사 hired 뒤에 바로 동명사가 오면 컨설턴트가 아니라 우리가 검토한다는 뜻이 흐려진다.",
+      "review": "동사 원형이 접속사 없이 이어질 수 없다."
+    },
+    "full": "We hired an outside consultant to review the approval process."
+  },
+  {
+    "id": "g215",
+    "level": 2,
+    "topic": "과거완료",
+    "sentence": "We ___ already sent the invoice when the client called.",
+    "answer": "had",
+    "options": [
+      "have",
+      "did",
+      "were",
+      "had"
+    ],
+    "ko": "고객이 전화했을 때 우리는 이미 청구서를 보낸 뒤였습니다.",
+    "tip": "과거의 어느 시점보다 더 먼저 일어난 일은 과거완료(had p.p.)로 쓴다.",
+    "notes": {
+      "have": "현재완료는 과거 시점 when the client called와 함께 쓰지 못한다.",
+      "did": "did 뒤에는 동사 원형이 온다. sent와 결합할 수 없다.",
+      "were": "were sent는 수동태다. 보낸 주체가 우리이므로 능동이어야 한다."
+    },
+    "full": "We had already sent the invoice when the client called."
+  },
+  {
+    "id": "g216",
+    "level": 2,
+    "topic": "as/like",
+    "sentence": "___ we discussed yesterday, I am attaching the revised draft.",
+    "answer": "As",
+    "options": [
+      "Like",
+      "As like",
+      "Such as",
+      "As"
+    ],
+    "ko": "어제 논의한 대로 수정된 초안을 첨부합니다.",
+    "tip": "뒤에 절(주어+동사)이 오면 as, 명사만 오면 like.",
+    "notes": {
+      "Like": "like 뒤에는 명사가 온다. we discussed는 절이라 as를 써야 한다.",
+      "As like": "as like라는 결합은 영어에 없다.",
+      "Such as": "such as는 예를 들 때 쓰며 뒤에 명사가 온다."
+    },
+    "full": "As we discussed yesterday, I am attaching the revised draft."
+  },
+  {
+    "id": "g217",
+    "level": 2,
+    "topic": "either/neither",
+    "sentence": "___ option works for us, so you can pick.",
+    "answer": "Either",
+    "options": [
+      "Neither",
+      "Both",
+      "Any",
+      "Either"
+    ],
+    "ko": "어느 쪽이든 괜찮으니 선택하셔도 됩니다.",
+    "tip": "either = 둘 중 어느 쪽이든 (단수 취급), neither = 둘 다 아닌.",
+    "notes": {
+      "Neither": "neither는 '둘 다 아니다'라는 부정이다. 고르라는 뒷문장과 모순된다.",
+      "Both": "both는 복수 취급이라 동사가 work여야 하고, 뒤에 복수 명사 options가 와야 한다.",
+      "Any": "any option은 셋 이상에서 아무거나를 뜻한다. 둘 중 선택에는 either가 자연스럽다."
+    },
+    "full": "Either option works for us, so you can pick."
+  },
+  {
+    "id": "g218",
+    "level": 2,
+    "topic": "수동태 행위자",
+    "sentence": "The billing issue was resolved ___ the vendor within a day.",
+    "answer": "by",
+    "options": [
+      "with",
+      "from",
+      "through of",
+      "by"
+    ],
+    "ko": "청구 문제는 하루 만에 협력업체가 해결했습니다.",
+    "tip": "수동태에서 행위자는 by로 표시한다. with는 도구·수단이다.",
+    "notes": {
+      "with": "with는 도구를 나타낸다. resolved with a script라면 맞지만 사람·조직에는 by를 쓴다.",
+      "from": "from은 출처를 나타내며 행위자를 표시하지 못한다.",
+      "through of": "through of라는 결합은 존재하지 않는다."
+    },
+    "full": "The billing issue was resolved by the vendor within a day."
+  },
+  {
+    "id": "g219",
+    "level": 2,
+    "topic": "시간 부사절",
+    "sentence": "I will call you as soon as I ___ the confirmation email.",
+    "answer": "get",
+    "options": [
+      "will get",
+      "got",
+      "am getting",
+      "get"
+    ],
+    "ko": "확인 메일을 받는 대로 전화드리겠습니다.",
+    "tip": "시간 부사절에서는 미래 의미라도 현재형을 쓴다.",
+    "notes": {
+      "will get": "as soon as, when, before 같은 시간 부사절 안에는 will을 쓰지 않는다.",
+      "got": "과거형은 미래 상황과 맞지 않는다. 아직 받지 않은 메일을 가리키고 있다.",
+      "am getting": "현재진행은 이미 받는 중이라는 뜻이 되어 조건이 성립하지 않는다."
+    },
+    "full": "I will call you as soon as I get the confirmation email."
+  },
+  {
+    "id": "g220",
+    "level": 2,
+    "topic": "관계부사",
+    "sentence": "This is the stage ___ most projects lose momentum.",
+    "answer": "where",
+    "options": [
+      "which",
+      "that where",
+      "when",
+      "where"
+    ],
+    "ko": "대부분의 프로젝트가 추진력을 잃는 단계가 바로 여기입니다.",
+    "tip": "선행사가 장소·지점이고 뒤 문장이 완전하면 관계부사 where를 쓴다.",
+    "notes": {
+      "which": "which 뒤에는 주어나 목적어가 빠진 불완전한 절이 온다. 여기는 완전한 절이다.",
+      "that where": "관계사를 두 개 겹쳐 쓸 수 없다. 둘 중 하나만 남겨야 한다.",
+      "when": "when은 시점을 받는다. stage는 단계라는 지점이므로 where가 자연스럽다."
+    },
+    "full": "This is the stage where most projects lose momentum."
+  },
+  {
+    "id": "g313",
+    "level": 3,
+    "topic": "계약 문어",
+    "sentence": "___ any provision to the contrary, the deposit is non-refundable.",
+    "answer": "Notwithstanding",
+    "options": [
+      "Despite of",
+      "Regardless",
+      "In spite",
+      "Notwithstanding"
+    ],
+    "ko": "이와 상충하는 어떤 조항에도 불구하고 계약금은 환불되지 않습니다.",
+    "tip": "notwithstanding + 명사 = ~에도 불구하고. 계약서에서 굳어진 표현이다.",
+    "notes": {
+      "Despite of": "despite of라는 형태는 없다. despite 또는 in spite of 둘 중 하나다.",
+      "Regardless": "regardless는 of가 반드시 따라온다. regardless of any provision이어야 한다.",
+      "In spite": "in spite도 of가 있어야 한다. in spite of가 완전한 형태다."
+    },
+    "full": "Notwithstanding any provision to the contrary, the deposit is non-refundable."
+  },
+  {
+    "id": "g314",
+    "level": 3,
+    "topic": "계약 조동사",
+    "sentence": "The supplier ___ deliver the goods within thirty days.",
+    "answer": "shall",
+    "options": [
+      "will can",
+      "should to",
+      "would be",
+      "shall"
+    ],
+    "ko": "공급사는 30일 이내에 물품을 인도해야 한다.",
+    "tip": "계약서에서 shall은 법적 의무를 나타낸다. 일상 영어의 will과 쓰임이 다르다.",
+    "notes": {
+      "will can": "조동사를 두 개 연달아 쓸 수 없다.",
+      "should to": "should 뒤에는 to 없이 동사 원형이 온다.",
+      "would be": "would be 뒤에 deliver 원형이 이어질 수 없다."
+    },
+    "full": "The supplier shall deliver the goods within thirty days."
+  },
+  {
+    "id": "g315",
+    "level": 3,
+    "topic": "완료 분사구문",
+    "sentence": "___ reviewed the indemnity clause, we proceeded with the signing.",
+    "answer": "Having",
+    "options": [
+      "Have",
+      "Being",
+      "To have",
+      "Having"
+    ],
+    "ko": "면책 조항을 검토한 뒤 서명을 진행했습니다.",
+    "tip": "주절보다 먼저 일어난 일은 Having p.p.로 나타낸다.",
+    "notes": {
+      "Have": "명령형이 되어 '조항을 검토하라'는 뜻이 된다.",
+      "Being": "being 뒤에 p.p.가 오면 수동이 되어 '우리가 검토당했다'는 뜻이 된다.",
+      "To have": "목적을 나타내어 '검토하기 위해'가 되고, 시간 순서가 사라진다."
+    },
+    "full": "Having reviewed the indemnity clause, we proceeded with the signing."
+  },
+  {
+    "id": "g316",
+    "level": 3,
+    "topic": "조건 문어",
+    "sentence": "___ default, the lender may accelerate the entire loan.",
+    "answer": "In the event of",
+    "options": [
+      "In event of",
+      "On the event",
+      "At event of",
+      "In the event of"
+    ],
+    "ko": "채무 불이행이 발생할 경우 대주는 대출 전액을 기한이익 상실 처리할 수 있습니다.",
+    "tip": "in the event of + 명사 = ~할 경우에. 계약서 표준 표현이다.",
+    "notes": {
+      "In event of": "관사 the가 빠졌다. in the event of가 고정 형태다.",
+      "On the event": "전치사가 다르다. on the event of라는 표현은 쓰지 않는다.",
+      "At event of": "at은 이 표현에 쓰이지 않는다. 관사도 빠져 이중으로 틀렸다."
+    },
+    "full": "In the event of default, the lender may accelerate the entire loan."
+  },
+  {
+    "id": "g317",
+    "level": 3,
+    "topic": "제한적 관계사",
+    "sentence": "Clauses ___ conflict with local law are void.",
+    "answer": "that",
+    "options": [
+      "who",
+      "what",
+      "whose",
+      "that"
+    ],
+    "ko": "현지 법과 충돌하는 조항은 무효입니다.",
+    "tip": "콤마 없이 대상을 한정할 때는 that을 쓴다. 콤마를 붙이면 '모든 조항이 무효'라는 다른 뜻이 된다.",
+    "notes": {
+      "who": "who는 사람을 받는다. clauses는 사물이므로 that이나 which를 쓴다.",
+      "what": "what은 선행사를 포함하므로 앞의 Clauses와 의미가 중복된다.",
+      "whose": "whose는 소유 관계를 나타낸다. 뒤에 소유 대상 명사가 와야 하는데 여기는 동사가 온다."
+    },
+    "full": "Clauses that conflict with local law are void."
+  },
+  {
+    "id": "g318",
+    "level": 3,
+    "topic": "부정어 도치",
+    "sentence": "Under no circumstances ___ the customer data be shared externally.",
+    "answer": "may",
+    "options": [
+      "the data may",
+      "may not",
+      "can to",
+      "may"
+    ],
+    "ko": "어떠한 경우에도 고객 데이터를 외부에 공유해서는 안 됩니다.",
+    "tip": "Under no circumstances 같은 부정어구가 앞에 오면 조동사와 주어가 도치된다.",
+    "notes": {
+      "the data may": "도치가 필요하다. 주어를 먼저 쓰면 이 구문이 성립하지 않는다.",
+      "may not": "앞의 Under no circumstances에 이미 부정이 들어 있다. not을 더하면 이중 부정이 된다.",
+      "can to": "조동사 뒤에는 to 없이 동사 원형이 온다. 도치도 이뤄지지 않았다."
+    },
+    "full": "Under no circumstances may the customer data be shared externally."
+  },
+  {
+    "id": "g319",
+    "level": 3,
+    "topic": "regret 용법",
+    "sentence": "We regret ___ you that the offer has expired.",
+    "answer": "to inform",
+    "options": [
+      "informing",
+      "to informing",
+      "inform",
+      "to inform"
+    ],
+    "ko": "안타깝게도 해당 제안이 만료되었음을 알려 드립니다.",
+    "tip": "regret to inform = 지금 알리게 되어 유감 / regret informing = 알린 것을 후회.",
+    "notes": {
+      "informing": "이미 알린 것을 후회한다는 뜻이 된다. 통지문에서는 정반대의 의미다.",
+      "to informing": "to부정사에 -ing를 붙이지 않는다.",
+      "inform": "regret 뒤에 동사 원형이 바로 올 수 없다."
+    },
+    "full": "We regret to inform you that the offer has expired."
+  },
+  {
+    "id": "g320",
+    "level": 3,
+    "topic": "병렬 구조",
+    "sentence": "The audit covers reporting, forecasting, and ___.",
+    "answer": "budgeting",
+    "options": [
+      "budget",
+      "to budget",
+      "budgeted",
+      "budgeting"
+    ],
+    "ko": "이번 감사는 보고, 예측, 예산 편성을 다룹니다.",
+    "tip": "and로 연결되는 항목은 형태를 맞춰야 한다. 앞이 -ing이면 뒤도 -ing.",
+    "notes": {
+      "budget": "앞의 reporting, forecasting과 형태가 어긋난다. 병렬 구조가 깨진다.",
+      "to budget": "to부정사는 앞의 동명사들과 형태가 맞지 않는다.",
+      "budgeted": "과거분사는 이 나열에 어울리지 않는다."
+    },
+    "full": "The audit covers reporting, forecasting, and budgeting."
+  }
+];
+const BY = Object.fromEntries(WORDS.map(w => [w.id, w]));
+const GB = Object.fromEntries(GRAMMAR.map(g => [g.id, g]));
+
+/* ---------- 진도 저장 (localStorage 실패 시 메모리로 조용히 강등) ---------- */
+const mem = {};
+const store = {
+  get(k){ try{ const v = localStorage.getItem(k); return v === null ? mem[k] : v; }catch(e){ return mem[k]; } },
+  set(k,v){ mem[k] = v; try{ localStorage.setItem(k,v); }catch(e){} }
+};
+function loadP(){ try{ return JSON.parse(store.get('bvq') || '{}'); }catch(e){ return {}; } }
+function saveP(p){ store.set('bvq', JSON.stringify(p)); }
+let P = Object.assign({items:{}, total:0, best:0}, loadP());
+
+const MIN=60000, DAY=86400000;
+const GAP = {1:0, 2:10*MIN, 3:DAY, 4:3*DAY, 5:7*DAY};
+
+/* ---------- 음성 (Web Speech API) ----------
+   조용히 실패하지 않는 것이 이 모듈의 제1 규칙이다.
+   안 들리면 왜 안 들리는지 반드시 화면에 띄운다.                     */
+const TTS = {
+  voices: [], started: false,
+
+  available(){
+    return typeof window !== 'undefined'
+        && 'speechSynthesis' in window
+        && typeof SpeechSynthesisUtterance !== 'undefined';
+  },
+
+  refresh(){
+    if(!this.available()) return;
+    try{ this.voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); }catch(e){}
+  },
+
+  pick(){
+    if(!this.voices.length) this.refresh();
+    return this.voices.find(v => v.lang === 'en-US')
+        || this.voices.find(v => /^en[-_]GB/i.test(v.lang))
+        || this.voices[0] || null;
+  },
+
+  say(text, btn){
+    if(!text) return;
+    if(btn){ btn.classList.add('busy'); setTimeout(()=>btn.classList.remove('busy'), 700); }
+
+    if(!this.available()){
+      toast('이 화면에서는 음성이 차단됩니다. 파일을 내려받아 Chrome이나 삼성 인터넷에서 열어 주세요.', 4200);
+      return;
+    }
+
+    try{
+      const ss = speechSynthesis;
+      if(ss.speaking || ss.pending) ss.cancel();
+
+      // 안드로이드 Chrome: cancel() 직후 speak()를 부르면 조용히 무시된다. 한 틱 쉬어 준다.
+      setTimeout(() => {
+        try{
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = 'en-US';                 // 한국어 엔진이 영어를 읽지 않도록 명시
+          u.rate = 0.92;
+          const v = this.pick(); if(v) u.voice = v;
+
+          let fired = false;
+          u.onstart = () => { fired = true; TTS.started = true; };
+          u.onerror = e => {
+            if(e && (e.error === 'canceled' || e.error === 'interrupted')) return;
+            toast('음성 재생 실패' + (e && e.error ? ' (' + e.error + ')' : ''), 3200);
+          };
+
+          ss.speak(u);
+          ss.resume();                      // 일부 안드로이드에서 큐가 멈춘 채로 시작된다
+
+          // 1.5초 안에 시작도 실패도 없으면 엔진이 죽은 것으로 간주하고 알린다
+          setTimeout(() => {
+            if(!fired && !ss.speaking && !ss.pending && !TTS.started){
+              toast('음성 엔진이 응답하지 않습니다. 설정 > 접근성 > 텍스트 음성 변환에서 영어 음성이 설치돼 있는지 확인해 주세요.', 5000);
+            }
+          }, 1500);
+        }catch(e){ toast('음성 오류: ' + e.message, 3200); }
+      }, 60);
+    }catch(e){ toast('음성 오류: ' + e.message, 3200); }
+  },
+
+  diagnose(){
+    if(!this.available()){
+      toast('speechSynthesis 없음 — 이 화면(미리보기 프레임)에서는 음성을 쓸 수 없습니다. 파일을 내려받아 브라우저에서 여세요.', 5500);
+      return;
+    }
+    this.refresh();
+    const all = (()=>{ try{ return speechSynthesis.getVoices().length; }catch(e){ return 0; } })();
+    toast('음성 엔진 있음 · 전체 ' + all + '개 / 영어 ' + this.voices.length + '개 · 지금 재생해 봅니다', 4000);
+    this.say('Business English. Leverage. Stakeholder.');
+  }
+};
+if(TTS.available()){
+  TTS.refresh();
+  try{ speechSynthesis.onvoiceschanged = () => TTS.refresh(); }catch(e){}
+  setTimeout(()=>TTS.refresh(), 500);   // 안드로이드는 목록이 늦게 온다
+  setTimeout(()=>TTS.refresh(), 1500);
+}
+
+let toastTimer = null;
+function toast(msg, ms){
+  const t = document.getElementById('toast');
+  if(!t){ return; }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), ms || 2600);
+}
+
+/* ---------- 퀴즈 엔진 ---------- */
+const SIZE = 10, BLANK = '______';
+const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+
+let PICK = { level: 0, cat: 'mix' };   // level 0 = 전체, cat: word | grammar | mix
+const LEVEL_KO = {1:'기초 업무', 2:'회의·프로젝트', 3:'재무·법무'};
+
+const inLevel = x => PICK.level === 0 || x.level === PICK.level;
+const key = it => it.kind === 'g' ? 'g:' + it.id : it.id;
+
+function pickPool(list, kind, n){
+  const now = Date.now(), it = P.items;
+  const k = x => kind === 'g' ? 'g:' + x.id : x.id;
+  const src = list.filter(inLevel);
+  const due    = src.filter(x => it[k(x)] && it[k(x)].due <= now).sort((a,b)=>it[k(a)].box-it[k(b)].box);
+  const unseen = src.filter(x => !it[k(x)]);
+  const rest   = src.filter(x => it[k(x)] && it[k(x)].due > now).sort((a,b)=>it[k(a)].box-it[k(b)].box);
+  const seen = new Set(), out = [];
+  for(const x of [...due, ...unseen, ...rest]){
+    if(seen.has(x.id)) continue;
+    seen.add(x.id); out.push(x);
+    if(out.length === n) break;
+  }
+  return out;
+}
+
+const modeFor = box => box <= 2 ? 'MEANING' : (box === 3 ? 'RECALL' : 'CLOZE');
+const MODE_KO = {MEANING:'뜻 고르기', RECALL:'영어로 떠올리기', CLOZE:'문장 빈칸', GRAMMAR:'문법 빈칸'};
+const blankOut = w => w.example.replace(new RegExp('\\b'+w.term+'\\b','ig'), BLANK);
+
+function build(target, mode, retry){
+  // 1순위: 사람이 지정한 '헷갈리는 짝'. 무작위로 뽑으면 소거법으로 다 풀린다.
+  const curated = shuffle(target.confusions.map(c=>BY[c.id]).filter(Boolean)).slice(0,3);
+  const used = new Set([...curated.map(w=>w.id), target.id]);
+  const pool = WORDS.filter(w => !used.has(w.id));
+  const fill = [...shuffle(pool.filter(w=>w.pos===target.pos)), ...shuffle(pool.filter(w=>w.pos!==target.pos))]
+                 .slice(0, Math.max(0, 3 - curated.length));
+  const opts = shuffle([...curated, ...fill, target])
+                 .map(w => ({id:w.id, label: mode==='MEANING' ? w.meaningKo : w.term}));
+  const prompt = mode==='MEANING' ? target.term : mode==='RECALL' ? target.meaningKo : blankOut(target);
+  return {kind:'w', w:target, mode, prompt, opts, retry:!!retry, id:target.id};
+}
+
+function buildG(g, retry){
+  // 문법 오답은 한국어 화자가 실제로 저지르는 실수다. 무작위였다면 문법 문제는 의미가 없다.
+  const opts = shuffle(g.options).map(o => ({id:o, label:o}));
+  return {kind:'g', g, mode:'GRAMMAR', prompt:g.sentence.replace('___', BLANK),
+          opts, retry:!!retry, id:g.id};
+}
+
+function explain(target, chosenId){
+  const n = target.confusions.find(c => c.id === chosenId);
+  if(n) return n.note;
+  const c = BY[chosenId];
+  return c ? `고른 '${c.term}'은(는) ${c.meaningKo}. 정답 '${target.term}'은(는) ${target.meaningKo}.`
+           : `정답 '${target.term}'은(는) ${target.meaningKo}.`;
+}
+const explainG = (g, chosen) => g.notes[chosen] || `정답은 '${g.answer}'입니다. ${g.tip}`;
+const scoreFor = s => 10 + Math.min(Math.max(s-1,0),5)*2;
+
+function record(k, ok, chosen){
+  const cur = P.items[k] || {};
+  const box = !ok ? 1 : Math.min((cur.box || 1) + 1, 5);
+  P.items[k] = {
+    box,
+    due: Date.now() + GAP[box],
+    n: (cur.n || 0) + 1,                       // 총 시도
+    w: (cur.w || 0) + (ok ? 0 : 1),            // 틀린 횟수
+    lw: ok ? (cur.lw || null) : chosen         // 마지막으로 고른 오답
+  };
+  saveP(P);
+}
+
+/* ---------- 상태 ---------- */
+let S = {screen:'home'};
+let LIB = {tab:'weak', level:0, q:''};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const app = document.getElementById('app');
+
+function start(){
+  const nG = PICK.cat === 'grammar' ? SIZE : PICK.cat === 'word' ? 0 : 3;
+  const nW = SIZE - nG;
+
+  const ws = nW ? pickPool(WORDS, 'w', nW) : [];
+  const gs = nG ? pickPool(GRAMMAR, 'g', nG) : [];
+
+  const qs = shuffle([
+    ...ws.map(w => build(w, modeFor(P.items[w.id] ? P.items[w.id].box : 0))),
+    ...gs.map(g => buildG(g))
+  ]);
+
+  if(!qs.length){ toast('선택한 조건에 해당하는 문제가 없습니다. 레벨이나 분류를 바꿔 보세요.', 3200); return; }
+
+  const fresh = ws.filter(w => !P.items[w.id]);   // 새 단어만 카드로 먼저 본다
+  S = {screen: fresh.length ? 'study' : 'quiz', deck:fresh, si:0, qs, i:0,
+       score:0, streak:0, best:0, right:0, fb:null, wrong:[]};
+  render();
+}
+
+function answer(id){
+  if(S.fb) return;
+  const q = S.qs[S.i];
+  const correct = q.kind === 'g' ? q.g.answer : q.w.id;
+  const ok = id === correct;
+
+  S.streak = ok ? S.streak + 1 : 0;
+  S.best = Math.max(S.best, S.streak);
+  const gain = (ok && !q.retry) ? scoreFor(S.streak) : 0;   // 재도전은 무득점
+  S.score += gain;
+  if(ok) S.right++; else S.wrong.push(q);
+
+  S.fb = {ok, chosen:id, gain,
+          why: ok ? '' : (q.kind === 'g' ? explainG(q.g, id) : explain(q.w, id))};
+  record(key(q), ok, id);
+  render();
+  TTS.say(q.kind === 'g' ? q.g.full : q.w.term);
+}
+
+function next(){
+  const q = S.qs[S.i];
+  if(S.fb && !S.fb.ok && !q.retry){
+    // 틀리면 세션 안에서 한 번 더. 단어는 쉬운 형식으로 낮춘다.
+    S.qs.push(q.kind === 'g' ? buildG(q.g, true) : build(q.w, 'MEANING', true));
+  }
+  S.fb = null;
+  if(S.i + 1 >= S.qs.length){
+    P.total += S.score; P.best = Math.max(P.best, S.best); saveP(P);
+    S.screen = 'result';
+  } else S.i++;
+  render();
+}
+
+function setPick(field, value){
+  PICK[field] = value;
+  render();
+}
+
+/* ---------- 화면 ---------- */
+function render(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  app.innerHTML = ({home:home, study:study, quiz:quiz, result:result, library:library})[S.screen]();
+  window.scrollTo(0,0);
+  if(S.screen === 'library') libFilter();
+}
+
+function ttsNotice(){
+  if(TTS.available()) return '';
+  return `<div class="notice">이 화면에서는 브라우저 음성 기능이 차단돼 있습니다.
+    파일을 내려받아 <b>Chrome</b> 또는 <b>삼성 인터넷</b>에서 열면 발음이 나옵니다.
+    발음 없이도 학습은 그대로 진행됩니다.</div>`;
+}
+
+function home(){
+  const now = Date.now();
+  const dueAll = Object.entries(P.items).filter(([k,v]) => v.due <= now).length;
+  const seen = Object.keys(P.items).length;
+  const mastered = Object.values(P.items).filter(v => v.box >= 5).length;
+
+  const lvCount = l => WORDS.filter(w => l===0 || w.level===l).length;
+  const gCount  = l => GRAMMAR.filter(g => l===0 || g.level===l).length;
+
+  const lvChip = (l, name) => `<button class="chip ${PICK.level===l?'on':''}" onclick="setPick('level',${l})">
+      ${name}<small>단어 ${lvCount(l)} · 문법 ${gCount(l)}</small></button>`;
+  const catChip = (c, name, desc) => `<button class="chip ${PICK.cat===c?'on':''}" onclick="setPick('cat','${c}')">
+      ${name}<small>${desc}</small></button>`;
+
+  return `
+  <h1>Biz Vocab Quest</h1>
+  <div class="sub">회의와 메일에서 바로 쓰는 비즈니스 영어</div>
+
+  <div class="card">
+    <div class="stats">
+      <div class="stat"><b style="color:var(--indigo)">${P.total}</b><span>누적 점수</span></div>
+      <div class="stat"><b style="color:var(--amber)">${P.best}</b><span>최고 연속</span></div>
+      <div class="stat"><b style="color:var(--ok)">${mastered}</b><span>완전 습득</span></div>
+    </div>
+    <p style="margin:16px 0 0; font-size:14px; color:var(--muted)">
+      전체 ${WORDS.length}단어 · 문법 ${GRAMMAR.length}문항 중 ${seen}개 학습 시작${dueAll ? ` · 복습 대기 ${dueAll}개` : ''}</p>
+  </div>
+
+  <div class="label">분야</div>
+  <div class="chips">
+    ${lvChip(0,'전체')}${lvChip(1,'기초 업무')}
+  </div>
+  <div class="chips">
+    ${lvChip(2,'회의·프로젝트')}${lvChip(3,'재무·법무')}
+  </div>
+
+  <div class="label">문제 유형</div>
+  <div class="chips">
+    ${catChip('word','단어','뜻·인출·빈칸')}
+    ${catChip('grammar','문법','빈칸 채우기')}
+    ${catChip('mix','섞어서','단어 7 + 문법 3')}
+  </div>
+
+  <button class="primary" onclick="start()">10문제 시작</button>
+  <button class="ghost" onclick="openLibrary()">📒 학습 노트 · 약점 확인</button>
+  <button class="install" id="installBtn" style="display:${deferredPrompt ? 'block' : 'none'}" onclick="installApp()">📲 홈 화면에 추가</button>
+  <button class="diag" onclick="TTS.diagnose()">🔊 음성 테스트 · 안 들리면 눌러 보세요</button>
+  ${ttsNotice()}
+
+  <div class="notice"><b>진행 방식</b><br>
+    새 단어는 카드로 먼저 보고, 익숙해질수록 문제가 어려워집니다(뜻 → 영어 인출 → 문장 빈칸).
+    문법은 한국어 화자가 실제로 자주 틀리는 오답을 보기로 넣었습니다.
+    틀린 문제는 세션 안에서 다시 나오고, 며칠 뒤 복습 대상으로 돌아옵니다.</div>
+
+  <button class="link" onclick="if(confirm('학습 기록을 모두 지웁니다.')){P={items:{},total:0,best:0};saveP(P);render();}"
+    style="display:block;margin:14px auto 0">학습 기록 초기화</button>`;
+}
+
+function study(){
+  const w = S.deck[S.si];
+  setTimeout(()=>TTS.say(w.term), 60);
+  return `
+  <div class="row" style="margin-bottom:14px">
+    <span class="meta">새 단어 ${S.si+1} / ${S.deck.length}</span>
+    <button class="link" onclick="S.screen='quiz';render()">건너뛰고 퀴즈로</button>
+  </div>
+  <div class="card" onclick="TTS.say(BY['${w.id}'].term)">
+    <div class="term">${esc(w.term)}</div>
+    <div style="margin-top:10px"><span class="ipa">${esc(w.ipa)}</span></div>
+    <div style="font-size:21px;font-weight:700;margin-top:14px">${esc(w.meaningKo)}</div>
+    <div class="meta" style="margin-top:4px">${w.pos}</div>
+    <div style="font-size:16px;font-weight:600;margin-top:20px;line-height:1.6">${esc(w.example)}</div>
+    <div style="font-size:15px;color:var(--muted);margin-top:6px;line-height:1.6">${esc(w.exampleKo)}</div>
+    <div style="margin-top:14px">
+      <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this)">🔊 단어</button>
+      <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>
+    </div>
+  </div>
+  <button class="primary" onclick="S.si+1>=S.deck.length ? (S.screen='quiz') : S.si++; render()">
+    ${S.si+1 >= S.deck.length ? '퀴즈 시작' : '다음 단어'}</button>`;
+}
+
+function quiz(){
+  const q = S.qs[S.i], fb = S.fb, reveal = !!fb;
+  const isG = q.kind === 'g';
+  const w = isG ? null : q.w, g = isG ? q.g : null;
+  const correctId = isG ? g.answer : w.id;
+  const canSpeak = isG ? reveal : (q.mode !== 'RECALL' || reveal);   // 정답 유출 방지
+
+  const opts = q.opts.map(o => {
+    let cls = '', mark = '';
+    if(fb){
+      if(o.id === correctId){ cls = 'correct'; mark = '✓'; }
+      else if(o.id === fb.chosen){ cls = 'wrong'; mark = '✕'; }
+      else cls = 'dim';
+    }
+    const safe = o.id.replace(/'/g, "\\'");
+    return `<button class="opt ${cls}" onclick="answer('${safe}')">
+      <span>${esc(o.label)}</span><span class="mark" style="color:${cls==='correct'?'var(--ok)':'var(--no)'}">${mark}</span></button>`;
+  }).join('');
+
+  const head = isG
+    ? `<div class="topic">${esc(g.topic)}</div>
+       <div class="prompt" style="margin-top:12px">${esc(q.prompt)}</div>`
+    : q.mode === 'MEANING'
+      ? `<div class="term">${esc(w.term)}</div><div style="margin-top:10px"><span class="ipa">${esc(w.ipa)}</span></div>`
+      : q.mode === 'RECALL'
+        ? `<div class="prompt">${esc(w.meaningKo)}</div><div class="meta" style="margin-top:6px">${w.pos}</div>`
+        : `<div class="prompt">${esc(q.prompt)}</div><div style="margin-top:10px"><span class="ipa">${esc(w.ipa)}</span></div>`;
+
+  const speakRow = !canSpeak ? '' : isG
+    ? `<div style="margin-top:14px"><button class="speak" onclick="event.stopPropagation();TTS.say(GB['${g.id}'].full, this)">🔊 완성 문장</button></div>`
+    : `<div style="margin-top:14px">
+         <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this)">🔊 단어</button>
+         ${(q.mode !== 'CLOZE' || reveal) ? `<button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>` : ''}
+       </div>`;
+
+  const fbBody = !fb ? '' : isG
+    ? `${fb.ok ? '' : `<p>${esc(fb.why)}</p>`}
+       <p style="margin-top:14px;font-weight:700">${esc(g.full)}</p>
+       <p class="ko" style="margin-top:2px">${esc(g.ko)}</p>
+       <div class="tip">${esc(g.tip)}</div>
+       <div style="margin-top:12px">
+         <button class="speak" onclick="TTS.say(GB['${g.id}'].full, this)">🔊 완성 문장</button></div>`
+    : `${fb.ok ? '' : `<p>${esc(fb.why)}</p>`}
+       <p style="margin-top:14px"><b style="font-size:20px;color:var(--indigo)">${esc(w.term)}</b>
+         <span class="ipa" style="margin-left:8px">${esc(w.ipa)}</span></p>
+       <p style="margin-top:4px">${esc(w.meaningKo)}</p>
+       <p style="font-weight:600">${esc(w.example)}</p>
+       <p class="ko" style="margin-top:2px">${esc(w.exampleKo)}</p>
+       <div style="margin-top:10px">
+         <button class="speak" onclick="TTS.say(BY['${w.id}'].term, this)">🔊 단어</button>
+         <button class="speak" onclick="TTS.say(BY['${w.id}'].example, this)">🔊 예문</button></div>`;
+
+  const fbHtml = !fb ? '' : `
+    <div class="fb ${fb.ok?'ok':'no'}">
+      <div class="row" style="justify-content:flex-start">
+        <h3 class="${fb.ok?'ok':'no'}">${fb.ok?'정답':'오답'}</h3>
+        ${fb.gain ? `<span class="plus">+${fb.gain}점</span>` : ''}
+      </div>${fbBody}
+    </div>
+    <button class="primary" onclick="next()">${S.i+1 >= S.qs.length ? '결과 보기' : '다음 문제'}</button>`;
+
+  const cardTap = canSpeak
+    ? (isG ? `onclick="TTS.say(GB['${g.id}'].full)"` : `onclick="TTS.say(BY['${w.id}'].term)"`)
+    : '';
+
+  return `
+  <div class="qhead">
+    <div class="row">
+      <span class="meta">문제 ${S.i+1} / ${S.qs.length}</span>
+      <span class="sc">
+        <span><em>점수</em><b style="color:var(--indigo)">${S.score}</b></span>
+        <span><em>연속</em><b class="fire">${S.streak}${S.streak?'🔥':''}</b></span>
+      </span>
+    </div>
+    <div class="bar"><i style="width:${(S.i / S.qs.length * 100).toFixed(1)}%"></i></div>
+  </div>
+  <div class="card" style="margin-top:18px" ${cardTap}>
+    <div class="meta" style="color:${q.retry?'var(--no)':'var(--muted)'};margin-bottom:10px">
+      ${q.retry ? '다시 도전 · ' : ''}${MODE_KO[q.mode]}</div>
+    ${head}${speakRow}
+  </div>
+  ${opts}${fbHtml}`;
+}
+
+function result(){
+  const acc = S.qs.length ? Math.round(S.right / S.qs.length * 100) : 0;
+  const uniq = [...new Map(S.wrong.map(q=>[q.kind+q.id, q])).values()];
+  const title = acc >= 90 ? '완벽합니다' : acc >= 70 ? '잘하고 있습니다' : '복습이 필요합니다';
+
+  const item = q => q.kind === 'g'
+    ? `<div class="wrongitem">
+         <span class="topic">${esc(q.g.topic)}</span>
+         <div style="margin-top:8px;font-size:16px;font-weight:700">${esc(q.g.full)}</div>
+         <div style="margin-top:4px;font-size:14px;color:var(--muted)">${esc(q.g.ko)}</div>
+         <div class="tip">${esc(q.g.tip)}</div>
+         <button class="speak" onclick="TTS.say(GB['${q.g.id}'].full, this)">🔊 문장</button>
+       </div>`
+    : `<div class="wrongitem">
+         <b>${esc(q.w.term)}</b> <span class="ipa" style="margin-left:8px">${esc(q.w.ipa)}</span>
+         <div style="margin-top:6px;font-size:16px">${esc(q.w.meaningKo)}</div>
+         <div style="margin-top:8px;font-size:15px;color:var(--muted);line-height:1.6">${esc(q.w.example)}</div>
+         <button class="speak" onclick="TTS.say(BY['${q.w.id}'].term, this)">🔊 발음</button>
+       </div>`;
+
+  return `
+  <h1 style="color:${acc>=70?'var(--ok)':'var(--amber)'}">${title}</h1>
+  <div class="card" style="margin-top:16px">
+    <div class="stats">
+      <div class="stat"><b style="color:var(--indigo)">${S.score}</b><span>획득 점수</span></div>
+      <div class="stat"><b style="color:var(--ok)">${acc}%</b><span>정답률</span></div>
+      <div class="stat"><b style="color:var(--amber)">${S.best}</b><span>최고 연속</span></div>
+    </div>
+  </div>
+  ${uniq.length ? `<h3 style="margin:24px 0 2px;font-size:19px">다시 볼 문제 ${uniq.length}개</h3>
+    <div class="meta" style="font-weight:400">며칠 뒤 복습 문제로 다시 나옵니다.</div>` : ''}
+  ${uniq.map(item).join('')}
+  <button class="primary" onclick="start()">한 세션 더</button>
+  <button class="ghost" onclick="S={screen:'home'};render()">홈으로</button>`;
+}
+
+/* ---------- 약점 노트 / 전체 목록 ---------- */
+const stat = k => P.items[k] || null;
+const statusOf = st => !st ? ['b-new','미학습']
+  : (st.w||0) >= 2 ? ['b-bad','약점']
+  : st.box >= 5 ? ['b-ok','습득']
+  : ['b-go','학습중'];
+
+function wordItem(w){
+  const st = stat(w.id), sv = statusOf(st);
+  const rate = st && st.n ? ` · ${st.n - (st.w||0)}/${st.n}` : '';
+  const conf = st && st.lw ? (w.confusions.find(c => c.id === st.lw) || {}).note : null;
+  return `<div class="item" data-lv="${w.level}" data-s="${esc((w.term + ' ' + w.meaningKo).toLowerCase())}">
+    <div class="top"><b>${esc(w.term)}</b><span class="badge ${sv[0]}">${sv[1]}${rate}</span></div>
+    <div style="margin-top:6px"><span class="ipa">${esc(w.ipa)}</span></div>
+    <div class="ko">${esc(w.meaningKo)}</div>
+    <div class="ex">${esc(w.example)}</div>
+    ${conf ? `<div class="tip">자주 헷갈린 짝 — ${esc(conf)}</div>` : ''}
+    <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].term, this)">🔊 발음</button>
+    <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>
+  </div>`;
+}
+
+function gramItem(g){
+  const st = stat('g:' + g.id), sv = statusOf(st);
+  const rate = st && st.n ? ` · ${st.n - (st.w||0)}/${st.n}` : '';
+  return `<div class="item" data-lv="${g.level}" data-s="${esc((g.topic + ' ' + g.full + ' ' + g.ko).toLowerCase())}">
+    <div class="top"><span class="topic">${esc(g.topic)}</span><span class="badge ${sv[0]}">${sv[1]}${rate}</span></div>
+    <div style="margin-top:10px;font-size:16px;font-weight:700">${esc(g.full)}</div>
+    <div class="ex">${esc(g.ko)}</div>
+    <div class="tip">${esc(g.tip)}</div>
+    <button class="miniSpeak" onclick="TTS.say(GB['${g.id}'].full, this)">🔊 문장</button>
+  </div>`;
+}
+
+function openLibrary(){ LIB = {tab:'weak', level:0, q:''}; S = {screen:'library'}; render(); }
+function libTab(t){ LIB.tab = t; LIB.level = 0; LIB.q = ''; render(); }
+
+function library(){
+  const tab = (t, name) => `<button class="tab ${LIB.tab===t?'on':''}" onclick="libTab('${t}')">${name}</button>`;
+  const lvBtn = l => `<button class="chip ${LIB.level===l?'on':''}" data-l="${l}" onclick="setLibLevel(${l})">${l===0?'전체':LEVEL_KO[l]}</button>`;
+
+  let body;
+  if(LIB.tab === 'weak'){
+    // 많이 틀린 순 → 아직 안 잡힌 순
+    const ws = WORDS.filter(w => (stat(w.id)||{}).w > 0)
+      .sort((a,b) => (stat(b.id).w - stat(a.id).w) || (stat(a.id).box - stat(b.id).box));
+    const gs = GRAMMAR.filter(g => (stat('g:'+g.id)||{}).w > 0)
+      .sort((a,b) => stat('g:'+b.id).w - stat('g:'+a.id).w);
+    body = (ws.length || gs.length)
+      ? ws.map(wordItem).join('') + gs.map(gramItem).join('')
+      : `<div class="empty">아직 틀린 문제가 없습니다.<br>퀴즈를 몇 번 풀고 나면<br>자주 틀리는 것만 여기 모입니다.</div>`;
+  } else if(LIB.tab === 'words'){
+    body = WORDS.map(wordItem).join('');
+  } else {
+    body = GRAMMAR.map(gramItem).join('');
+  }
+
+  const filter = LIB.tab === 'weak' ? '' : `
+    <input class="search" placeholder="단어나 뜻으로 검색" oninput="libSearch(this.value)">
+    <div class="chips" id="libLevels">${lvBtn(0)}${lvBtn(1)}${lvBtn(2)}${lvBtn(3)}</div>
+    <div class="meta" style="margin-top:12px" id="libCount"></div>`;
+
+  return `
+  <div class="row">
+    <h1 style="font-size:26px;margin:6px 0">학습 노트</h1>
+    <button class="link" onclick="S={screen:'home'};render()">홈으로</button>
+  </div>
+  <div class="tabs">${tab('weak','약점 노트')}${tab('words','단어 '+WORDS.length)}${tab('grammar','문법 '+GRAMMAR.length)}</div>
+  ${filter}
+  <div id="libList">${body}</div>
+  <div style="height:24px"></div>`;
+}
+
+// 필터는 화면을 다시 그리지 않고 DOM만 숨긴다. 다시 그리면 검색창 포커스가 날아간다.
+function libFilter(){
+  const rows = document.querySelectorAll('#libList > .item');
+  let n = 0;
+  rows.forEach(r => {
+    const okLv = LIB.level === 0 || Number(r.dataset.lv) === LIB.level;
+    const okQ  = !LIB.q || (r.dataset.s || '').indexOf(LIB.q) >= 0;
+    const show = okLv && okQ;
+    r.style.display = show ? '' : 'none';
+    if(show) n++;
+  });
+  const c = document.getElementById('libCount');
+  if(c) c.textContent = n + '개';
+}
+function libSearch(v){ LIB.q = (v || '').toLowerCase().trim(); libFilter(); }
+function setLibLevel(l){
+  LIB.level = l;
+  document.querySelectorAll('#libLevels .chip').forEach(b =>
+    b.classList.toggle('on', Number(b.dataset.l) === l));
+  libFilter();
+}
+
+/* ---------- 홈 화면 설치 / 오프라인 ---------- */
+let deferredPrompt = null;
+
+if(typeof navigator !== 'undefined' && 'serviceWorker' in navigator
+   && typeof location !== 'undefined' && location.protocol.indexOf('http') === 0){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW 등록 실패', e));
+  });
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const b = document.getElementById('installBtn');
+  if(b) b.style.display = 'block';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  toast('홈 화면에 추가됐습니다. 이제 아이콘으로 바로 열 수 있습니다.', 3600);
+});
+
+async function installApp(){
+  if(!deferredPrompt){
+    toast('브라우저 메뉴(⋮)에서 "홈 화면에 추가"를 눌러 주세요.', 4200);
+    return;
+  }
+  deferredPrompt.prompt();
+  try{ await deferredPrompt.userChoice; }catch(e){}
+  deferredPrompt = null;
+}
+
+render();
+</script>
+</body>
+</html>

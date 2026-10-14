@@ -1,0 +1,7 @@
+# Android 프로젝트는 동결 상태(미컴파일) — 웹 배포에는 불필요하고 Actions가 실패하므로 제외
+app/
+gradle/
+gradle.properties
+*.gradle.kts
+.github/
+setup.sh
