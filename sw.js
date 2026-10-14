@@ -1,6 +1,6 @@
 // 오프라인 지원. 앱 전체가 파일 몇 개뿐이라 설치 시점에 통째로 캐시한다.
 // 앱을 수정하면 CACHE 이름의 숫자를 반드시 올려야 새 버전이 반영된다.
-const CACHE = 'bvq-v10';
+const CACHE = 'bvq-v11';
 const ASSETS = [
   './',
   './index.html',
