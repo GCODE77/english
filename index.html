@@ -161,6 +161,11 @@
   .trow .ct{font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap; text-align:right}
   .trow.on{border-color:var(--indigo); background:var(--chipbg)}
   .trow .ck{color:var(--indigo); font-weight:900}
+  .stick{position:sticky; bottom:0; z-index:15; margin-top:6px;
+    padding:14px 0 calc(8px + env(safe-area-inset-bottom)); background:linear-gradient(to top, var(--cloud) 68%, transparent)}
+  .stick .primary{margin-top:0}
+  .fb{scroll-margin-top:96px}
+  .instr{font-size:13px; font-weight:700; color:var(--muted); margin-bottom:10px}
   .nav{display:flex; align-items:center; gap:8px}
   .nav button{min-height:44px; min-width:44px; padding:0 14px; border-radius:22px; background:var(--surface);
     border:1.5px solid var(--line); color:var(--muted); font-size:14px; font-weight:800}
@@ -10860,6 +10865,7 @@ function pickPool(list, kind, n){
 
 const modeFor = box => box <= 2 ? 'MEANING' : (box === 3 ? 'RECALL' : 'CLOZE');
 const MODE_KO = {MEANING:'뜻 고르기', RECALL:'영어로 떠올리기', CLOZE:'문장 빈칸', GRAMMAR:'문법 빈칸'};
+const INSTR = {MEANING:'알맞은 뜻을 고르세요', RECALL:'알맞은 영어 단어를 고르세요', CLOZE:'빈칸에 들어갈 단어를 고르세요', GRAMMAR:'빈칸에 알맞은 표현을 고르세요'};
 const blankOut = w => w.example.replace(new RegExp('\\b'+w.term+'\\b','ig'), BLANK);
 
 function build(target, mode, retry){
@@ -10958,7 +10964,7 @@ function next(){
   }
   S.fb = null;
   if(S.i + 1 >= S.qs.length){
-    P.total += S.score; P.best = Math.max(P.best, S.best); saveP(P);
+    bank();
     S.screen = 'result';
   } else S.i++;
   render();
@@ -10971,9 +10977,16 @@ function setPick(field, value){
   render();
 }
 
+// 세션 점수를 누적 기록에 한 번만 반영한다
+function bank(){
+  if(!S.qs || S.banked) return;
+  S.banked = true;
+  P.total += S.score || 0; P.best = Math.max(P.best, S.best || 0); saveP(P);
+}
 function goHome(){
   if(S.screen === 'quiz' || S.screen === 'study'){
-    if(!confirm('홈으로 나갑니다. 지금까지 푼 기록은 저장돼요.')) return;
+    if(!confirm('홈으로 나갑니다. 지금까지 푼 기록과 점수는 저장돼요.')) return;
+    bank();
   }
   S = {screen:'home'}; render();
 }
@@ -10983,13 +10996,39 @@ function closeSession(){
   const done = S.i + (S.fb ? 1 : 0);
   if(done <= 0){ S = {screen:'home'}; render(); return; }
   if(!confirm('여기까지 푼 ' + done + '문제로 끝낼까요?')) return;
-  S.qs = S.qs.slice(0, done); S.fb = null; S.screen = 'result'; render();
+  S.qs = S.qs.slice(0, done); S.fb = null; bank(); S.screen = 'result'; render();
 }
 const navBar = (extra) => `<div class="nav">
     <button onclick="goHome()" aria-label="홈으로">🏠 홈</button>
     <span class="sp"></span>${extra || ''}
     <button onclick="closeSession()" aria-label="닫기">✕ 닫기</button>
   </div>`;
+
+function retryWrong(){
+  const seen = new Set(), qs = [];
+  for(const q of S.wrong){
+    const k = q.kind + q.id;
+    if(seen.has(k)) continue;
+    seen.add(k);
+    qs.push(q.kind === 'g' ? buildG(q.g) : build(q.w, 'MEANING'));
+  }
+  if(!qs.length) return start();
+  S = {screen:'quiz', deck:[], si:0, qs:shuffle(qs), i:0, score:0, streak:0, best:0, right:0, fb:null, wrong:[]};
+  render();
+}
+
+window.addEventListener('keydown', e => {
+  const t = e.target && e.target.tagName;
+  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet) return;
+  const go = e.key === 'Enter' || e.key === ' ';
+  if(go && t === 'BUTTON') return;     // 버튼이 이미 자기 클릭을 처리한다
+  if(S.screen === 'quiz'){
+    if(!S.fb && /^[1-4]$/.test(e.key)){ const o = S.qs[S.i].opts[+e.key - 1]; if(o) answer(o.id); }
+    else if(S.fb && go){ e.preventDefault(); next(); }
+  } else if(S.screen === 'study' && go){
+    e.preventDefault(); const b = document.querySelector('.stick .primary'); if(b) b.click();
+  }
+});
 
 function toggleSheet(v){ UI.sheet = v; render(); }
 function pickTrack(id){ UI.sheet = false; setPick('track', id); }
@@ -10998,7 +11037,9 @@ function pickTrack(id){ UI.sheet = false; setPick('track', id); }
 function render(){
   try{ speechSynthesis.cancel(); }catch(e){}
   app.innerHTML = ({home:home, study:study, quiz:quiz, result:result, library:library})[S.screen]();
-  window.scrollTo(0,0);
+  const fbEl = (S.screen === 'quiz' && S.fb && document.querySelector) ? document.querySelector('.fb') : null;
+  if(fbEl && fbEl.scrollIntoView) fbEl.scrollIntoView({block:'start', behavior:'smooth'});
+  else window.scrollTo(0,0);
   if(S.screen === 'library') libFilter();
 }
 
@@ -11113,8 +11154,8 @@ function study(){
       <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>
     </div>
   </div>
-  <button class="primary" onclick="S.si+1>=S.deck.length ? (S.screen='quiz') : S.si++; render()">
-    ${S.si+1 >= S.deck.length ? '퀴즈 시작' : '다음 단어'}</button>`;
+  <div class="stick"><button class="primary" onclick="S.si+1>=S.deck.length ? (S.screen='quiz') : S.si++; render()">
+    ${S.si+1 >= S.deck.length ? '퀴즈 시작' : '다음 단어'}</button></div>`;
 }
 
 function quiz(){
@@ -11176,7 +11217,7 @@ function quiz(){
         ${fb.gain ? `<span class="plus">+${fb.gain}점</span>` : ''}
       </div>${fbBody}
     </div>
-    <button class="primary" onclick="next()">${S.i+1 >= S.qs.length ? '결과 보기' : '다음 문제'}</button>`;
+    <div class="stick"><button class="primary" onclick="next()">${S.i+1 >= S.qs.length ? '결과 보기' : '다음 문제'}</button></div>`;
 
   const cardTap = canSpeak
     ? (isG ? `onclick="TTS.say(GB['${g.id}'].full)"` : `onclick="TTS.say(BY['${w.id}'].term)"`)
@@ -11197,6 +11238,7 @@ function quiz(){
   <div class="card" style="margin-top:18px" ${cardTap}>
     <div class="meta" style="color:${q.retry?'var(--no)':'var(--muted)'};margin-bottom:10px">
       ${q.retry ? '다시 도전 · ' : ''}${MODE_KO[q.mode]}</div>
+    ${fb ? '' : `<div class="instr">${INSTR[q.mode]}</div>`}
     ${head}${speakRow}
   </div>
   ${opts}${fbHtml}`;
@@ -11232,11 +11274,14 @@ function result(){
       <div class="stat"><b style="color:var(--amber)">${S.best}</b><span>최고 연속</span></div>
     </div>
   </div>
+  ${uniq.length
+    ? `<button class="primary" onclick="retryWrong()">틀린 ${uniq.length}문제 바로 다시 풀기<small>기억이 남아 있을 때 한 번 더</small></button>
+       <button class="ghost" onclick="start()">새 문제 10개 풀기</button>`
+    : `<button class="primary" onclick="start()">한 세션 더<small>새 문제 10개</small></button>`}
+  <button class="ghost" onclick="goHome()">홈으로</button>
   ${uniq.length ? `<h3 style="margin:24px 0 2px;font-size:19px">다시 볼 문제 ${uniq.length}개</h3>
     <div class="meta" style="font-weight:400">며칠 뒤 복습 문제로 다시 나옵니다.</div>` : ''}
-  ${uniq.map(item).join('')}
-  <button class="primary" onclick="start()">한 세션 더</button>
-  <button class="ghost" onclick="S={screen:'home'};render()">홈으로</button>`;
+  ${uniq.map(item).join('')}`;
 }
 
 /* ---------- 약점 노트 / 전체 목록 ---------- */
