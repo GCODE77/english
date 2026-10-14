@@ -19,7 +19,7 @@
 | 웹 앱 (`index.html`) | **완성, 검증됨** | 단일 파일. 데이터·로직·UI 전부 포함 |
 | PWA (오프라인·홈 화면 설치) | 완성 | `manifest.webmanifest`, `sw.js`, `icons/` |
 | 자동 검증 (`tools/verify.js`) | 완성 | `node tools/verify.js` — 전체 통과 확인됨 |
-| GitHub Pages 배포 | **완료** | https://gcode77.github.io/BizVocabQuest/ (저장소 GCODE77/BizVocabQuest) |
+| GitHub Pages 배포 | **완료** | https://gcode77.github.io/english/ (저장소 GCODE77/english, 소문자 경로만 열림) |
 | 학습 대상 트랙 7개 | 완료 | 유아·어린이·초등·중등·고등·대학·직장인. 항목의 `track` 필드로 구분 |
 | Android 앱 (`app/`) | **미완성·동결** | 단어 32개에 멈춤. **한 번도 컴파일된 적 없음** |
 | GitHub Actions APK 빌드 | 작성만 됨 | `.github/workflows/build.yml`, 실행된 적 없음 |
@@ -36,8 +36,8 @@
 
 사용자의 GitHub 사용자명은 `gcode77`이고, `gcode77.github.io`에는 **이미 다른 앱(콘티, 교회 찬양팀 코드 차트)이 배포돼 있다.**
 
-- 이 앱은 **반드시 새 저장소**에 올린다. 예: `BizVocabQuest`
-- 배포 주소는 `https://gcode77.github.io/BizVocabQuest/` 형태가 된다
+- 이 앱은 **반드시 새 저장소**에 올린다. 현재 저장소: `english`
+- 배포 주소는 `https://gcode77.github.io/english/` 형태가 된다
 - **기존 `gcode77.github.io` 저장소 루트에 `index.html`을 넣으면 콘티 앱이 덮어써진다.** 절대 금지
 - GitHub Pages 무료 요금제에서는 저장소가 **Public**이어야 한다
 
@@ -219,4 +219,6 @@ PWA를 홈 화면에 설치하고 나면 **Android 네이티브의 존재 이유
 - 새 트랙 단어는 `ipa`가 없다. 확인되지 않은 발음기호를 넣지 않는다는 원칙 때문이다. 확인된 값만 추가할 것.
 - `emoji` 필드가 있으면 학습 카드·뜻 고르기 화면에 큰 그림으로 표시된다(유아·어린이용).
 - 세부 분야(`level` 1~3)는 직장인 트랙에만 있다. 새 트랙은 모두 `level:1`.
-- 현재 분량: 유아 16/6, 어린이 21/6, 초등 18/8, 중등 23/8, 고등 21/8, 대학 21/8 (단어/문법). 사용해 보며 늘릴 것.
+- 현재 분량(단어/문법): 유아 348/6, 어린이 307/6, 초등 349/8, 중등 323/8, 고등 304/8, 대학 306/8, 직장인 105/60. **문법은 아직 적다**(트랙당 6~8문항).
+- 새 트랙 단어는 AI가 트랙별로 병렬 작성했다. 뜻·해설을 사람이 전수 검수하지 않았으므로 사용 중 어색한 항목은 고친다. 유아의 숫자 1~20 해설은 문장 틀에 숫자만 바꾼 것이다.
+- 파일이 약 1.1MB로 커졌다. 느려지면 데이터를 JSON으로 분리하는 것을 검토(sw.js ASSETS에 추가 필요).
