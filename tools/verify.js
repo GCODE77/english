@@ -62,8 +62,7 @@ console.log('\n[1] 단어 데이터 ' + A.WORDS.length + '개');
     ids.add(w.id);
     for (const k of ['term', 'meaningKo', 'pos', 'example', 'exampleKo', 'level', 'track'])
       if (!w[k]) fail.push(`${w.id}: ${k} 누락`);
-    // IPA는 확인된 표기만 넣는다. 직장인 트랙은 필수, 나머지는 없으면 비워 둔다(지어내지 않기)
-    if (w.track === 'work' && !w.ipa) fail.push(`${w.id}: ipa 누락`);
+    // IPA는 확인된 표기만 넣는다. 없으면 비워 두고(지어내지 않기), 있으면 형식만 검사한다
     if (w.ipa && !/^\/.+\/$/.test(w.ipa)) fail.push(`${w.id}: IPA 표기 오류 ${w.ipa}`);
     const re = new RegExp('\\b' + w.term + '\\b', 'i');
     if (!re.test(w.example)) fail.push(`${w.id}: 예문에 기본형 '${w.term}' 없음 → 빈칸 문제 불가`);
