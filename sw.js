@@ -1,9 +1,16 @@
 // 오프라인 지원. 앱 전체가 파일 몇 개뿐이라 설치 시점에 통째로 캐시한다.
 // 앱을 수정하면 CACHE 이름의 숫자를 반드시 올려야 새 버전이 반영된다.
-const CACHE = 'bvq-v11';
+const CACHE = 'bvq-v12';
 const ASSETS = [
   './',
   './index.html',
+  './data/toddler.js',
+  './data/child.js',
+  './data/elem.js',
+  './data/mid.js',
+  './data/high.js',
+  './data/univ.js',
+  './data/work.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -33,6 +40,8 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(hit => {
       if (hit) {
+        // 데이터 파일은 용량이 커서 매번 다시 받지 않는다(CACHE 버전을 올리면 갱신됨)
+        if (e.request.url.includes('/data/')) return hit;
         // 캐시를 먼저 주고, 뒤에서 조용히 최신본을 받아 둔다
         fetch(e.request).then(res => {
           if (res && res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));

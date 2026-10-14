@@ -10,6 +10,7 @@ const fs = require('fs');
 const vm = require('vm');
 const path = require('path');
 
+const TRACK_IDS = ['toddler', 'child', 'elem', 'mid', 'high', 'univ', 'work'];
 const FILE = path.join(__dirname, '..', 'index.html');
 const html = fs.readFileSync(FILE, 'utf8');
 const css = html.split('<style>')[1].split('</style>')[0];
@@ -44,9 +45,11 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,getP:()=>P,getS:()=>S};',
     box
   );
+  for (const t of TRACK_IDS)
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'data', t + '.js'), 'utf8'), box);
   return box;
 }
 
@@ -232,6 +235,19 @@ console.log('\n[6] CSS · DOM 정합성');
       fail.push('매니페스트가 가리키는 아이콘 없음: ' + i.src);
   });
   note('CSS 변수 ' + defined.size + '개 · PWA 파일 확인');
+
+  // 데이터 분리 정합성: 개수 표(TRACK_COUNTS) 동기화, 서비스워커 캐시 목록, 트랙 로드 상태
+  for (const t of TRACK_IDS) {
+    const w = A.WORDS.filter(x => x.track === t).length, g = A.GRAMMAR.filter(x => x.track === t).length;
+    const c = A.TRACK_COUNTS[t] || {};
+    if (c.w !== w || c.g !== g)
+      fail.push(`TRACK_COUNTS[${t}] = ${c.w}/${c.g} 이지만 실제는 ${w}/${g} → node tools/sync-counts.js 실행`);
+    if (!A.LOADED.has(t)) fail.push('트랙이 로드되지 않음: ' + t);
+    const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+    if (!sw.includes("'./data/" + t + ".js'")) fail.push('sw.js ASSETS 에 data/' + t + '.js 없음 → 오프라인에서 이 트랙이 안 열림');
+  }
+  if (html.includes('const WORDS = [\n  {')) fail.push('index.html 안에 데이터가 다시 들어옴 → data/*.js 에 둘 것');
+  note('트랙 데이터 ' + TRACK_IDS.length + '개 · TRACK_COUNTS 동기화 확인');
 }
 
 /* ---------- 결과 ---------- */
