@@ -1,7 +1,7 @@
 {
-  "name": "Biz Vocab Quest",
-  "short_name": "Biz Vocab",
-  "description": "비즈니스 영어 단어와 문법을 게임처럼 익히는 학습 앱",
+  "name": "English",
+  "short_name": "English",
+  "description": "유아부터 직장인까지 영어 단어와 문법을 게임처럼 익히는 학습 앱",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
