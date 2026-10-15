@@ -45,7 +45,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,getP:()=>P,getS:()=>S};',
     box
   );
   for (const t of TRACK_IDS)
@@ -248,6 +248,68 @@ console.log('\n[6] CSS · DOM 정합성');
   }
   if (html.includes('const WORDS = [\n  {')) fail.push('index.html 안에 데이터가 다시 들어옴 → data/*.js 에 둘 것');
   note('트랙 데이터 ' + TRACK_IDS.length + '개 · TRACK_COUNTS 동기화 확인');
+}
+
+/* ---------- 7. 자동 발음 · 이어서 하기 ---------- */
+console.log('\n[7] 자동 발음 · 이어서 하기');
+{
+  box.confirm = () => true;
+  let spoke = 0;
+  const origSay = A.TTS.say; A.TTS.say = () => { spoke++; };
+  if (A.SND.on) fail.push('자동 발음 기본값이 꺼짐이 아님');
+
+  A.clearSession();
+  A.setPick('track', 'elem'); A.setPick('cat', 'mix'); A.setPick('level', 0);
+  const base = A.getP().total;
+  A.start();
+  let S = A.getS();
+  if (S.screen === 'study') { S.screen = 'quiz'; A.render(); }
+  S = A.getS();
+  const q0 = S.qs[S.i];
+  A.answer(q0.kind === 'g' ? q0.g.answer : q0.w.id);          // 정답 1개
+  if (spoke) fail.push('자동 발음이 꺼져 있는데 정답 확인 때 재생됨');
+  const snap = JSON.parse(box.localStorage.getItem('bvq_session') || 'null');
+  if (!snap) fail.push('진행 중인 세션이 저장되지 않음');
+  else if (snap.score <= 0 || !snap.fb) fail.push('저장본에 점수·피드백 상태가 없음');
+
+  A.goHome();                                                  // 🏠 홈 = 일시정지
+  if (A.getS().screen !== 'home') fail.push('goHome 이 홈으로 가지 않음');
+  if (!A.readSession()) fail.push('홈으로 나간 뒤 저장본이 사라짐');
+  if (!A.home().includes('이어서 하기')) fail.push('홈에 이어서 하기 버튼이 없음');
+  const pausedScore = snap ? snap.score : 0;
+
+  A.resumeSession();
+  S = A.getS();
+  if (S.screen !== 'quiz' || S.qs.length !== snap.qs.length || S.i !== snap.i || S.score !== snap.score || S.right !== snap.right)
+    fail.push('이어서 하기가 저장 시점의 상태를 복원하지 못함');
+  if (!S.fb || S.fb.chosen !== snap.fb.chosen) fail.push('이어서 하기가 피드백 상태를 복원하지 못함');
+
+  // 끝까지 진행 → 결과 화면에서 저장본 삭제, 점수는 중복 없이 한 번만 합산
+  let guard = 0;
+  while (A.getS().screen === 'quiz' && guard++ < 60) {
+    const st = A.getS();
+    if (!st.fb) { const q = st.qs[st.i]; A.answer(q.kind === 'g' ? q.g.answer : q.w.id); }
+    A.next();
+  }
+  if (A.getS().screen !== 'result') fail.push('이어서 한 세션이 결과 화면에 도달하지 못함');
+  if (A.readSession()) fail.push('세션이 끝났는데 저장본이 남아 있음');
+  if (A.getP().total !== base + A.getS().score)
+    fail.push('점수 합산 오류: 기대 ' + (base + A.getS().score) + ' 실제 ' + A.getP().total + ' (홈 → 이어서 하기에서 중복 합산?)');
+  note('이어서 하기 복원 · 점수 중복 없음 · 완료 시 저장본 삭제 확인 (일시정지 점수 ' + pausedScore + ')');
+
+  // 자동 발음을 켜면 재생된다
+  A.toggleSound();
+  if (!A.SND.on) fail.push('toggleSound 가 켜지지 않음');
+  A.setPick('cat', 'word'); A.start();
+  S = A.getS();
+  if (S.screen === 'study') { S.screen = 'quiz'; A.render(); }
+  S = A.getS();
+  spoke = 0;
+  const q1 = S.qs[S.i]; A.answer(q1.kind === 'g' ? q1.g.answer : q1.w.id);
+  if (!spoke) fail.push('자동 발음이 켜져 있는데 재생되지 않음');
+  A.toggleSound();
+  A.TTS.say = origSay;
+  A.clearSession();
 }
 
 /* ---------- 결과 ---------- */

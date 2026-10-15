@@ -140,6 +140,7 @@
     align-items:center; justify-content:center; gap:1px; padding:6px}
   .seg small{font-size:11px; font-weight:600; opacity:.85}
   .seg.on{background:var(--indigo); border-color:var(--indigo); color:#fff}
+  .ghost small{display:block; font-size:12px; font-weight:600; opacity:.85; margin-top:2px}
   .primary small{display:block; font-size:13px; font-weight:600; opacity:.9; margin-top:2px}
   .foot{display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-top:18px}
   details.how{margin-top:16px; background:var(--line); border-radius:14px; padding:12px 14px;
@@ -166,6 +167,8 @@
   .stick .primary{margin-top:0}
   .fb{scroll-margin-top:96px}
   .instr{font-size:13px; font-weight:700; color:var(--muted); margin-bottom:10px}
+  .iconbtn{min-width:48px; min-height:48px; padding:0 12px; border-radius:24px; background:var(--surface);
+    border:1.5px solid var(--line); font-size:20px; line-height:1; box-shadow:var(--shadow)}
   .nav{display:flex; align-items:center; gap:8px}
   .nav button{min-height:44px; min-width:44px; padding:0 14px; border-radius:22px; background:var(--surface);
     border:1.5px solid var(--line); color:var(--muted); font-size:14px; font-weight:800}
@@ -448,7 +451,7 @@ function answer(id){
           why: ok ? '' : (q.kind === 'g' ? explainG(q.g, id) : explain(q.w, id))};
   record(key(q), ok, id);
   render();
-  TTS.say(q.kind === 'g' ? q.g.full : q.w.term);
+  autoSay(q.kind === 'g' ? q.g.full : q.w.term);
 }
 
 function next(){
@@ -474,14 +477,16 @@ function setPick(field, value){
 
 // 세션 점수를 누적 기록에 한 번만 반영한다
 function bank(){
-  if(!S.qs || S.banked) return;
-  S.banked = true;
-  P.total += S.score || 0; P.best = Math.max(P.best, S.best || 0); saveP(P);
+  if(!S.qs) return;
+  const add = (S.score || 0) - (S.bankedScore || 0);
+  S.bankedScore = S.score || 0;
+  if(add > 0) P.total += add;
+  P.best = Math.max(P.best, S.best || 0); saveP(P);
 }
 function goHome(){
   if(S.screen === 'quiz' || S.screen === 'study'){
-    if(!confirm('홈으로 나갑니다. 지금까지 푼 기록과 점수는 저장돼요.')) return;
-    bank();
+    if(!confirm('홈으로 나갑니다. 진행 상황이 저장돼서 나중에 이어서 할 수 있어요.')) return;
+    bank(); saveSession();
   }
   S = {screen:'home'}; render();
 }
@@ -496,6 +501,7 @@ function closeSession(){
 const navBar = (extra) => `<div class="nav">
     <button onclick="goHome()" aria-label="홈으로">🏠 홈</button>
     <span class="sp"></span>${extra || ''}
+    ${soundBtn()}
     <button onclick="closeSession()" aria-label="닫기">✕ 닫기</button>
   </div>`;
 
@@ -525,12 +531,74 @@ window.addEventListener('keydown', e => {
   }
 });
 
+/* ---------- 자동 발음 (기본 꺼짐) ----------
+   꺼져 있어도 🔊 버튼을 직접 누르면 항상 재생된다. 자동 재생만 막는다. */
+const SND = { on: store.get('bvq_snd') === '1' };
+function toggleSound(){
+  SND.on = !SND.on;
+  store.set('bvq_snd', SND.on ? '1' : '0');
+  if(!SND.on){ try{ speechSynthesis.cancel(); }catch(e){} }
+  document.querySelectorAll('[data-snd]').forEach(b => {
+    b.textContent = SND.on ? '🔊' : '🔇';
+    b.setAttribute('aria-label', '자동 발음 ' + (SND.on ? '끄기' : '켜기'));
+  });
+  toast(SND.on ? '자동 발음을 켰어요' : '자동 발음을 껐어요. 🔊 버튼을 누르면 들을 수 있어요', 1800);
+}
+const autoSay = (text, delay) => { if(SND.on) setTimeout(() => TTS.say(text), delay || 0); };
+const soundBtn = () => `<button class="iconbtn" data-snd="1" onclick="toggleSound()" aria-label="자동 발음 ${SND.on ? '끄기' : '켜기'}">${SND.on ? '🔊' : '🔇'}</button>`;
+
+/* ---------- 이어서 하기: 진행 중인 세션을 자동 저장한다 ---------- */
+const SES_KEY = 'bvq_session';
+function saveSession(){
+  if(!S.qs || !(S.screen === 'quiz' || S.screen === 'study')) return;
+  try{
+    store.set(SES_KEY, JSON.stringify({
+      v:1, t:Date.now(), track:PICK.track, cat:PICK.cat, level:PICK.level,
+      screen:S.screen, si:S.si || 0, i:S.i || 0, score:S.score || 0, streak:S.streak || 0,
+      best:S.best || 0, right:S.right || 0, bankedScore:S.bankedScore || 0, fb:S.fb || null,
+      deck:(S.deck || []).map(w => w.id),
+      qs:S.qs.map(q => ({k:q.kind, id:q.id, m:q.mode, p:q.prompt, o:q.opts, r:q.retry ? 1 : 0})),
+      wrong:S.wrong.map(q => ({k:q.kind, id:q.id}))
+    }));
+  }catch(e){}
+}
+function clearSession(){ try{ store.set(SES_KEY, ''); }catch(e){} }
+function readSession(){
+  try{
+    const d = JSON.parse(store.get(SES_KEY) || 'null');
+    return (d && d.v === 1 && Array.isArray(d.qs) && d.qs.length && TRACKS.some(t => t.id === d.track)) ? d : null;
+  }catch(e){ return null; }
+}
+function resumeSession(){
+  const d = readSession();
+  if(!d){ toast('이어서 할 학습이 없어요.', 1800); return; }
+  PICK.track = d.track; PICK.cat = d.cat || 'mix'; PICK.level = d.level || 0; savePick();
+  UI.sheet = false;
+  const apply = () => {
+    const qs = d.qs.map(x => x.k === 'g'
+      ? {kind:'g', g:GB[x.id], mode:x.m, prompt:x.p, opts:x.o, retry:!!x.r, id:x.id}
+      : {kind:'w', w:BY[x.id], mode:x.m, prompt:x.p, opts:x.o, retry:!!x.r, id:x.id});
+    if(qs.some(q => !(q.g || q.w))){ clearSession(); toast('저장된 학습을 복원하지 못했어요. 새로 시작해 주세요.', 2800); render(); return; }
+    S = {screen:d.screen, deck:d.deck.map(id => BY[id]).filter(Boolean), si:d.si, qs, i:d.i,
+         score:d.score, streak:d.streak, best:d.best, right:d.right, bankedScore:d.bankedScore || 0,
+         fb:d.fb, wrong:d.wrong.map(x => qs.find(q => q.kind === x.k && q.id === x.id)).filter(Boolean)};
+    if(S.screen === 'study' && !S.deck.length) S.screen = 'quiz';
+    render();
+  };
+  if(LOADED.has(d.track)) apply();
+  else loadTrack(d.track).then(apply).catch(() => toast('데이터를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.', 2800));
+}
+const agoKo = t => { const m = Math.floor((Date.now() - t) / 60000);
+  return m < 1 ? '방금 전' : m < 60 ? m + '분 전' : m < 1440 ? Math.floor(m / 60) + '시간 전' : Math.floor(m / 1440) + '일 전'; };
+
 function toggleSheet(v){ UI.sheet = v; render(); }
 function pickTrack(id){ UI.sheet = false; setPick('track', id); }
 
 /* ---------- 화면 ---------- */
 function render(){
   try{ speechSynthesis.cancel(); }catch(e){}
+  if(S.screen === 'quiz' || S.screen === 'study') saveSession();
+  else if(S.screen === 'result') clearSession();
   if(!LOADED.has(PICK.track) && !(S.screen === 'home' && UI.sheet)){
     app.innerHTML = '<div class="empty" style="padding-top:120px">불러오는 중…</div>';
     loadTrack(PICK.track).then(() => render()).catch(() => {
@@ -589,6 +657,15 @@ function home(){
       ${TRACKS.map(trRow).join('')}
     </div></div>` : '';
 
+  const ses = readSession();
+  let resumeHtml = '';
+  if(ses){
+    const ST = TRACK(ses.track);
+    const where = ses.screen === 'study'
+      ? `새 단어 카드 ${ses.si + 1} / ${ses.deck.length}`
+      : `${Math.min(ses.i + (ses.fb ? 1 : 0), ses.qs.length)} / ${ses.qs.length}문제 푼 상태`;
+    resumeHtml = `<button class="primary" onclick="resumeSession()">▶ 이어서 하기<small>${ST.emoji} ${ST.name} · ${where} · ${agoKo(ses.t)}</small></button>`;
+  }
   const first = pr.seen === 0;
   const ctaSub = PICK.cat === 'word' ? '단어 10문제' : PICK.cat === 'grammar' ? '문법 10문제' : '단어 7 + 문법 3';
   const ctaMain = first ? '첫 학습 시작하기' : (pr.due ? '복습하고 이어서 풀기' : '10문제 시작');
@@ -596,7 +673,10 @@ function home(){
   return `
   <div class="top">
     <h1>English</h1>
-    <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} <i>▼</i></button>
+    <span style="display:flex; gap:8px; align-items:center">
+      ${soundBtn()}
+      <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} <i>▼</i></button>
+    </span>
   </div>
   <div class="sub" style="margin-bottom:0">${T.sub}</div>
 
@@ -610,6 +690,8 @@ function home(){
     </div>
   </div>
 
+  ${resumeHtml}
+
   <div class="label">문제 유형</div>
   <div class="segs">
     ${seg('mix','섞어서','단어 7 + 문법 3')}
@@ -618,7 +700,7 @@ function home(){
   </div>
   ${levels()}
 
-  <button class="primary" onclick="start()">${ctaMain}<small>${ctaSub}${pr.due ? ' · 복습 ' + pr.due + '개 대기 중' : ''}</small></button>
+  <button class="${ses ? 'ghost' : 'primary'}" onclick="start()">${ses ? '새로 시작하기' : ctaMain}<small>${ctaSub}${pr.due ? ' · 복습 ' + pr.due + '개 대기 중' : ''}</small></button>
   <button class="ghost" onclick="openLibrary()">📒 학습 노트 · 약점 확인</button>
   <button class="install" id="installBtn" style="display:${deferredPrompt ? 'block' : 'none'}" onclick="installApp()">📲 홈 화면에 추가하면 앱처럼 써요</button>
   ${ttsNotice()}
@@ -637,7 +719,7 @@ function home(){
 
 function study(){
   const w = S.deck[S.si];
-  setTimeout(()=>TTS.say(w.term), 60);
+  autoSay(w.term, 60);
   return `
   ${navBar()}
   <div class="row" style="margin:14px 0">
