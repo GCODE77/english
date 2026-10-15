@@ -268,7 +268,7 @@ console.log('\n[7] 자동 발음 · 이어서 하기');
   const q0 = S.qs[S.i];
   A.answer(q0.kind === 'g' ? q0.g.answer : q0.w.id);          // 정답 1개
   if (spoke) fail.push('자동 발음이 꺼져 있는데 정답 확인 때 재생됨');
-  const snap = JSON.parse(box.localStorage.getItem('bvq_session') || 'null');
+  const snap = (JSON.parse(box.localStorage.getItem('bvq_sessions') || '{}').elem || null);
   if (!snap) fail.push('진행 중인 세션이 저장되지 않음');
   else if (snap.score <= 0 || !snap.fb) fail.push('저장본에 점수·피드백 상태가 없음');
 
@@ -276,6 +276,13 @@ console.log('\n[7] 자동 발음 · 이어서 하기');
   if (A.getS().screen !== 'home') fail.push('goHome 이 홈으로 가지 않음');
   if (!A.readSession()) fail.push('홈으로 나간 뒤 저장본이 사라짐');
   if (!A.home().includes('이어서 하기')) fail.push('홈에 이어서 하기 버튼이 없음');
+  // 세션은 트랙별로 따로 저장된다: 다른 탭에는 이어서 하기가 보이면 안 되고, 돌아오면 다시 보여야 한다
+  A.setPick('track', 'toddler');
+  if (A.readSession()) fail.push('다른 트랙(유아)에 초등의 저장본이 보임');
+  if (A.home().includes('이어서 하기')) fail.push('유아 탭 홈에 초등의 이어서 하기가 보임');
+  A.setPick('track', 'elem');
+  if (!A.readSession()) fail.push('초등 탭으로 돌아왔는데 저장본이 사라짐');
+  if (!A.readSession('elem') || A.readSession('toddler')) fail.push('readSession(트랙) 인자 동작 오류');
   const pausedScore = snap ? snap.score : 0;
 
   A.resumeSession();

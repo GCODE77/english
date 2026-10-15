@@ -548,24 +548,39 @@ const autoSay = (text, delay) => { if(SND.on) setTimeout(() => TTS.say(text), de
 const soundBtn = () => `<button class="iconbtn" data-snd="1" onclick="toggleSound()" aria-label="자동 발음 ${SND.on ? '끄기' : '켜기'}">${SND.on ? '🔊' : '🔇'}</button>`;
 
 /* ---------- 이어서 하기: 진행 중인 세션을 자동 저장한다 ---------- */
-const SES_KEY = 'bvq_session';
+const SES_KEY = 'bvq_session';      // 예전 버전의 단일 저장. 읽을 때 트랙별 저장소로 옮긴다
+const SES_MAP = 'bvq_sessions';     // { 트랙id: 저장본 }  트랙마다 진행 중인 세션을 따로 둔다
+function sesMap(){
+  let m = {};
+  try{ m = JSON.parse(store.get(SES_MAP) || '{}') || {}; }catch(e){ m = {}; }
+  try{
+    const old = JSON.parse(store.get(SES_KEY) || 'null');
+    if(old && old.v === 1 && old.track && !m[old.track]){ m[old.track] = old; store.set(SES_MAP, JSON.stringify(m)); }
+    if(store.get(SES_KEY)) store.set(SES_KEY, '');
+  }catch(e){}
+  return m;
+}
+function putSes(track, d){
+  const m = sesMap();
+  if(d) m[track] = d; else delete m[track];
+  try{ store.set(SES_MAP, JSON.stringify(m)); }catch(e){}
+}
 function saveSession(){
   if(!S.qs || !(S.screen === 'quiz' || S.screen === 'study')) return;
-  try{
-    store.set(SES_KEY, JSON.stringify({
-      v:1, t:Date.now(), track:PICK.track, cat:PICK.cat, level:PICK.level,
-      screen:S.screen, si:S.si || 0, i:S.i || 0, score:S.score || 0, streak:S.streak || 0,
-      best:S.best || 0, right:S.right || 0, bankedScore:S.bankedScore || 0, fb:S.fb || null,
-      deck:(S.deck || []).map(w => w.id),
-      qs:S.qs.map(q => ({k:q.kind, id:q.id, m:q.mode, p:q.prompt, o:q.opts, r:q.retry ? 1 : 0})),
-      wrong:S.wrong.map(q => ({k:q.kind, id:q.id}))
-    }));
-  }catch(e){}
+  putSes(PICK.track, {
+    v:1, t:Date.now(), track:PICK.track, cat:PICK.cat, level:PICK.level,
+    screen:S.screen, si:S.si || 0, i:S.i || 0, score:S.score || 0, streak:S.streak || 0,
+    best:S.best || 0, right:S.right || 0, bankedScore:S.bankedScore || 0, fb:S.fb || null,
+    deck:(S.deck || []).map(w => w.id),
+    qs:S.qs.map(q => ({k:q.kind, id:q.id, m:q.mode, p:q.prompt, o:q.opts, r:q.retry ? 1 : 0})),
+    wrong:S.wrong.map(q => ({k:q.kind, id:q.id}))
+  });
 }
-function clearSession(){ try{ store.set(SES_KEY, ''); }catch(e){} }
-function readSession(){
+function clearSession(track){ putSes(track || PICK.track, null); }
+// 기본은 '지금 선택한 트랙'의 저장본. 다른 트랙의 진행은 그 탭으로 가야 보인다.
+function readSession(track){
   try{
-    const d = JSON.parse(store.get(SES_KEY) || 'null');
+    const d = sesMap()[track || PICK.track];
     return (d && d.v === 1 && Array.isArray(d.qs) && d.qs.length && TRACKS.some(t => t.id === d.track)) ? d : null;
   }catch(e){ return null; }
 }
@@ -648,7 +663,7 @@ function home(){
     return `<button class="trow ${on?'on':''}" onclick="pickTrack('${t.id}')">
       <span class="em">${t.emoji}</span>
       <span class="tx"><b>${t.name}</b><span>${t.sub}</span></span>
-      <span class="ct">${on ? '<span class="ck">✓ 선택됨</span><br>' : ''}단어 ${TRACK_COUNTS[t.id].w}<br>문법 ${TRACK_COUNTS[t.id].g}${p.seen ? '<br>학습 ' + p.seen : ''}</span>
+      <span class="ct">${on ? '<span class="ck">✓ 선택됨</span><br>' : ''}단어 ${TRACK_COUNTS[t.id].w}<br>문법 ${TRACK_COUNTS[t.id].g}${p.seen ? '<br>학습 ' + p.seen : ''}${readSession(t.id) ? '<br><span class="ck">⏸ 진행 중</span>' : ''}</span>
     </button>`;
   };
   const sheet = UI.sheet ? `<div class="sheetbg" onclick="toggleSheet(false)">
