@@ -45,7 +45,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,getP:()=>P,getS:()=>S};',
     box
   );
   for (const t of TRACK_IDS)
@@ -405,6 +405,28 @@ console.log('\n[8] 발음기호 · 자동 넘김 · 깜빡이 암기');
     note('깜빡이: 1단계(영어+발음기호) → 2단계(뜻·예문) → 반복/완료 → 퀴즈 연결 확인');
   }
   A.clearSession();
+}
+
+/* ---------- 9. 화면 설정 (테마 · 음영 대비) ---------- */
+console.log('\n[9] 화면 설정 (테마 · 음영 대비)');
+{
+  if (A.SET.theme !== 'auto' || A.SET.hc) fail.push('테마 기본값이 자동/보통이 아님');
+  A.UI.setSheet = true;
+  let h = A.themeSheetHtml();
+  for (const t of ['자동', '밝게', '어둡게', '음영 대비', '고대비', '미리보기'])
+    if (!h.includes(t)) fail.push('화면 설정 시트에 "' + t + '" 가 없음');
+  if (/undefined|NaN|\[object /.test(h)) fail.push('화면 설정 시트 템플릿 오류');
+  A.UI.setSheet = false;
+  if (A.themeSheetHtml() !== '') fail.push('닫힌 화면 설정 시트가 렌더링됨');
+  A.setTheme('dark'); if (A.SET.theme !== 'dark') fail.push('setTheme 이 저장되지 않음');
+  A.toggleHC(); if (!A.SET.hc) fail.push('toggleHC 가 켜지지 않음');
+  if (!JSON.parse(box.localStorage.getItem('bvq_set') || '{}').hc) fail.push('고대비 설정이 저장되지 않음');
+  if (!A.hcBtn().includes('aria-pressed="true"')) fail.push('고대비 버튼 상태 표시 오류');
+  A.toggleHC(); A.setTheme('auto');
+  // CSS: 라이트/다크 × 고대비 변수 블록이 모두 있어야 한다
+  for (const sel of ['data-mode="light"', 'data-mode="dark"', 'data-hc="1"][data-mode="light"', 'data-hc="1"][data-mode="dark"'])
+    if (!css.includes(sel)) fail.push('CSS 에 ' + sel + ' 블록이 없음');
+  note('테마(자동·밝게·어둡게) · 고대비 토글 · 저장 · CSS 변수 4블록 확인');
 }
 
 /* ---------- 결과 ---------- */

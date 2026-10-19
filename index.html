@@ -42,7 +42,7 @@
   .stat span{font-size:12px; color:var(--muted)}
   button{font-family:inherit; border:none; cursor:pointer}
   .primary{width:100%; min-height:60px; border-radius:20px; background:var(--indigo);
-    color:#fff; font-size:19px; font-weight:800; margin-top:18px}
+    color:var(--cloud); font-size:19px; font-weight:800; margin-top:18px}
   .primary:active{background:var(--indigo-d)}
   .ghost{width:100%; min-height:52px; border-radius:18px; background:transparent;
     border:1.5px solid #D1D5DB; color:var(--muted); font-size:15px; font-weight:700; margin-top:10px}
@@ -84,12 +84,12 @@
   .wrongitem b{font-size:20px; font-weight:900; color:var(--no)}
   .plus{color:var(--ok); font-weight:800; font-size:15px; margin-left:10px}
   .fire{color:var(--amber)}
-  .install{width:100%; min-height:56px; border-radius:18px; background:var(--ok); color:#fff;
+  .install{width:100%; min-height:56px; border-radius:18px; background:var(--ok); color:var(--cloud);
     font-size:16px; font-weight:800; margin-top:10px}
   .tabs{display:flex; gap:8px; margin:14px 0 12px}
   .tab{flex:1; min-height:46px; border-radius:14px; background:var(--surface); border:1.5px solid var(--line);
     color:var(--muted); font-size:14px; font-weight:800}
-  .tab.on{background:var(--indigo); border-color:var(--indigo); color:#fff}
+  .tab.on{background:var(--indigo); border-color:var(--indigo); color:var(--cloud)}
   .search{width:100%; min-height:50px; border-radius:14px; border:1.5px solid var(--line);
     padding:0 16px; font-size:16px; font-family:inherit; background:var(--surface); color:var(--ink); margin-bottom:6px}
   .search:focus{outline:none; border-color:var(--indigo)}
@@ -111,14 +111,14 @@
     border:1.5px solid var(--line); color:var(--muted); font-size:14px; font-weight:700;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:6px}
   .chip small{font-size:12px; font-weight:600; opacity:.85}
-  .chip.on{background:var(--indigo); border-color:var(--indigo); color:#fff}
+  .chip.on{background:var(--indigo); border-color:var(--indigo); color:var(--cloud)}
   .chip.on small{opacity:.9}
   .label{font-size:13px; font-weight:800; color:var(--muted); margin-top:18px}
   .topic{display:inline-block; background:var(--chipbg); color:var(--indigo-d); border-radius:8px;
     padding:4px 10px; font-size:12px; font-weight:800}
   .tip{background:var(--surface); border-radius:12px; padding:13px 15px; margin-top:12px;
     font-size:15px; line-height:1.7; color:var(--ink); border-left:5px solid var(--indigo)}
-  .speak.busy{background:var(--indigo); color:#fff}
+  .speak.busy{background:var(--indigo); color:var(--cloud)}
   #toast{position:fixed; left:12px; right:12px; bottom:16px; margin:0 auto; max-width:496px;
     background:var(--toastbg); color:#fff; border-radius:14px; padding:14px 16px; font-size:14px;
     line-height:1.5; opacity:0; transform:translateY(12px); pointer-events:none;
@@ -139,7 +139,7 @@
     color:var(--muted); font-size:15px; font-weight:800; display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:1px; padding:6px}
   .seg small{font-size:11px; font-weight:600; opacity:.85}
-  .seg.on{background:var(--indigo); border-color:var(--indigo); color:#fff}
+  .seg.on{background:var(--indigo); border-color:var(--indigo); color:var(--cloud)}
   .ghost small{display:block; font-size:12px; font-weight:600; opacity:.85; margin-top:2px}
   .primary small{display:block; font-size:13px; font-weight:600; opacity:.9; margin-top:2px}
   .foot{display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-top:18px}
@@ -167,7 +167,7 @@
   .stick .primary{margin-top:0}
   .fb{scroll-margin-top:96px}
   .instr{font-size:13px; font-weight:700; color:var(--muted); margin-bottom:10px}
-  .iconbtn{min-width:48px; min-height:48px; padding:0 12px; border-radius:24px; background:var(--surface);
+  .iconbtn{color:var(--ink); min-width:48px; min-height:48px; padding:0 12px; border-radius:24px; background:var(--surface);
     border:1.5px solid var(--line); font-size:20px; line-height:1; box-shadow:var(--shadow)}
   .nav{display:flex; align-items:center; gap:8px}
   .nav button{min-height:44px; min-width:44px; padding:0 14px; border-radius:22px; background:var(--surface);
@@ -196,16 +196,52 @@
     gap:12px; padding:8px; overflow:hidden; animation:fin .18s ease-out; max-width:560px; width:100%; margin:0 auto}
   .fword{font-size:clamp(40px,13vw,80px); font-weight:900; color:var(--indigo); line-height:1.1; word-break:break-word}
   .fword.sm{font-size:clamp(24px,7vw,36px)}
-  .fipa{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:clamp(18px,5.4vw,30px); color:var(--ink);
-    background:var(--line); border-radius:12px; padding:6px 16px; letter-spacing:.3px}
+  .fipa{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:clamp(22px,6.6vw,36px); color:var(--ink);
+    background:var(--line); border-radius:14px; padding:8px 20px; letter-spacing:.3px}
   .fko{font-size:clamp(30px,9vw,48px); font-weight:900; line-height:1.25}
   .fex{font-size:clamp(16px,4.4vw,22px); font-weight:600; line-height:1.6; margin-top:6px}
   .fexko{font-size:clamp(14px,4vw,18px); color:var(--muted); line-height:1.6}
   .fctl{display:flex; gap:10px; align-items:center; justify-content:center; max-width:560px; width:100%; margin:0 auto}
   .fctl button{min-width:58px; min-height:58px; border-radius:29px; background:var(--surface);
     border:1.5px solid var(--line); color:var(--ink); font-size:20px; font-weight:800}
-  .fctl .big{min-width:92px; background:var(--indigo); border-color:var(--indigo); color:#fff}
+  .fctl .big{min-width:92px; background:var(--indigo); border-color:var(--indigo); color:var(--cloud)}
   @media (min-width:600px){ #app{max-width:600px} }
+  /* 테마: JS 가 data-mode(light/dark)와 data-hc(고대비)를 정한다. 자동이면 폰 설정을 따른다. */
+  :root[data-mode="light"]{
+    --indigo:#4F46E5; --indigo-d:#3730A3; --amber:#B45309;
+    --ok:#15803D; --ok-bg:#DCFCE7; --no:#B91C1C; --no-bg:#FEE2E2;
+    --ink:#0F172A; --muted:#475569; --cloud:#F4F5FD; --line:#E6E9F5;
+    --surface:#FFFFFF; --chipbg:#E0E7FF; --chipink:#312E81;
+    --shadow:0 1px 3px rgba(15,23,42,.07); --chippress:#C7D2FE; --toastbg:#0F172A;
+  }
+  :root[data-mode="dark"]{
+    --indigo:#A5B4FC; --indigo-d:#C7D2FE; --amber:#FBBF24;
+    --ok:#4ADE80; --ok-bg:#123021; --no:#F87171; --no-bg:#3A1618;
+    --ink:#F1F5F9; --muted:#A3AEC2; --cloud:#0E1017; --line:#232838;
+    --surface:#171B26; --chipbg:#2A3150; --chipink:#C7D2FE;
+    --shadow:0 1px 3px rgba(0,0,0,.4); --chippress:#3B4570; --toastbg:#2C3346;
+  }
+  /* 고대비: 글자는 거의 검정/흰색, 배경과의 명암 차이를 최대로, 테두리를 진하게 */
+  :root[data-hc="1"][data-mode="light"]{
+    --indigo:#1E1B8E; --indigo-d:#0F0D5C; --amber:#7A3A00;
+    --ok:#05652B; --ok-bg:#CDF3DA; --no:#8F0000; --no-bg:#FFDADA;
+    --ink:#000000; --muted:#1B2433; --cloud:#FFFFFF; --line:#8A93A6;
+    --surface:#FFFFFF; --chipbg:#D9E0FF; --chipink:#000000;
+    --shadow:0 0 0 1.5px #000000; --chippress:#B4C0FF; --toastbg:#000000;
+  }
+  :root[data-hc="1"][data-mode="dark"]{
+    --indigo:#C7D2FE; --indigo-d:#FFFFFF; --amber:#FFD54A;
+    --ok:#5CFF9A; --ok-bg:#00381B; --no:#FF8A8A; --no-bg:#4A0000;
+    --ink:#FFFFFF; --muted:#E5E7EB; --cloud:#000000; --line:#8A93A6;
+    --surface:#000000; --chipbg:#1E2A6B; --chipink:#FFFFFF;
+    --shadow:0 0 0 1.5px #FFFFFF; --chippress:#34449A; --toastbg:#1B1B1B;
+  }
+  [data-hc="1"] .card, [data-hc="1"] .item, [data-hc="1"] .notice, [data-hc="1"] .tip{border:2px solid var(--ink)}
+  [data-hc="1"] .chip, [data-hc="1"] .seg, [data-hc="1"] .opt, [data-hc="1"] .tab, [data-hc="1"] .pill,
+  [data-hc="1"] .iconbtn, [data-hc="1"] .ghost, [data-hc="1"] .trow{border-width:2px}
+  [data-hc="1"] .meta, [data-hc="1"] .sub, [data-hc="1"] .fexko, [data-hc="1"] .stat span{color:var(--ink)}
+  [data-hc="1"] .fipa, [data-hc="1"] .ipa{border:2px solid var(--ink); background:var(--surface)}
+  .iconbtn.tgl{border-color:var(--indigo); box-shadow:0 0 0 2px var(--indigo)}
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
 </style>
@@ -362,7 +398,7 @@ const TRACK = id => TRACKS.find(t => t.id === id) || TRACKS[TRACKS.length-1];
 const TR_PREFIX = {td:'toddler', ch:'child', el:'elem', md:'mid', hs:'high', un:'univ'};
 const trackOfKey = k => { const m = /^(?:g:)?(td|ch|el|md|hs|un)_/.exec(k); return m ? TR_PREFIX[m[1]] : 'work'; };
 // 마지막으로 고른 트랙·유형을 기억한다. 처음 접속이면 트랙 선택창을 먼저 연다.
-let UI = { sheet: true, flashSheet: false };
+let UI = { sheet: true, flashSheet: false, setSheet: false };
 try{
   const sv = JSON.parse(store.get('bvq_pick') || 'null');
   if(sv && TRACKS.some(t => t.id === sv.track)){
@@ -552,7 +588,7 @@ function retryWrong(){
 
 window.addEventListener('keydown', e => {
   const t = e.target && e.target.tagName;
-  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet || UI.flashSheet) return;
+  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet || UI.flashSheet || UI.setSheet) return;
   const go = e.key === 'Enter' || e.key === ' ';
   if(go && t === 'BUTTON') return;     // 버튼이 이미 자기 클릭을 처리한다
   if(S.screen === 'flash'){
@@ -647,7 +683,7 @@ const agoKo = t => { const m = Math.floor((Date.now() - t) / 60000);
 
 /* ---------- 설정 (자동 넘김 · 깜빡이 암기) ---------- */
 const SET = Object.assign(
-  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false},
+  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false},
   (() => { try{ return JSON.parse(store.get('bvq_set') || '{}') || {}; }catch(e){ return {}; } })());
 const saveSet = () => { try{ store.set('bvq_set', JSON.stringify(SET)); }catch(e){} };
 
@@ -773,7 +809,7 @@ function flash(){
     <div class="fhead" onclick="event.stopPropagation()">
       <button class="iconbtn" onclick="exitFlash()" aria-label="닫기">✕</button>
       <span class="sp">${f.i + 1} / ${f.deck.length} · ${f.round}바퀴</span>
-      ${soundBtn()}${fsBtn()}
+      ${soundBtn()}${hcBtn()}${fsBtn()}
     </div>
     ${f.paused ? '<div class="abar"><i style="width:100%;animation:none"></i></div>' : autoBar(ms)}
     <div class="fcard">
@@ -824,8 +860,53 @@ function flashSheetHtml(){
       <div class="chips">
         <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'}</button>
         ${tg('flashEx', '예문도 읽기', SET.flashEx)}${tg('flashLoop', '끝나면 반복', SET.flashLoop)}
+        <button class="chip ${SET.hc ? 'on' : ''}" onclick="toggleHC()">◐ 고대비 ${SET.hc ? '켜짐' : '꺼짐'}</button>
       </div>
       <button class="primary" onclick="startFlash()">시작</button>
+    </div></div>`;
+}
+
+/* ---------- 화면 설정 (테마 · 음영 대비) ---------- */
+const THEME_KO = {auto:'자동', light:'밝게', dark:'어둡게'};
+function applyTheme(){
+  const root = typeof document !== 'undefined' ? document.documentElement : null;
+  if(!root || !root.setAttribute) return;
+  const sysDark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
+  root.setAttribute('data-mode', (SET.theme === 'dark' || (SET.theme !== 'light' && sysDark)) ? 'dark' : 'light');
+  if(SET.hc) root.setAttribute('data-hc', '1'); else root.removeAttribute('data-hc');
+}
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(SET.theme === 'auto') applyTheme(); }); }catch(e){}
+applyTheme();
+function setTheme(v){ SET.theme = v; saveSet(); applyTheme(); render(); }
+function toggleHC(){
+  SET.hc = !SET.hc; saveSet(); applyTheme();
+  if(S.screen !== 'flash'){ render(); return; }
+  // 깜빡이 중에는 화면을 다시 그리지 않는다(타이머·소리를 유지)
+  const b = document.getElementById('hcbtn');
+  if(b){ if(b.classList) b.classList.toggle('tgl', SET.hc); b.setAttribute('aria-pressed', String(SET.hc)); }
+}
+const hcBtn = () => `<button class="iconbtn ${SET.hc ? 'tgl' : ''}" id="hcbtn" onclick="toggleHC()" aria-label="고대비 ${SET.hc ? '끄기' : '켜기'}" aria-pressed="${SET.hc}">◐</button>`;
+function toggleSetSheet(v){ UI.setSheet = v; render(); }
+function themeSheetHtml(){
+  if(!UI.setSheet) return '';
+  const th = v => `<button class="chip ${SET.theme === v ? 'on' : ''}" onclick="setTheme('${v}')">${THEME_KO[v]}</button>`;
+  return `<div class="sheetbg" onclick="toggleSetSheet(false)">
+    <div class="sheet" role="dialog" aria-label="화면 설정" onclick="event.stopPropagation()">
+      <div class="row"><h2>🎨 화면 설정</h2><button class="link" onclick="toggleSetSheet(false)">닫기</button></div>
+      <div class="label">테마</div>
+      <div class="chips">${th('auto')}${th('light')}${th('dark')}</div>
+      <p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">자동은 폰의 다크 모드 설정을 따라가요.</p>
+      <div class="label">음영 대비</div>
+      <div class="chips">
+        <button class="chip ${SET.hc ? '' : 'on'}" onclick="if(SET.hc) toggleHC()">보통</button>
+        <button class="chip ${SET.hc ? 'on' : ''}" onclick="if(!SET.hc) toggleHC()">고대비<small>글자·테두리를 더 진하게</small></button>
+      </div>
+      <div class="card" style="margin-top:16px;text-align:center">
+        <div class="term" style="font-size:30px">look up</div>
+        <div style="margin-top:8px"><span class="ipa">/lʊk ʌp/</span></div>
+        <div style="font-size:18px;font-weight:700;margin-top:10px">찾아보다</div>
+        <div class="meta" style="margin-top:4px">미리보기</div>
+      </div>
     </div></div>`;
 }
 
@@ -952,12 +1033,13 @@ function home(){
   </details>
 
   <div class="foot">
+    <button class="link" onclick="toggleSetSheet(true)">🎨 화면 설정</button>
     ${fsOK() ? '<button class="link" onclick="toggleFullscreen()">⛶ 전체화면</button>' : ''}
     <button class="link" onclick="TTS.diagnose()">🔊 음성 테스트</button>
     <button class="link" onclick="if(confirm('모든 트랙의 학습 기록을 지웁니다.')){P={items:{},total:0,best:0};saveP(P);render();}">학습 기록 초기화</button>
   </div>
   ${sheet}
-  ${flashSheetHtml()}`;
+  ${flashSheetHtml()}${themeSheetHtml()}`;
 }
 
 function study(){

@@ -94,11 +94,23 @@ function toIPA(phones) {
   }).join('');
 }
 
+// 사전에 없는 복합어(dragonfly = dragon + fly)는 두 단어가 모두 사전에 있을 때만 이어 붙인다.
+// 각 부분은 3글자 이상이어야 하고, 뒤 단어의 제1강세는 제2강세로 낮춘다.
+function compound(t) {
+  let best = null;
+  for (let k = 3; k <= t.length - 3; k++) {
+    const a = dict.get(t.slice(0, k)), b = dict.get(t.slice(k));
+    if (a && b && (!best || Math.min(k, t.length - k) > best.score))
+      best = {score: Math.min(k, t.length - k), ph: [...a, ...b.map(p => isVowel(p) ? p.replace(/1$/, '2') : p)]};
+  }
+  return best ? best.ph : null;
+}
+
 function ipaOfTerm(term) {
   const toks = term.toLowerCase().split(/[\s-]+/).filter(Boolean);
   const parts = [];
   for (const t of toks) {
-    const ph = dict.get(t);
+    const ph = dict.get(t) || compound(t);
     if (!ph) return null;
     parts.push(toIPA(ph));
   }

@@ -264,3 +264,10 @@ PWA를 홈 화면에 설치하고 나면 **Android 네이티브의 존재 이유
 - **학습 카드 자동 넘김**(기본 켜짐, 6초): \`SET.auto\`, \`SET.autoSec\`(4/6/9). 일시정지·간격 변경은 카드 위 버튼.
 - 자동 타이머는 \`autoStart/autoStop\`(AUTO)로만 건다. \`render()\`가 화면이 바뀔 때마다 \`autoStop()\`한다. 타이머를 직접 setTimeout으로 걸면 화면 전환 후에도 남는다.
 - 화면 켜 두기(\`navigator.wakeLock\`)는 깜빡이 화면에서만 켠다. 전체화면 버튼(⛶)은 Fullscreen API를 지원하는 브라우저에서만 보인다(아이폰 사파리는 미지원 → 홈 화면에 추가해서 쓰면 전체화면). manifest는 \`display_override: [fullscreen, standalone]\`, \`orientation: any\`.
+
+## 14. 화면 설정(테마·고대비) · 서비스워커 캐시 수정 (2026-10)
+
+- 홈 하단 `🎨 화면 설정`에서 테마(자동/밝게/어둡게)와 **음영 대비(고대비)**를 고른다. 깜빡이 화면 위쪽 ◐ 버튼과 깜빡이 설정에서도 고대비를 켜고 끌 수 있다(깜빡이 중에는 화면을 다시 그리지 않아 타이머·소리가 유지된다). 설정은 \`SET.theme\`, \`SET.hc\`(localStorage \`bvq_set\`).
+- 구현: JS(\`applyTheme\`)가 \`<html>\`에 \`data-mode="light|dark"\`와 \`data-hc="1"\`을 달고, CSS는 이 속성으로 변수 4블록(light/dark × 보통/고대비)을 바꾼다. 새 색은 반드시 CSS 변수로 쓸 것(하드코딩하면 다크/고대비에서 깨진다). 밝은 배경 위 글자는 \`#fff\`가 아니라 \`var(--cloud)\`를 쓴다(다크에서는 \`--indigo\`가 밝은색이라 흰 글자가 안 보인다). \`.iconbtn\`처럼 \`<button>\`은 글자색을 명시하지 않으면 다크에서 검정이라 안 보인다.
+- **sw.js 수정**: \`caches.match(요청)\`은 옛 버전 캐시까지 뒤져서 업데이트 직후 옛 데이터(발음기호 없는 버전)를 줄 수 있었다. 현재 버전 캐시(\`caches.open(CACHE)\`)만 조회하도록 바꿨다. 이후에도 이 방식을 유지할 것.
+- 발음기호: 사전에 없는 복합어는 두 단어가 모두 사전에 있을 때만 이어 붙인다(gen-ipa.js \`compound\`). 지금 비어 있는 단어는 7개(simile, GPA, morpheme, salutation, rebrand, influencer 등).
