@@ -221,6 +221,13 @@
     --surface:#171B26; --chipbg:#2A3150; --chipink:#C7D2FE;
     --shadow:0 1px 3px rgba(0,0,0,.4); --chippress:#3B4570; --toastbg:#2C3346;
   }
+  :root[data-mode="black"]{
+    --indigo:#A5B4FC; --indigo-d:#C7D2FE; --amber:#FBBF24;
+    --ok:#4ADE80; --ok-bg:#0A2414; --no:#F87171; --no-bg:#2C1012;
+    --ink:#F1F5F9; --muted:#A3AEC2; --cloud:#000000; --line:#1E222C;
+    --surface:#0B0D12; --chipbg:#1B2140; --chipink:#C7D2FE;
+    --shadow:0 0 0 1px #1E222C; --chippress:#2B3566; --toastbg:#1C202B;
+  }
   /* 고대비: 글자는 거의 검정/흰색, 배경과의 명암 차이를 최대로, 테두리를 진하게 */
   :root[data-hc="1"][data-mode="light"]{
     --indigo:#1E1B8E; --indigo-d:#0F0D5C; --amber:#7A3A00;
@@ -229,7 +236,7 @@
     --surface:#FFFFFF; --chipbg:#D9E0FF; --chipink:#000000;
     --shadow:0 0 0 1.5px #000000; --chippress:#B4C0FF; --toastbg:#000000;
   }
-  :root[data-hc="1"][data-mode="dark"]{
+  :root[data-hc="1"][data-mode="dark"], :root[data-hc="1"][data-mode="black"]{
     --indigo:#C7D2FE; --indigo-d:#FFFFFF; --amber:#FFD54A;
     --ok:#5CFF9A; --ok-bg:#00381B; --no:#FF8A8A; --no-bg:#4A0000;
     --ink:#FFFFFF; --muted:#E5E7EB; --cloud:#000000; --line:#8A93A6;
@@ -867,12 +874,16 @@ function flashSheetHtml(){
 }
 
 /* ---------- 화면 설정 (테마 · 음영 대비) ---------- */
-const THEME_KO = {auto:'자동', light:'밝게', dark:'어둡게'};
+const THEME_KO = {auto:'자동', light:'밝게', dark:'어둡게', black:'블랙'};
 function applyTheme(){
   const root = typeof document !== 'undefined' ? document.documentElement : null;
   if(!root || !root.setAttribute) return;
   const sysDark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
-  root.setAttribute('data-mode', (SET.theme === 'dark' || (SET.theme !== 'light' && sysDark)) ? 'dark' : 'light');
+  const mode = SET.theme === 'black' ? 'black' : (SET.theme === 'dark' || (SET.theme !== 'light' && sysDark)) ? 'dark' : 'light';
+  root.setAttribute('data-mode', mode);
+  // 브라우저 상단바 색도 테마에 맞춘다 (블랙이면 상단바까지 검정)
+  const meta = document.querySelector && document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute('content', mode === 'black' ? '#000000' : mode === 'dark' ? '#0E1017' : '#4F46E5');
   if(SET.hc) root.setAttribute('data-hc', '1'); else root.removeAttribute('data-hc');
 }
 try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(SET.theme === 'auto') applyTheme(); }); }catch(e){}
@@ -894,8 +905,8 @@ function themeSheetHtml(){
     <div class="sheet" role="dialog" aria-label="화면 설정" onclick="event.stopPropagation()">
       <div class="row"><h2>🎨 화면 설정</h2><button class="link" onclick="toggleSetSheet(false)">닫기</button></div>
       <div class="label">테마</div>
-      <div class="chips">${th('auto')}${th('light')}${th('dark')}</div>
-      <p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">자동은 폰의 다크 모드 설정을 따라가요.</p>
+      <div class="chips">${th('auto')}${th('light')}${th('dark')}${th('black')}</div>
+      <p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">자동은 폰의 다크 모드 설정을 따라가요. 블랙은 배경이 완전한 검정이라 OLED 화면에서 배터리를 아끼고 눈이 편해요.</p>
       <div class="label">음영 대비</div>
       <div class="chips">
         <button class="chip ${SET.hc ? '' : 'on'}" onclick="if(SET.hc) toggleHC()">보통</button>

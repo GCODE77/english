@@ -271,3 +271,4 @@ PWA를 홈 화면에 설치하고 나면 **Android 네이티브의 존재 이유
 - 구현: JS(\`applyTheme\`)가 \`<html>\`에 \`data-mode="light|dark"\`와 \`data-hc="1"\`을 달고, CSS는 이 속성으로 변수 4블록(light/dark × 보통/고대비)을 바꾼다. 새 색은 반드시 CSS 변수로 쓸 것(하드코딩하면 다크/고대비에서 깨진다). 밝은 배경 위 글자는 \`#fff\`가 아니라 \`var(--cloud)\`를 쓴다(다크에서는 \`--indigo\`가 밝은색이라 흰 글자가 안 보인다). \`.iconbtn\`처럼 \`<button>\`은 글자색을 명시하지 않으면 다크에서 검정이라 안 보인다.
 - **sw.js 수정**: \`caches.match(요청)\`은 옛 버전 캐시까지 뒤져서 업데이트 직후 옛 데이터(발음기호 없는 버전)를 줄 수 있었다. 현재 버전 캐시(\`caches.open(CACHE)\`)만 조회하도록 바꿨다. 이후에도 이 방식을 유지할 것.
 - 발음기호: 사전에 없는 복합어는 두 단어가 모두 사전에 있을 때만 이어 붙인다(gen-ipa.js \`compound\`). 지금 비어 있는 단어는 7개(simile, GPA, morpheme, salutation, rebrand, influencer 등).
+- **블랙 테마**(`SET.theme = 'black'`, `data-mode="black"`): 배경 `--cloud:#000000`(완전한 검정, OLED용), 카드 `--surface:#0B0D12`. 고대비와 함께 쓰면 '어둡게+고대비'와 같은 변수를 쓴다. 테마를 바꾸면 `<meta name="theme-color">`도 함께 바뀐다(블랙 #000000 / 어둡게 #0E1017 / 밝게 인디고).
