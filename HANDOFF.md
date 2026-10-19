@@ -255,3 +255,12 @@ PWA를 홈 화면에 설치하고 나면 **Android 네이티브의 존재 이유
 - 홈의 `▶ 이어서 하기`는 저장본이 있을 때만 맨 위 주 버튼이 되고, 기존 시작 버튼은 `새로 시작하기`(보조)로 내려간다.
 - 🏠홈 = 일시정지(저장 유지), ✕닫기 = 여기까지로 끝내고 결과 보기(저장 삭제).
 - 점수 합산 `bank()`는 `S.bankedScore`와의 **차이만** 더한다. 홈으로 나갔다 이어서 해도 중복 합산되지 않는다(verify.js 7번 항목이 검사).
+
+## 13. 깜빡이 암기 · 자동 넘김 · 발음기호 · 전체화면 (2026-10)
+
+- **발음기호(ipa)는 CMUdict로 생성**했다(미국식, Carnegie Mellon University, BSD 계열 라이선스). `node tools/gen-ipa.js <cmudict.dict> --write`가 `data/*.js`에서 ipa 없는 단어만 채우고, 이미 있는 값(직장인 기존 105개, 사람이 확인)은 건드리지 않는다. 새 단어를 추가한 뒤에는 이 스크립트를 다시 돌린다(사전: https://github.com/cmusphinx/cmudict 의 cmudict.dict). 사전에 없는 단어(복합어·약어, 약 26개)는 비어 있다. 지어내지 않는다는 원칙은 유지.
+- 빈칸(CLOZE) 문제는 **정답을 확인하기 전에는 발음기호를 숨긴다**(소리값이 힌트가 됨). verify.js가 검사한다.
+- **깜빡이 암기**(screen 'flash'): 영어+발음기호 → 일정 시간 뒤 뜻·예문으로 자동 전환 → 다음 단어, 반복. 범위(덜 본 단어/약점/복습 대기/전체)·개수·속도·예문 읽기·반복은 \`SET\`(localStorage \`bvq_set\`). 본 횟수는 \`bvq_flash\`에 쌓여 '덜 본 단어'를 먼저 보여 준다. 끝나면 방금 본 단어로 퀴즈로 이어진다. 깜빡이는 학습 기록(P.items)을 바꾸지 않는다(눈으로 보기만 한 것).
+- **학습 카드 자동 넘김**(기본 켜짐, 6초): \`SET.auto\`, \`SET.autoSec\`(4/6/9). 일시정지·간격 변경은 카드 위 버튼.
+- 자동 타이머는 \`autoStart/autoStop\`(AUTO)로만 건다. \`render()\`가 화면이 바뀔 때마다 \`autoStop()\`한다. 타이머를 직접 setTimeout으로 걸면 화면 전환 후에도 남는다.
+- 화면 켜 두기(\`navigator.wakeLock\`)는 깜빡이 화면에서만 켠다. 전체화면 버튼(⛶)은 Fullscreen API를 지원하는 브라우저에서만 보인다(아이폰 사파리는 미지원 → 홈 화면에 추가해서 쓰면 전체화면). manifest는 \`display_override: [fullscreen, standalone]\`, \`orientation: any\`.

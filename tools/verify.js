@@ -45,7 +45,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,getP:()=>P,getS:()=>S};',
     box
   );
   for (const t of TRACK_IDS)
@@ -316,6 +316,94 @@ console.log('\n[7] 자동 발음 · 이어서 하기');
   if (!spoke) fail.push('자동 발음이 켜져 있는데 재생되지 않음');
   A.toggleSound();
   A.TTS.say = origSay;
+  A.clearSession();
+}
+
+/* ---------- 8. 발음기호 · 자동 넘김 · 깜빡이 암기 ---------- */
+console.log('\n[8] 발음기호 · 자동 넘김 · 깜빡이 암기');
+{
+  // 발음기호 커버리지 (CMUdict 로 채움, 사전에 없는 일부 단어만 비어 있음)
+  const withIpa = A.WORDS.filter(w => w.ipa).length;
+  const pct = withIpa / A.WORDS.length * 100;
+  if (pct < 97) fail.push('발음기호 커버리지 ' + pct.toFixed(1) + '% (97% 미만) → node tools/gen-ipa.js 로 채울 것');
+  note('발음기호 ' + withIpa + '/' + A.WORDS.length + ' (' + pct.toFixed(1) + '%)');
+
+  // 빈칸(CLOZE) 문제는 정답을 확인하기 전에 발음기호를 보여 주면 안 된다 (소리값이 힌트)
+  A.setPick('track', 'mid'); A.setPick('cat', 'word'); A.start();
+  {
+    const w = A.WORDS.find(x => x.track === 'mid' && x.ipa);
+    const q = A.build(w, 'CLOZE');
+    const st = A.getS(); st.qs = [q]; st.i = 0; st.fb = null; st.screen = 'quiz';
+    if (A.quiz().includes(w.ipa)) fail.push('빈칸 문제가 정답 확인 전에 발음기호를 보여 줌 (힌트 유출)');
+    st.fb = {ok: true, chosen: w.id, gain: 10, why: ''};
+    if (!A.quiz().includes(w.ipa)) fail.push('빈칸 문제가 정답 확인 뒤에도 발음기호를 보여 주지 않음');
+    st.fb = null;
+  }
+
+  // 학습 카드 자동 넘김: 켜져 있으면 타이머가 걸리고, 마지막 카드 다음은 퀴즈
+  A.setPick('track', 'toddler'); A.setPick('cat', 'word');
+  box.localStorage.removeItem && box.localStorage.removeItem('bvq_progress');
+  A.SET.auto = true; A.SET.autoSec = 6;
+  A.start();
+  let S = A.getS();
+  if (S.screen === 'study') {
+    const html = A.study();
+    if (typeof A.AUTO.fn !== 'function') fail.push('자동 넘김이 켜져 있는데 타이머가 걸리지 않음');
+    if (!html.includes('animation-duration:6000ms')) fail.push('자동 넘김 진행 막대가 없음');
+    const n = S.deck.length;
+    for (let k = 0; k < n; k++) A.studyNext();
+    if (A.getS().screen !== 'quiz') fail.push('자동 넘김이 마지막 카드 뒤에 퀴즈로 넘어가지 않음');
+    A.SET.auto = false; S = A.getS(); S.screen = 'study'; S.si = 0;
+    A.study();
+    if (A.AUTO.fn) fail.push('자동 넘김이 꺼져 있는데 타이머가 걸림');
+    A.SET.auto = true;
+  } else fail.push('유아 트랙에서 학습 카드가 나오지 않음(신규 단어가 없음?)');
+
+  // 깜빡이 암기
+  A.setPick('track', 'elem'); A.SET.flashDeck = 'least'; A.SET.flashCount = 20; A.SET.flashLoop = true; A.SET.flashSpeed = 'normal';
+  A.startFlash();
+  S = A.getS();
+  if (S.screen !== 'flash' || !S.fl || !S.fl.deck.length) fail.push('깜빡이 암기가 시작되지 않음');
+  else {
+    if (S.fl.deck.length > 20) fail.push('깜빡이 개수 설정을 넘김');
+    if (S.fl.deck.some(id => !A.WORDS.find(w => w.id === id && w.track === 'elem'))) fail.push('깜빡이에 다른 트랙 단어가 섞임');
+    const w0 = A.WORDS.find(x => x.id === S.fl.deck[0]);
+    let html = A.flash();
+    if (!html.includes(w0.term)) fail.push('깜빡이 1단계에 영어 단어가 없음');
+    if (w0.ipa && !html.includes(w0.ipa)) fail.push('깜빡이 1단계에 발음기호가 없음');
+    if (html.includes(w0.meaningKo)) fail.push('깜빡이 1단계에서 뜻이 미리 보임');
+    if (typeof A.AUTO.fn !== 'function') fail.push('깜빡이 타이머가 걸리지 않음');
+    if (/undefined|NaN|\[object /.test(html)) fail.push('깜빡이 화면 템플릿 오류');
+    A.flashStep(0);                                           // 영어 → 뜻
+    html = A.flash();
+    if (A.getS().fl.phase !== 1 || !html.includes(w0.meaningKo) || !html.includes(w0.exampleKo)) fail.push('깜빡이 2단계에 뜻·예문이 나오지 않음');
+    A.flashStep(0);                                           // 뜻 → 다음 단어
+    if (A.getS().fl.i !== 1 || A.getS().fl.phase !== 0) fail.push('깜빡이가 다음 단어로 넘어가지 않음');
+    A.flashStep(-1);
+    if (A.getS().fl.i !== 0) fail.push('깜빡이 이전 단어 이동 오류');
+    A.flashTap();
+    if (!A.getS().fl.paused || A.AUTO.fn) fail.push('일시정지가 타이머를 멈추지 않음');
+    A.flashTap();
+    // 한 바퀴를 돌면 (반복 켜짐) 다음 바퀴
+    const total = A.getS().fl.deck.length;
+    for (let k = 0; k < total; k++) A.flashStep(1);
+    if (A.getS().fl.round !== 2 || A.getS().fl.i !== 0) fail.push('끝나면 반복(바퀴 증가)이 동작하지 않음');
+    // 반복을 끄면 완료 화면 → 방금 본 단어로 퀴즈
+    A.SET.flashLoop = false;
+    for (let k = 0; k < total; k++) A.flashStep(1);
+    if (A.getS().screen !== 'flashdone') fail.push('반복을 껐는데 완료 화면이 나오지 않음');
+    if (!A.flashdone().includes('방금 본 단어로 퀴즈')) fail.push('완료 화면에 퀴즈 버튼이 없음');
+    A.flashQuiz();
+    if (A.getS().screen !== 'quiz' || !A.getS().qs.length) fail.push('깜빡이 → 퀴즈 전환 실패');
+    A.SET.flashLoop = true;
+    // 노출 횟수가 저장되어 다음에는 '덜 본 단어'를 먼저 보여 준다
+    A.startFlash(); A.exitFlash();
+    const fcs = JSON.parse(box.localStorage.getItem('bvq_flash') || '{}');
+    if (!Object.keys(fcs).length) fail.push('깜빡이 노출 횟수가 저장되지 않음');
+    const first = A.getS && A.flashDeck();
+    if (first.some(id => (fcs[id] || 0) > Math.min(...first.map(i => fcs[i] || 0)) + 5)) fail.push('덜 본 단어 우선 정렬 이상');
+    note('깜빡이: 1단계(영어+발음기호) → 2단계(뜻·예문) → 반복/완료 → 퀴즈 연결 확인');
+  }
   A.clearSession();
 }
 

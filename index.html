@@ -174,6 +174,38 @@
     border:1.5px solid var(--line); color:var(--muted); font-size:14px; font-weight:800}
   .nav button:active{background:var(--chipbg)}
   .nav .sp{flex:1}
+  @keyframes afill{from{width:0}to{width:100%}}
+  @keyframes fin{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+  .abar{height:6px; border-radius:3px; background:var(--line); overflow:hidden; margin-top:10px}
+  .abar i{display:block; height:100%; width:0; background:var(--indigo); border-radius:3px;
+    animation:afill linear forwards}
+  .abar.paused i{animation-play-state:paused}
+  .autorow{display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap}
+  .autorow button{min-height:40px; padding:0 14px; border-radius:20px; background:var(--chipbg);
+    color:var(--chipink); font-size:13px; font-weight:800}
+  .flashrow{display:flex; gap:8px; margin-top:10px}
+  .flashbtn{flex:1; min-height:60px; border-radius:18px; background:var(--chipbg); color:var(--chipink);
+    border:2px solid var(--indigo); font-size:17px; font-weight:900}
+  .flashbtn small{display:block; font-size:12px; font-weight:600; opacity:.85; margin-top:1px}
+  .flash{position:fixed; inset:0; z-index:40; background:var(--cloud); display:flex; flex-direction:column;
+    height:100vh; height:100dvh; padding:calc(10px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom))}
+  .flash .fhead{display:flex; align-items:center; gap:8px; max-width:560px; width:100%; margin:0 auto}
+  .flash .fhead .sp{flex:1; text-align:center; font-size:14px; font-weight:800; color:var(--muted)}
+  .flash .abar{max-width:560px; width:100%; margin:12px auto 0}
+  .fcard{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    gap:12px; padding:8px; overflow:hidden; animation:fin .18s ease-out; max-width:560px; width:100%; margin:0 auto}
+  .fword{font-size:clamp(40px,13vw,80px); font-weight:900; color:var(--indigo); line-height:1.1; word-break:break-word}
+  .fword.sm{font-size:clamp(24px,7vw,36px)}
+  .fipa{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:clamp(18px,5.4vw,30px); color:var(--ink);
+    background:var(--line); border-radius:12px; padding:6px 16px; letter-spacing:.3px}
+  .fko{font-size:clamp(30px,9vw,48px); font-weight:900; line-height:1.25}
+  .fex{font-size:clamp(16px,4.4vw,22px); font-weight:600; line-height:1.6; margin-top:6px}
+  .fexko{font-size:clamp(14px,4vw,18px); color:var(--muted); line-height:1.6}
+  .fctl{display:flex; gap:10px; align-items:center; justify-content:center; max-width:560px; width:100%; margin:0 auto}
+  .fctl button{min-width:58px; min-height:58px; border-radius:29px; background:var(--surface);
+    border:1.5px solid var(--line); color:var(--ink); font-size:20px; font-weight:800}
+  .fctl .big{min-width:92px; background:var(--indigo); border-color:var(--indigo); color:#fff}
+  @media (min-width:600px){ #app{max-width:600px} }
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
 </style>
@@ -330,7 +362,7 @@ const TRACK = id => TRACKS.find(t => t.id === id) || TRACKS[TRACKS.length-1];
 const TR_PREFIX = {td:'toddler', ch:'child', el:'elem', md:'mid', hs:'high', un:'univ'};
 const trackOfKey = k => { const m = /^(?:g:)?(td|ch|el|md|hs|un)_/.exec(k); return m ? TR_PREFIX[m[1]] : 'work'; };
 // 마지막으로 고른 트랙·유형을 기억한다. 처음 접속이면 트랙 선택창을 먼저 연다.
-let UI = { sheet: true };
+let UI = { sheet: true, flashSheet: false };
 try{
   const sv = JSON.parse(store.get('bvq_pick') || 'null');
   if(sv && TRACKS.some(t => t.id === sv.track)){
@@ -501,7 +533,7 @@ function closeSession(){
 const navBar = (extra) => `<div class="nav">
     <button onclick="goHome()" aria-label="홈으로">🏠 홈</button>
     <span class="sp"></span>${extra || ''}
-    ${soundBtn()}
+    ${soundBtn()}${fsBtn()}
     <button onclick="closeSession()" aria-label="닫기">✕ 닫기</button>
   </div>`;
 
@@ -520,9 +552,16 @@ function retryWrong(){
 
 window.addEventListener('keydown', e => {
   const t = e.target && e.target.tagName;
-  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet) return;
+  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet || UI.flashSheet) return;
   const go = e.key === 'Enter' || e.key === ' ';
   if(go && t === 'BUTTON') return;     // 버튼이 이미 자기 클릭을 처리한다
+  if(S.screen === 'flash'){
+    if(go){ e.preventDefault(); flashTap(); }
+    else if(e.key === 'ArrowRight') flashStep(1);
+    else if(e.key === 'ArrowLeft') flashStep(-1);
+    else if(e.key === 'Escape') exitFlash();
+    return;
+  }
   if(S.screen === 'quiz'){
     if(!S.fb && /^[1-4]$/.test(e.key)){ const o = S.qs[S.i].opts[+e.key - 1]; if(o) answer(o.id); }
     else if(S.fb && go){ e.preventDefault(); next(); }
@@ -606,12 +645,198 @@ function resumeSession(){
 const agoKo = t => { const m = Math.floor((Date.now() - t) / 60000);
   return m < 1 ? '방금 전' : m < 60 ? m + '분 전' : m < 1440 ? Math.floor(m / 60) + '시간 전' : Math.floor(m / 1440) + '일 전'; };
 
+/* ---------- 설정 (자동 넘김 · 깜빡이 암기) ---------- */
+const SET = Object.assign(
+  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false},
+  (() => { try{ return JSON.parse(store.get('bvq_set') || '{}') || {}; }catch(e){ return {}; } })());
+const saveSet = () => { try{ store.set('bvq_set', JSON.stringify(SET)); }catch(e){} };
+
+/* ---------- 자동 넘김 타이머 (화면이 바뀔 때마다 render() 가 멈춘다) ---------- */
+const AUTO = {id:null, t0:0, left:0, fn:null, paused:false};
+function autoStop(){ if(AUTO.id) clearTimeout(AUTO.id); AUTO.id = null; AUTO.fn = null; AUTO.paused = false; }
+function autoStart(ms, fn){
+  autoStop();
+  AUTO.left = ms; AUTO.t0 = Date.now(); AUTO.fn = fn;
+  AUTO.id = setTimeout(() => { AUTO.id = null; const f = AUTO.fn; AUTO.fn = null; if(f) f(); }, ms);
+}
+function autoPause(){
+  if(!AUTO.fn || AUTO.paused) return;
+  if(AUTO.id) clearTimeout(AUTO.id);
+  AUTO.id = null; AUTO.left = Math.max(0, AUTO.left - (Date.now() - AUTO.t0)); AUTO.paused = true;
+}
+function autoResume(){
+  if(!AUTO.fn || !AUTO.paused) return;
+  AUTO.paused = false; AUTO.t0 = Date.now();
+  const f = AUTO.fn;
+  AUTO.id = setTimeout(() => { AUTO.id = null; AUTO.fn = null; f(); }, AUTO.left);
+}
+const autoBar = ms => `<div class="abar" id="abar"><i style="animation-duration:${ms}ms"></i></div>`;
+// 진행 막대와 버튼 글자만 바꾼다(화면 전체를 다시 그리지 않는다)
+function setPaused(p){
+  p ? autoPause() : autoResume();
+  const bar = document.getElementById('abar'); if(bar && bar.classList) bar.classList.toggle('paused', p);
+  const b = document.getElementById('pausebtn'); if(b) b.textContent = p ? '▶ 계속' : '⏸ 일시정지';
+}
+const togglePause = () => setPaused(!AUTO.paused);
+
+/* ---------- 화면 켜 두기 / 전체화면 ---------- */
+let WAKE = null;
+async function wakeOn(){ try{ if(!WAKE && navigator.wakeLock) WAKE = await navigator.wakeLock.request('screen'); }catch(e){} }
+function wakeOff(){ try{ if(WAKE){ WAKE.release(); WAKE = null; } }catch(e){} }
+const fsOK = () => typeof document !== 'undefined' && !!document.documentElement && !!document.documentElement.requestFullscreen;
+function toggleFullscreen(){
+  const fail = () => toast('이 브라우저에서는 전체화면을 쓸 수 없어요. 홈 화면에 추가하면 전체화면으로 열려요.', 3200);
+  try{
+    const p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen({navigationUI:'hide'});
+    if(p && p.catch) p.catch(fail);
+  }catch(e){ fail(); }
+}
+const fsBtn = () => fsOK() ? `<button class="iconbtn" onclick="toggleFullscreen()" aria-label="전체화면">⛶</button>` : '';
+
+/* ---------- 학습 카드: 자동 넘김 ---------- */
+function studyNext(){
+  if(S.screen !== 'study') return;
+  if(S.si + 1 >= S.deck.length) S.screen = 'quiz'; else S.si++;
+  render();
+}
+function toggleStudyAuto(){ SET.auto = !SET.auto; saveSet(); render(); }
+function cycleAutoSec(){ const o = [4, 6, 9]; SET.autoSec = o[(o.indexOf(SET.autoSec) + 1) % o.length]; saveSet(); render(); }
+
+/* ---------- 깜빡이 암기: 영어(+발음기호) → 잠시 뒤 뜻으로 자동 전환, 계속 반복 ---------- */
+const FDUR = {fast:[1500, 2200], normal:[2500, 3200], slow:[4000, 4500]};   // [영어 보여 주는 시간, 뜻 보여 주는 시간] ms
+const FSPEED_KO = {fast:'빠르게', normal:'보통', slow:'느리게'};
+const FDECK_KO = {least:'덜 본 단어', weak:'약점 단어', due:'복습 대기', all:'전체 섞기'};
+let FLC = null, flcDirty = 0;              // 깜빡이로 본 횟수 { 단어id: n }  → '덜 본 단어'를 먼저 보여 준다
+const flc = () => { if(!FLC){ try{ FLC = JSON.parse(store.get('bvq_flash') || '{}') || {}; }catch(e){ FLC = {}; } } return FLC; };
+function flcSave(){ if(!FLC || !flcDirty) return; flcDirty = 0; try{ store.set('bvq_flash', JSON.stringify(FLC)); }catch(e){} }
+function countFlash(id){ const c = flc(); c[id] = (c[id] || 0) + 1; if(++flcDirty >= 8) flcSave(); }
+
+function flashDeck(){
+  const ws = WORDS.filter(inLevel), now = Date.now(), it = P.items, fc = flc();
+  let list;
+  if(SET.flashDeck === 'weak') list = ws.filter(w => it[w.id] && it[w.id].w > 0).sort((a, b) => it[b.id].w - it[a.id].w);
+  else if(SET.flashDeck === 'due') list = ws.filter(w => it[w.id] && it[w.id].due <= now);
+  else if(SET.flashDeck === 'all') list = shuffle(ws);
+  else list = shuffle(ws).sort((a, b) => (fc[a.id] || 0) - (fc[b.id] || 0));
+  return list.slice(0, SET.flashCount).map(w => w.id);
+}
+function startFlash(){
+  UI.flashSheet = false;
+  const deck = flashDeck();
+  if(!deck.length){
+    toast('이 범위에는 보여 줄 단어가 없어요. 다른 범위를 골라 보세요.', 2800);
+    UI.flashSheet = true; render(); return;
+  }
+  S = {screen:'flash', fl:{deck, i:0, phase:0, round:1, paused:false}};
+  render();
+}
+// dir: 0 = 같은 단어의 다음 단계(영어→뜻→다음 단어), 1 = 다음 단어, -1 = 이전 단어
+function flashStep(dir){
+  const f = S.fl;
+  if(S.screen !== 'flash' || !f) return;
+  if(dir === 0 && f.phase === 0) f.phase = 1;
+  else {
+    f.phase = 0;
+    f.i += dir === -1 ? -1 : 1;
+    if(f.i < 0) f.i = 0;
+    if(f.i >= f.deck.length){
+      flcSave();
+      if(SET.flashLoop){ f.i = 0; f.round++; f.deck = shuffle(f.deck); }
+      else { S.screen = 'flashdone'; render(); return; }
+    }
+  }
+  render();
+}
+const flashAdvance = () => flashStep(0);
+function flashTap(){ if(S.screen !== 'flash') return; S.fl.paused = !S.fl.paused; render(); }
+function exitFlash(){ flcSave(); wakeOff(); S = {screen:'home'}; render(); }
+function cycleFlashSpeed(){
+  const o = ['fast', 'normal', 'slow'];
+  SET.flashSpeed = o[(o.indexOf(SET.flashSpeed) + 1) % o.length]; saveSet();
+  const b = document.getElementById('spdbtn'); if(b) b.textContent = FSPEED_KO[SET.flashSpeed];
+}
+function flashQuiz(){          // 방금 본 단어로 바로 퀴즈
+  const ws = S.fl.deck.slice(0, SIZE).map(id => BY[id]);
+  const qs = shuffle(ws.map(w => build(w, modeFor(P.items[w.id] ? P.items[w.id].box : 0))));
+  S = {screen:'quiz', deck:[], si:0, qs, i:0, score:0, streak:0, best:0, right:0, fb:null, wrong:[]};
+  render();
+}
+
+function flash(){
+  const f = S.fl, w = BY[f.deck[f.i]];
+  wakeOn();
+  if(f.phase === 0){ countFlash(w.id); autoSay(w.term, 120); }
+  else if(SET.flashEx) autoSay(w.example, 150);
+  const ms = FDUR[SET.flashSpeed][f.phase];
+  if(!f.paused) autoStart(ms, flashAdvance);
+  return `<div class="flash" onclick="flashTap()">
+    <div class="fhead" onclick="event.stopPropagation()">
+      <button class="iconbtn" onclick="exitFlash()" aria-label="닫기">✕</button>
+      <span class="sp">${f.i + 1} / ${f.deck.length} · ${f.round}바퀴</span>
+      ${soundBtn()}${fsBtn()}
+    </div>
+    ${f.paused ? '<div class="abar"><i style="width:100%;animation:none"></i></div>' : autoBar(ms)}
+    <div class="fcard">
+      ${w.emoji ? `<div style="font-size:72px;line-height:1.1">${w.emoji}</div>` : ''}
+      <div class="fword ${f.phase === 1 ? 'sm' : ''}">${esc(w.term)}</div>
+      ${w.ipa ? `<div class="fipa">${esc(w.ipa)}</div>` : ''}
+      ${f.phase === 1 ? `<div class="fko">${esc(w.meaningKo)}</div><div class="meta">${esc(w.pos)}</div>
+        <div class="fex">${esc(w.example)}</div><div class="fexko">${esc(w.exampleKo)}</div>` : ''}
+      ${f.paused ? '<div class="meta" style="margin-top:14px">⏸ 일시정지 · 화면을 누르면 계속</div>' : ''}
+    </div>
+    <div class="fctl" onclick="event.stopPropagation()">
+      <button onclick="flashStep(-1)" aria-label="이전 단어">⏮</button>
+      <button class="big" onclick="flashTap()" aria-label="일시정지 또는 계속">${f.paused ? '▶' : '⏸'}</button>
+      <button onclick="flashStep(1)" aria-label="다음 단어">⏭</button>
+      <button id="spdbtn" style="font-size:14px;padding:0 14px" onclick="cycleFlashSpeed()">${FSPEED_KO[SET.flashSpeed]}</button>
+    </div>
+  </div>`;
+}
+function flashdone(){
+  const f = S.fl;
+  return `
+  <div class="nav"><button onclick="exitFlash()" aria-label="홈으로">🏠 홈</button></div>
+  <h1 style="color:var(--ok)">한 바퀴 끝</h1>
+  <div class="card" style="margin-top:16px"><div class="stat"><b style="color:var(--indigo)">${f.deck.length}</b><span>개 단어를 봤어요</span></div></div>
+  <button class="primary" onclick="flashQuiz()">방금 본 단어로 퀴즈<small>눈으로 익힌 걸 바로 확인해요</small></button>
+  <button class="ghost" onclick="startFlash()">깜빡이 한 번 더</button>
+  <button class="ghost" onclick="exitFlash()">홈으로</button>`;
+}
+
+function toggleFlashSheet(v){ UI.flashSheet = v; render(); }
+function setFlash(k, v){ SET[k] = v; saveSet(); render(); }
+function flashSheetHtml(){
+  if(!UI.flashSheet) return '';
+  const T = TRACK(PICK.track);
+  const ch = (k, v, label) => `<button class="chip ${SET[k] === v ? 'on' : ''}" onclick="setFlash('${k}', ${typeof v === 'string' ? `'${v}'` : v})">${label}</button>`;
+  const tg = (k, label, on) => `<button class="chip ${on ? 'on' : ''}" onclick="setFlash('${k}', ${!SET[k]})">${label}</button>`;
+  return `<div class="sheetbg" onclick="toggleFlashSheet(false)">
+    <div class="sheet" role="dialog" aria-label="깜빡이 암기 설정" onclick="event.stopPropagation()">
+      <div class="row"><h2>⚡ 깜빡이 암기</h2><button class="link" onclick="toggleFlashSheet(false)">닫기</button></div>
+      <p class="meta" style="font-weight:400;margin:6px 0 0;line-height:1.6">영어 단어와 발음기호가 나오고, 잠시 뒤 뜻으로 자동 전환돼요. 화면만 켜 두고 눈으로 익히세요. (${T.emoji} ${T.name} 단어)</p>
+      <div class="label">범위</div>
+      <div class="chips">${ch('flashDeck', 'least', '덜 본 단어')}${ch('flashDeck', 'weak', '약점 단어')}${ch('flashDeck', 'due', '복습 대기')}${ch('flashDeck', 'all', '전체 섞기')}</div>
+      <div class="label">개수</div>
+      <div class="chips">${ch('flashCount', 20, '20개')}${ch('flashCount', 50, '50개')}${ch('flashCount', 100, '100개')}</div>
+      <div class="label">속도</div>
+      <div class="chips">${ch('flashSpeed', 'fast', '빠르게')}${ch('flashSpeed', 'normal', '보통')}${ch('flashSpeed', 'slow', '느리게')}</div>
+      <div class="label">옵션</div>
+      <div class="chips">
+        <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'}</button>
+        ${tg('flashEx', '예문도 읽기', SET.flashEx)}${tg('flashLoop', '끝나면 반복', SET.flashLoop)}
+      </div>
+      <button class="primary" onclick="startFlash()">시작</button>
+    </div></div>`;
+}
+
 function toggleSheet(v){ UI.sheet = v; render(); }
 function pickTrack(id){ UI.sheet = false; setPick('track', id); }
 
 /* ---------- 화면 ---------- */
 function render(){
   try{ speechSynthesis.cancel(); }catch(e){}
+  autoStop();
+  if(S.screen !== 'flash') wakeOff();
   if(S.screen === 'quiz' || S.screen === 'study') saveSession();
   else if(S.screen === 'result') clearSession();
   if(!LOADED.has(PICK.track) && !(S.screen === 'home' && UI.sheet)){
@@ -621,7 +846,7 @@ function render(){
     });
     return;
   }
-  app.innerHTML = ({home:home, study:study, quiz:quiz, result:result, library:library})[S.screen]();
+  app.innerHTML = ({home:home, study:study, quiz:quiz, result:result, library:library, flash:flash, flashdone:flashdone})[S.screen]();
   const fbEl = (S.screen === 'quiz' && S.fb && document.querySelector) ? document.querySelector('.fb') : null;
   if(fbEl && fbEl.scrollIntoView) fbEl.scrollIntoView({block:'start', behavior:'smooth'});
   else window.scrollTo(0,0);
@@ -716,6 +941,7 @@ function home(){
   ${levels()}
 
   <button class="${ses ? 'ghost' : 'primary'}" onclick="start()">${ses ? '새로 시작하기' : ctaMain}<small>${ctaSub}${pr.due ? ' · 복습 ' + pr.due + '개 대기 중' : ''}</small></button>
+  <div class="flashrow"><button class="flashbtn" onclick="startFlash()">⚡ 깜빡이 암기<small>${FDECK_KO[SET.flashDeck]} ${SET.flashCount}개 · ${FSPEED_KO[SET.flashSpeed]} · 소리 ${SND.on ? "켜짐" : "꺼짐"}</small></button><button class="iconbtn" onclick="toggleFlashSheet(true)" aria-label="깜빡이 설정">⚙</button></div>
   <button class="ghost" onclick="openLibrary()">📒 학습 노트 · 약점 확인</button>
   <button class="install" id="installBtn" style="display:${deferredPrompt ? 'block' : 'none'}" onclick="installApp()">📲 홈 화면에 추가하면 앱처럼 써요</button>
   ${ttsNotice()}
@@ -726,22 +952,32 @@ function home(){
   </details>
 
   <div class="foot">
+    ${fsOK() ? '<button class="link" onclick="toggleFullscreen()">⛶ 전체화면</button>' : ''}
     <button class="link" onclick="TTS.diagnose()">🔊 음성 테스트</button>
     <button class="link" onclick="if(confirm('모든 트랙의 학습 기록을 지웁니다.')){P={items:{},total:0,best:0};saveP(P);render();}">학습 기록 초기화</button>
   </div>
-  ${sheet}`;
+  ${sheet}
+  ${flashSheetHtml()}`;
 }
 
 function study(){
   const w = S.deck[S.si];
   autoSay(w.term, 60);
+  const ms = SET.auto ? SET.autoSec * 1000 : 0;
+  if(ms) autoStart(ms, studyNext);
   return `
   ${navBar()}
-  <div class="row" style="margin:14px 0">
+  <div class="row" style="margin:14px 0 0">
     <span class="meta">새 단어 ${S.si+1} / ${S.deck.length}</span>
     <button class="link" onclick="S.screen='quiz';render()">건너뛰고 퀴즈로</button>
   </div>
-  <div class="card" onclick="TTS.say(BY['${w.id}'].term)">
+  ${ms ? autoBar(ms) : ''}
+  <div class="autorow">
+    <button onclick="toggleStudyAuto()">${SET.auto ? '⏩ 자동 넘김 켜짐' : '자동 넘김 꺼짐'}</button>
+    ${SET.auto ? `<button onclick="cycleAutoSec()" aria-label="넘김 간격 바꾸기">${SET.autoSec}초</button>
+    <button id="pausebtn" onclick="togglePause()">⏸ 일시정지</button>` : ''}
+  </div>
+  <div class="card" style="margin-top:14px" onclick="TTS.say(BY['${w.id}'].term)">
     ${emojiOf(w)}<div class="term">${esc(w.term)}</div>
     ${ipaOf(w) ? `<div style="margin-top:10px">${ipaOf(w)}</div>` : ''}
     <div style="font-size:21px;font-weight:700;margin-top:14px">${esc(w.meaningKo)}</div>
@@ -753,7 +989,7 @@ function study(){
       <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>
     </div>
   </div>
-  <div class="stick"><button class="primary" onclick="S.si+1>=S.deck.length ? (S.screen='quiz') : S.si++; render()">
+  <div class="stick"><button class="primary" onclick="studyNext()">
     ${S.si+1 >= S.deck.length ? '퀴즈 시작' : '다음 단어'}</button></div>`;
 }
 
@@ -783,7 +1019,7 @@ function quiz(){
       ? `${emojiOf(w)}<div class="term">${esc(w.term)}</div>${ipaOf(w) ? `<div style="margin-top:10px">${ipaOf(w)}</div>` : ''}`
       : q.mode === 'RECALL'
         ? `${emojiOf(w)}<div class="prompt">${esc(w.meaningKo)}</div><div class="meta" style="margin-top:6px">${w.pos}</div>`
-        : `<div class="prompt">${esc(q.prompt)}</div>${ipaOf(w) ? `<div style="margin-top:10px">${ipaOf(w)}</div>` : ''}`;
+        : `<div class="prompt">${esc(q.prompt)}</div>${(reveal && ipaOf(w)) ? `<div style="margin-top:10px">${ipaOf(w)}</div>` : ''}`;
 
   const speakRow = !canSpeak ? '' : isG
     ? `<div style="margin-top:14px"><button class="speak" onclick="event.stopPropagation();TTS.say(GB['${g.id}'].full, this)">🔊 완성 문장</button></div>`
