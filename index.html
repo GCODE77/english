@@ -292,6 +292,13 @@
   .weakcta .primary{margin-top:10px}
   .empty .primary{margin-top:20px}
   #libStatus .chip{min-width:0; min-height:46px; padding:6px 2px; font-size:14px}
+  .bar.two{position:relative}
+  .bar.two > i{position:absolute; left:0; top:0}
+  .bar.two > i.seen{background:var(--chippress)}
+  .hero .big .mastered{font-size:14px; font-weight:800; color:var(--ok)}
+  .sheet .chip{word-break:keep-all}
+  .opts2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .opts2 .chip{min-width:0; min-height:58px}
   .iconbtn.tgl{border-color:var(--indigo); box-shadow:0 0 0 2px var(--indigo)}
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
@@ -449,11 +456,11 @@ const TRACK = id => TRACKS.find(t => t.id === id) || TRACKS[TRACKS.length-1];
 const TR_PREFIX = {td:'toddler', ch:'child', el:'elem', md:'mid', hs:'high', un:'univ'};
 const trackOfKey = k => { const m = /^(?:g:)?(td|ch|el|md|hs|un)_/.exec(k); return m ? TR_PREFIX[m[1]] : 'work'; };
 // 마지막으로 고른 트랙·유형을 기억한다. 처음 접속이면 트랙 선택창을 먼저 연다.
-let UI = { sheet: true, flashSheet: false, setSheet: false };
+let UI = { sheet: true, firstRun: true, flashSheet: false, setSheet: false };
 try{
   const sv = JSON.parse(store.get('bvq_pick') || 'null');
   if(sv && TRACKS.some(t => t.id === sv.track)){
-    PICK.track = sv.track; UI.sheet = false;
+    PICK.track = sv.track; UI.sheet = false; UI.firstRun = false;
     if(['word','grammar','mix'].includes(sv.cat)) PICK.cat = sv.cat;
   }
 }catch(e){}
@@ -908,7 +915,7 @@ function flashSheetHtml(){
   if(!UI.flashSheet) return '';
   const T = TRACK(PICK.track);
   const ch = (k, v, label) => `<button class="chip ${SET[k] === v ? 'on' : ''}" onclick="setFlash('${k}', ${typeof v === 'string' ? `'${v}'` : v})">${label}</button>`;
-  const tg = (k, label, on) => `<button class="chip ${on ? 'on' : ''}" onclick="setFlash('${k}', ${!SET[k]})">${label}</button>`;
+  const tg = (k, label, on) => `<button class="chip ${on ? 'on' : ''}" onclick="setFlash('${k}', ${!SET[k]})">${label}<small>${on ? '켜짐' : '꺼짐'}</small></button>`;
   return `<div class="sheetbg" onclick="toggleFlashSheet(false)">
     <div class="sheet" role="dialog" aria-label="깜빡이 암기 설정" onclick="event.stopPropagation()">
       <div class="row"><h2>⚡ 깜빡이 암기</h2><button class="link" onclick="toggleFlashSheet(false)">닫기</button></div>
@@ -920,10 +927,11 @@ function flashSheetHtml(){
       <div class="label">속도</div>
       <div class="chips">${ch('flashSpeed', 'fast', '빠르게')}${ch('flashSpeed', 'normal', '보통')}${ch('flashSpeed', 'slow', '느리게')}</div>
       <div class="label">옵션</div>
-      <div class="chips">
-        <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'}</button>
-        ${tg('flashEx', '예문도 읽기', SET.flashEx)}${tg('flashLoop', '끝나면 반복', SET.flashLoop)}
-        <button class="chip ${SET.flashBlack ? 'on' : ''}" onclick="toggleBlack()">◐ 깜빡이 블랙 화면 ${SET.flashBlack ? '켜짐' : '꺼짐'}</button>
+      <div class="chips opts2">
+        <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊' : '🔇'} 단어 읽어 주기<small>${SND.on ? '켜짐' : '꺼짐'}</small></button>
+        ${tg('flashEx', '예문도 읽기', SET.flashEx)}
+        ${tg('flashLoop', '끝나면 반복', SET.flashLoop)}
+        <button class="chip ${SET.flashBlack ? 'on' : ''}" onclick="toggleBlack()">◐ 블랙 화면<small>${SET.flashBlack ? '켜짐' : '꺼짐'}</small></button>
       </div>
       <button class="primary" onclick="startFlash()">시작</button>
     </div></div>`;
@@ -1074,8 +1082,8 @@ function iosHintHtml(){
     <button class="link" onclick="store.set('bvq_ioshint','1');render()">다시 보지 않기</button></div>`;
 }
 
-function toggleSheet(v){ UI.sheet = v; render(); }
-function pickTrack(id){ UI.sheet = false; setPick('track', id); }
+function toggleSheet(v){ UI.sheet = v; if(!v) UI.firstRun = false; render(); }
+function pickTrack(id){ UI.sheet = false; UI.firstRun = false; setPick('track', id); }
 
 /* ---------- 화면 ---------- */
 function render(){
@@ -1117,6 +1125,7 @@ function home(){
   };
   const pr = prog(T);
   const pct = pr.total ? Math.round(pr.mastered / pr.total * 100) : 0;
+  const seenPct = pr.seen ? Math.max(2, Math.round(pr.seen / pr.total * 100)) : 0;   // 조금만 해도 막대가 보이게
 
   const lvCount = l => tw.filter(w => l===0 || w.level===l).length;
   const gCount  = l => tg.filter(g => l===0 || g.level===l).length;
@@ -1129,7 +1138,7 @@ function home(){
     <div class="chips">${lvChip(2,'회의·프로젝트')}${lvChip(3,'재무·법무')}</div>` : '';
 
   const trRow = t => {
-    const p = prog(t), on = t.id === T.id;
+    const p = prog(t), on = t.id === T.id && !UI.firstRun;
     return `<button class="trow ${on?'on':''}" onclick="pickTrack('${t.id}')">
       <span class="em">${t.emoji}</span>
       <span class="tx"><b>${t.name}</b><span>${t.sub}</span></span>
@@ -1168,8 +1177,8 @@ function home(){
   ${fsBannerHtml()}
 
   <div class="card hero">
-    <div class="big"><b>${pr.mastered}</b>/ ${pr.total} 완전 습득</div>
-    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="big"><b>${pr.seen}</b>/ ${pr.total} 학습 시작<span class="mastered"> · 완전 습득 ${pr.mastered}</span></div>
+    <div class="bar two"><i class="seen" style="width:${seenPct}%"></i><i style="width:${pct}%"></i></div>
     <div class="stats">
       <div class="stat"><b style="color:var(--indigo)">${P.total}</b><span>누적 점수</span></div>
       <div class="stat"><b style="color:${pr.due ? 'var(--no)' : 'var(--muted)'}">${pr.due}</b><span>복습 대기</span></div>
@@ -1318,7 +1327,8 @@ function quiz(){
 function result(){
   const acc = S.qs.length ? Math.round(S.right / S.qs.length * 100) : 0;
   const uniq = [...new Map(S.wrong.map(q=>[q.kind+q.id, q])).values()];
-  const title = acc >= 90 ? '완벽합니다' : acc >= 70 ? '잘하고 있습니다' : '복습이 필요합니다';
+  const title = acc >= 90 ? '완벽해요!' : acc >= 70 ? '잘하고 있어요' : uniq.length ? '틀린 것만 다시 보면 돼요' : '수고했어요';
+  const wrongWords = uniq.some(q => q.kind === 'w');
 
   const item = q => q.kind === 'g'
     ? `<div class="wrongitem">
@@ -1347,6 +1357,7 @@ function result(){
   </div>
   ${uniq.length
     ? `<button class="primary" onclick="retryWrong()">틀린 ${uniq.length}문제 바로 다시 풀기<small>기억이 남아 있을 때 한 번 더</small></button>
+       ${wrongWords ? '<button class="ghost" onclick="flashWrong()">⚡ 틀린 단어 깜빡이로 외우기</button>' : ''}
        <button class="ghost" onclick="start()">새 문제 10개 풀기</button>`
     : `<button class="primary" onclick="start()">한 세션 더<small>새 문제 10개</small></button>`}
   <button class="ghost" onclick="goHome()">홈으로</button>
@@ -1452,6 +1463,13 @@ function weakQuiz(){
   const qs = shuffle([...ws.map(w => build(w, 'MEANING')), ...gs.map(g => buildG(g))]);
   if(!qs.length){ toast('틀린 문제가 아직 없어요.', 2000); return; }
   S = {screen:'quiz', deck:[], si:0, qs, i:0, score:0, streak:0, best:0, right:0, fb:null, wrong:[]};
+  render();
+}
+// 방금 틀린 단어만 깜빡이로 외우기 (퀴즈 → 깜빡이 → 다시 퀴즈 흐름)
+function flashWrong(){
+  const ids = [...new Set(S.wrong.filter(q => q.kind === 'w').map(q => q.w.id))];
+  if(!ids.length) return;
+  S = {screen:'flash', fl:{deck:ids, i:0, phase:0, round:1, paused:false}};
   render();
 }
 function flashWeak(){ SET.flashDeck = 'weak'; saveSet(); startFlash(); }

@@ -45,7 +45,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,setLibStatus,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,flashWrong,setLibStatus,getP:()=>P,getS:()=>S};',
     box
   );
   for (const t of TRACK_IDS)
@@ -515,6 +515,32 @@ console.log('\n[10] 학습 노트');
   if (A.SET.flashDeck !== 'weak' || A.getS().screen !== 'flash') fail.push('약점 단어 깜빡이가 시작되지 않음');
   A.exitFlash(); A.SET.flashDeck = prevDeck;
   note('학습 노트: 홈 버튼 · 상태 필터 · 약점 퀴즈 · 약점 깜빡이 확인');
+}
+
+/* ---------- 11. 결과 화면 흐름 ---------- */
+console.log('\n[11] 결과 화면 흐름');
+{
+  A.setPick('track', 'elem');
+  const w = A.WORDS.find(x => x.track === 'elem');
+  const st = A.getS();
+  st.screen = 'result'; st.qs = [{kind: 'w', w, id: w.id, opts: [], mode: 'MEANING', prompt: w.term}];
+  st.wrong = [{kind: 'w', w, id: w.id}]; st.right = 0; st.score = 0; st.best = 0;
+  const h = A.result();
+  if (/undefined|NaN|\[object /.test(h)) fail.push('결과 화면 템플릿 오류');
+  if (!h.includes('틀린 1문제 바로 다시 풀기')) fail.push('결과 화면에 다시 풀기 버튼이 없음');
+  if (!h.includes('틀린 단어 깜빡이로 외우기')) fail.push('결과 화면에 틀린 단어 깜빡이 버튼이 없음');
+  if (h.includes('복습이 필요합니다')) fail.push('결과 제목이 부정적인 문구로 남아 있음');
+  A.flashWrong();
+  const fl = A.getS();
+  if (fl.screen !== 'flash' || fl.fl.deck.length !== 1 || fl.fl.deck[0] !== w.id) fail.push('틀린 단어 깜빡이가 그 단어로 시작되지 않음');
+  A.exitFlash();
+  // 첫 접속의 트랙 선택창은 아직 아무것도 고르지 않았으므로 '선택됨'을 표시하면 안 된다
+  A.UI.sheet = true; A.UI.firstRun = true;
+  if (A.home().includes('선택됨')) fail.push('첫 접속 선택창에 선택됨 표시가 있음');
+  A.UI.firstRun = false;
+  if (!A.home().includes('선택됨')) fail.push('트랙을 고른 뒤 선택창에 선택됨 표시가 없음');
+  A.UI.sheet = false;
+  note('결과 → 틀린 단어 깜빡이 연결 · 첫 접속 선택 표시 확인');
 }
 
 /* ---------- 결과 ---------- */
