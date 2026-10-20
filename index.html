@@ -820,7 +820,7 @@ function flash(){
     <div class="fhead" onclick="event.stopPropagation()">
       <button class="iconbtn" onclick="exitFlash()" aria-label="닫기">✕</button>
       <span class="sp">${f.i + 1} / ${f.deck.length} · ${f.round}바퀴</span>
-      ${soundBtn()}${hcBtn()}${fsBtn()}
+      ${soundBtn()}${blackBtn()}${fsBtn()}
     </div>
     ${f.paused ? '<div class="abar"><i style="width:100%;animation:none"></i></div>' : autoBar(ms)}
     <div class="fcard">
@@ -871,7 +871,7 @@ function flashSheetHtml(){
       <div class="chips">
         <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'}</button>
         ${tg('flashEx', '예문도 읽기', SET.flashEx)}${tg('flashLoop', '끝나면 반복', SET.flashLoop)}
-        <button class="chip ${SET.hc ? 'on' : ''}" onclick="toggleHC()">◐ 고대비 ${SET.hc ? '켜짐' : '꺼짐'}</button>
+        <button class="chip ${SET.theme === 'black' ? 'on' : ''}" onclick="toggleBlack()">◐ 블랙 화면 ${SET.theme === 'black' ? '켜짐' : '꺼짐'}</button>
       </div>
       <button class="primary" onclick="startFlash()">시작</button>
     </div></div>`;
@@ -901,6 +901,16 @@ function toggleHC(){
   if(b){ if(b.classList) b.classList.toggle('tgl', SET.hc); b.setAttribute('aria-pressed', String(SET.hc)); }
 }
 const hcBtn = () => `<button class="iconbtn ${SET.hc ? 'tgl' : ''}" id="hcbtn" onclick="toggleHC()" aria-label="고대비 ${SET.hc ? '끄기' : '켜기'}" aria-pressed="${SET.hc}">◐</button>`;
+function toggleBlack(){
+  if(SET.theme === 'black') SET.theme = (SET.prevTheme && SET.prevTheme !== 'black') ? SET.prevTheme : 'auto';
+  else { SET.prevTheme = SET.theme; SET.theme = 'black'; }
+  saveSet(); applyTheme();
+  if(S.screen !== 'flash'){ render(); return; }
+  // 깜빡이 중에는 화면을 다시 그리지 않는다(타이머·소리 유지). 색만 바뀐다.
+  const b = document.getElementById('blackbtn');
+  if(b){ if(b.classList) b.classList.toggle('tgl', SET.theme === 'black'); b.setAttribute('aria-pressed', String(SET.theme === 'black')); }
+}
+const blackBtn = () => `<button class="iconbtn ${SET.theme === 'black' ? 'tgl' : ''}" id="blackbtn" onclick="toggleBlack()" aria-label="블랙 화면 ${SET.theme === 'black' ? '끄기' : '켜기'}" aria-pressed="${SET.theme === 'black'}">◐</button>`;
 function toggleSetSheet(v){ UI.setSheet = v; render(); }
 function themeSheetHtml(){
   if(!UI.setSheet) return '';

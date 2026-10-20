@@ -45,7 +45,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,toggleBlack,blackBtn,getP:()=>P,getS:()=>S};',
     box
   );
   for (const t of TRACK_IDS)
@@ -425,6 +425,21 @@ console.log('\n[9] 화면 설정 (테마 · 음영 대비)');
   if (!JSON.parse(box.localStorage.getItem('bvq_set') || '{}').hc) fail.push('고대비 설정이 저장되지 않음');
   if (!A.hcBtn().includes('aria-pressed="true"')) fail.push('고대비 버튼 상태 표시 오류');
   A.toggleHC(); A.setTheme('auto');
+  // 깜빡이 ◐ 버튼: 블랙 테마로 바뀌고, 다시 누르면 직전 테마로 돌아온다
+  A.setTheme('light'); A.toggleBlack();
+  if (A.SET.theme !== 'black') fail.push('◐ 버튼이 블랙 테마로 바꾸지 않음');
+  if (!A.blackBtn().includes('aria-pressed="true"')) fail.push('블랙 화면 버튼 상태 표시 오류');
+  A.toggleBlack();
+  if (A.SET.theme !== 'light') fail.push('◐ 버튼을 다시 누르면 직전 테마(밝게)로 돌아와야 함: ' + A.SET.theme);
+  A.setTheme('dark'); A.toggleBlack(); A.toggleBlack();
+  if (A.SET.theme !== 'dark') fail.push('어둡게 → 블랙 → 복귀가 어둡게로 돌아오지 않음');
+  A.setTheme('auto');
+  {
+    // 깜빡이 화면 위쪽에 ◐ 버튼이 있다
+    A.setPick('track', 'elem'); A.startFlash();
+    if (!A.flash().includes('id="blackbtn"')) fail.push('깜빡이 화면에 블랙 화면(◐) 버튼이 없음');
+    A.exitFlash();
+  }
   // CSS: 라이트/다크 × 고대비 변수 블록이 모두 있어야 한다
   for (const sel of ['data-mode="light"', 'data-mode="dark"', 'data-mode="black"', 'data-hc="1"][data-mode="light"', 'data-hc="1"][data-mode="dark"'])
     if (!css.includes(sel)) fail.push('CSS 에 ' + sel + ' 블록이 없음');
