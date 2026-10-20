@@ -45,7 +45,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,toggleBlack,blackBtn,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,setLibStatus,getP:()=>P,getS:()=>S};',
     box
   );
   for (const t of TRACK_IDS)
@@ -425,21 +425,33 @@ console.log('\n[9] 화면 설정 (테마 · 음영 대비)');
   if (!JSON.parse(box.localStorage.getItem('bvq_set') || '{}').hc) fail.push('고대비 설정이 저장되지 않음');
   if (!A.hcBtn().includes('aria-pressed="true"')) fail.push('고대비 버튼 상태 표시 오류');
   A.toggleHC(); A.setTheme('auto');
-  // 깜빡이 ◐ 버튼: 블랙 테마로 바뀌고, 다시 누르면 직전 테마로 돌아온다
-  A.setTheme('light'); A.toggleBlack();
-  if (A.SET.theme !== 'black') fail.push('◐ 버튼이 블랙 테마로 바꾸지 않음');
-  if (!A.blackBtn().includes('aria-pressed="true"')) fail.push('블랙 화면 버튼 상태 표시 오류');
+  // 블랙 화면은 '깜빡이 전용': 깜빡이 화면에서만 검정이고, 홈·다른 화면은 원래 테마를 유지한다
+  const modeCases = [
+    ['light', false, 'home', true, 'light', '홈은 깜빡이 블랙 설정과 무관'],
+    ['light', false, 'flash', true, 'black', '깜빡이 + 블랙 켬'],
+    ['light', false, 'flashdone', true, 'black', '깜빡이 완료 화면도 블랙 유지'],
+    ['light', false, 'flash', false, 'light', '깜빡이 + 블랙 끔'],
+    ['auto', true, 'home', false, 'dark', '자동 + 폰 다크'],
+    ['auto', false, 'quiz', true, 'light', '퀴즈는 깜빡이 블랙 설정과 무관'],
+    ['black', false, 'home', false, 'black', '앱 전체 블랙 테마(설정)'],
+    ['dark', false, 'flash', true, 'black', '어둡게 + 깜빡이 블랙'],
+  ];
+  for (const [th, sys, scr, fb, want, label] of modeCases)
+    if (A.themeMode(th, sys, scr, fb) !== want) fail.push('테마 모드 오류: ' + label + ' → 기대 ' + want + ' 실제 ' + A.themeMode(th, sys, scr, fb));
+  A.setTheme('light'); A.SET.flashBlack = false;
+  A.setPick('track', 'elem'); A.startFlash();
+  if (!A.flash().includes('id="blackbtn"')) fail.push('깜빡이 화면에 블랙 버튼이 없음');
+  if (!A.flash().includes('끝내기')) fail.push('깜빡이 화면에 끝내기 버튼이 없음');
   A.toggleBlack();
-  if (A.SET.theme !== 'light') fail.push('◐ 버튼을 다시 누르면 직전 테마(밝게)로 돌아와야 함: ' + A.SET.theme);
-  A.setTheme('dark'); A.toggleBlack(); A.toggleBlack();
-  if (A.SET.theme !== 'dark') fail.push('어둡게 → 블랙 → 복귀가 어둡게로 돌아오지 않음');
+  if (!A.SET.flashBlack) fail.push('깜빡이 블랙 버튼이 켜지지 않음');
+  if (A.SET.theme !== 'light') fail.push('깜빡이 블랙이 앱 전체 테마를 바꿨음(홈까지 검정이 되는 버그): ' + A.SET.theme);
+  if (!A.blackBtn().includes('aria-pressed="true"')) fail.push('블랙 버튼 상태 표시 오류');
+  A.exitFlash();
+  if (A.SET.theme !== 'light') fail.push('깜빡이를 나갔는데 테마가 바뀌어 있음: ' + A.SET.theme);
+  A.toggleBlack();       // 홈에서 눌러도 앱 전체 테마는 그대로
+  if (A.SET.theme !== 'light' || A.SET.flashBlack) fail.push('깜빡이 블랙 끄기 오류');
   A.setTheme('auto');
-  {
-    // 깜빡이 화면 위쪽에 ◐ 버튼이 있다
-    A.setPick('track', 'elem'); A.startFlash();
-    if (!A.flash().includes('id="blackbtn"')) fail.push('깜빡이 화면에 블랙 화면(◐) 버튼이 없음');
-    A.exitFlash();
-  }
+
   // CSS: 라이트/다크 × 고대비 변수 블록이 모두 있어야 한다
   for (const sel of ['data-mode="light"', 'data-mode="dark"', 'data-mode="black"', 'data-hc="1"][data-mode="light"', 'data-hc="1"][data-mode="dark"'])
     if (!css.includes(sel)) fail.push('CSS 에 ' + sel + ' 블록이 없음');
@@ -475,6 +487,34 @@ console.log('\n[9] 화면 설정 (테마 · 음영 대비)');
     if (A.fsBannerWanted(e) !== want) fail.push('전체화면 배너 조건 오류: ' + label);
   if (A.fsBannerHtml() !== '') fail.push('PC(비모바일)에서 전체화면 배너가 보임');
   note('자동 전체화면 조건 7가지 · 배너 조건 7가지 · 설정 토글 · manifest fullscreen 확인');
+}
+
+/* ---------- 10. 학습 노트 ---------- */
+console.log('\n[10] 학습 노트');
+{
+  A.setPick('track', 'elem');
+  A.openLibrary();
+  let h = A.library();
+  for (const t of ['🏠 홈', '학습 노트', '약점 노트'])
+    if (!h.includes(t)) fail.push('학습 노트에 "' + t + '" 가 없음');
+  if (/undefined|NaN|\[object /.test(h)) fail.push('학습 노트 템플릿 오류');
+  if (h.includes('아직 틀린 문제가 없습니다')) fail.push('약점 노트가 비어 있음(통계 연결 실패)');
+  if (!h.includes('약점만 퀴즈 풀기')) fail.push('약점 노트에 퀴즈 버튼이 없음');
+  if (!h.includes('약점 단어 깜빡이로 보기')) fail.push('약점 노트에 깜빡이 버튼이 없음');
+  A.libTab('words');
+  h = A.library();
+  for (const t of ['약점', '학습중', '습득', '미학습'])
+    if (!h.includes('>' + t + '</button>')) fail.push('단어 탭에 상태 필터 "' + t + '" 가 없음');
+  if (!h.includes('data-st="')) fail.push('목록 항목에 data-st 가 없음');
+  A.setLibStatus('b-bad');
+  A.weakQuiz();
+  const st = A.getS();
+  if (st.screen !== 'quiz' || !st.qs.length || st.qs.length > 10) fail.push('약점 퀴즈가 만들어지지 않음');
+  const prevDeck = A.SET.flashDeck;
+  A.flashWeak();
+  if (A.SET.flashDeck !== 'weak' || A.getS().screen !== 'flash') fail.push('약점 단어 깜빡이가 시작되지 않음');
+  A.exitFlash(); A.SET.flashDeck = prevDeck;
+  note('학습 노트: 홈 버튼 · 상태 필터 · 약점 퀴즈 · 약점 깜빡이 확인');
 }
 
 /* ---------- 결과 ---------- */

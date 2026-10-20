@@ -263,6 +263,35 @@
   .tert button{flex:1; min-height:54px; border-radius:16px; background:var(--surface); border:2px solid var(--line);
     color:var(--ink); font-size:16px; font-weight:800}
   .abar:empty{background:var(--line)}
+  /* 깜빡이 */
+  .flash .abar{height:8px}
+  .fclose{min-height:46px; padding:0 16px; border-radius:23px; background:var(--surface); border:2px solid var(--line);
+    color:var(--ink); font-size:15px; font-weight:800}
+  .fcount{margin-left:auto; text-align:right; font-size:15px; color:var(--muted); font-weight:700; line-height:1.2}
+  .fcount b{font-size:28px; font-weight:900; color:var(--ink)}
+  .fcount small{display:block; font-size:12px; font-weight:700}
+  .fword{font-size:clamp(44px,14vw,88px)}
+  .fko{font-size:clamp(32px,10vw,52px)}
+  .fex{font-size:clamp(17px,4.8vw,24px)}
+  .fhint{text-align:center; font-size:13px; color:var(--muted); min-height:20px; margin:4px auto 8px; max-width:560px; width:100%}
+  .fctl{margin-top:2px}
+  .fctl .big{min-width:108px; min-height:66px; border-radius:33px}
+  .fopts{display:flex; gap:8px; flex-wrap:wrap; max-width:560px; width:100%; margin:12px auto 0}
+  .fopts button{flex:1 1 22%; min-height:48px; padding:0 8px; border-radius:24px; background:var(--surface);
+    border:2px solid var(--line); color:var(--ink); font-size:14px; font-weight:800; white-space:nowrap}
+  .fopts button.tgl{border-color:var(--indigo); box-shadow:0 0 0 2px var(--indigo)}
+  /* 학습 노트 */
+  .libbar{position:sticky; top:0; z-index:20; background:var(--cloud); margin:0 -18px; padding:10px 18px 8px}
+  .libbar .tabs{margin:0 0 8px}
+  .libbar .search{margin-bottom:0}
+  .item{border:1px solid var(--line); padding:16px; margin-top:12px}
+  .item b{font-size:20px}
+  .badge{font-size:12px; padding:5px 11px}
+  .miniSpeak{font-size:14px; min-height:44px; padding:0 14px}
+  .weakcta{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:16px; margin-top:12px}
+  .weakcta .primary{margin-top:10px}
+  .empty .primary{margin-top:20px}
+  #libStatus .chip{min-width:0; min-height:46px; padding:6px 2px; font-size:14px}
   .iconbtn.tgl{border-color:var(--indigo); box-shadow:0 0 0 2px var(--indigo)}
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
@@ -706,9 +735,14 @@ const agoKo = t => { const m = Math.floor((Date.now() - t) / 60000);
 
 /* ---------- 설정 (자동 넘김 · 깜빡이 암기) ---------- */
 const SET = Object.assign(
-  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:true},
+  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:true, flashBlack:false},
   (() => { try{ return JSON.parse(store.get('bvq_set') || '{}') || {}; }catch(e){ return {}; } })());
 const saveSet = () => { try{ store.set('bvq_set', JSON.stringify(SET)); }catch(e){} };
+// 이전 버전(v20)은 깜빡이의 ◐ 버튼이 앱 전체 테마를 'black'으로 바꿔 저장했다 → 원래 테마로 되돌리고 '깜빡이 블랙'으로 옮긴다
+if(SET.prevTheme !== undefined){
+  if(SET.theme === 'black'){ SET.theme = (SET.prevTheme && SET.prevTheme !== 'black') ? SET.prevTheme : 'auto'; SET.flashBlack = true; }
+  delete SET.prevTheme; saveSet();
+}
 
 /* ---------- 자동 넘김 타이머 (화면이 바뀔 때마다 render() 가 멈춘다) ---------- */
 const AUTO = {id:null, t0:0, left:0, fn:null, paused:false};
@@ -813,7 +847,7 @@ function exitFlash(){ flcSave(); wakeOff(); S = {screen:'home'}; render(); }
 function cycleFlashSpeed(){
   const o = ['fast', 'normal', 'slow'];
   SET.flashSpeed = o[(o.indexOf(SET.flashSpeed) + 1) % o.length]; saveSet();
-  const b = document.getElementById('spdbtn'); if(b) b.textContent = FSPEED_KO[SET.flashSpeed];
+  const b = document.getElementById('spdbtn'); if(b) b.textContent = '⏱ ' + FSPEED_KO[SET.flashSpeed];
 }
 function flashQuiz(){          // 방금 본 단어로 바로 퀴즈
   const ws = S.fl.deck.slice(0, SIZE).map(id => BY[id]);
@@ -831,9 +865,8 @@ function flash(){
   if(!f.paused) autoStart(ms, flashAdvance);
   return `<div class="flash" onclick="flashTap()">
     <div class="fhead" onclick="event.stopPropagation()">
-      <button class="iconbtn" onclick="exitFlash()" aria-label="닫기">✕</button>
-      <span class="sp">${f.i + 1} / ${f.deck.length} · ${f.round}바퀴</span>
-      ${soundBtn()}${blackBtn()}${fsBtn()}
+      <button class="fclose" onclick="exitFlash()" aria-label="끝내기">✕ 끝내기</button>
+      <span class="fcount"><b>${f.i + 1}</b> / ${f.deck.length}<small>${f.round}바퀴째</small></span>
     </div>
     ${f.paused ? '<div class="abar"><i style="width:100%;animation:none"></i></div>' : autoBar(ms)}
     <div class="fcard">
@@ -842,16 +875,22 @@ function flash(){
       ${w.ipa ? `<div class="fipa">${esc(w.ipa)}</div>` : ''}
       ${f.phase === 1 ? `<div class="fko">${esc(w.meaningKo)}</div><div class="meta">${esc(w.pos)}</div>
         <div class="fex">${esc(w.example)}</div><div class="fexko">${esc(w.exampleKo)}</div>` : ''}
-      ${f.paused ? '<div class="meta" style="margin-top:14px">⏸ 일시정지 · 화면을 누르면 계속</div>' : ''}
     </div>
+    <div class="fhint">${f.paused ? '⏸ 일시정지 · 화면을 누르면 계속' : '화면을 누르면 일시정지'}</div>
     <div class="fctl" onclick="event.stopPropagation()">
       <button onclick="flashStep(-1)" aria-label="이전 단어">⏮</button>
       <button class="big" onclick="flashTap()" aria-label="일시정지 또는 계속">${f.paused ? '▶' : '⏸'}</button>
       <button onclick="flashStep(1)" aria-label="다음 단어">⏭</button>
-      <button id="spdbtn" style="font-size:14px;padding:0 14px" onclick="cycleFlashSpeed()">${FSPEED_KO[SET.flashSpeed]}</button>
+    </div>
+    <div class="fopts" onclick="event.stopPropagation()">
+      ${soundBtn(true)}
+      <button id="spdbtn" onclick="cycleFlashSpeed()">⏱ ${FSPEED_KO[SET.flashSpeed]}</button>
+      ${blackBtn()}
+      ${fsOK() ? '<button onclick="toggleFullscreen()">⛶ 전체</button>' : ''}
     </div>
   </div>`;
 }
+
 function flashdone(){
   const f = S.fl;
   return `
@@ -884,7 +923,7 @@ function flashSheetHtml(){
       <div class="chips">
         <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'}</button>
         ${tg('flashEx', '예문도 읽기', SET.flashEx)}${tg('flashLoop', '끝나면 반복', SET.flashLoop)}
-        <button class="chip ${SET.theme === 'black' ? 'on' : ''}" onclick="toggleBlack()">◐ 블랙 화면 ${SET.theme === 'black' ? '켜짐' : '꺼짐'}</button>
+        <button class="chip ${SET.flashBlack ? 'on' : ''}" onclick="toggleBlack()">◐ 깜빡이 블랙 화면 ${SET.flashBlack ? '켜짐' : '꺼짐'}</button>
       </div>
       <button class="primary" onclick="startFlash()">시작</button>
     </div></div>`;
@@ -892,11 +931,15 @@ function flashSheetHtml(){
 
 /* ---------- 화면 설정 (테마 · 음영 대비) ---------- */
 const THEME_KO = {auto:'자동', light:'밝게', dark:'어둡게', black:'블랙'};
+// 화면에 쓸 색 모드. 깜빡이 화면(과 그 완료 화면)에서만 flashBlack 을 적용한다.
+const themeMode = (theme, sysDark, screen, flashBlack) =>
+  (((screen === 'flash' || screen === 'flashdone') && flashBlack) || theme === 'black') ? 'black'
+  : (theme === 'dark' || (theme !== 'light' && sysDark)) ? 'dark' : 'light';
 function applyTheme(){
   const root = typeof document !== 'undefined' ? document.documentElement : null;
   if(!root || !root.setAttribute) return;
   const sysDark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
-  const mode = SET.theme === 'black' ? 'black' : (SET.theme === 'dark' || (SET.theme !== 'light' && sysDark)) ? 'dark' : 'light';
+  const mode = themeMode(SET.theme, sysDark, S.screen, SET.flashBlack);
   root.setAttribute('data-mode', mode);
   // 브라우저 상단바 색도 테마에 맞춘다 (블랙이면 상단바까지 검정)
   const meta = document.querySelector && document.querySelector('meta[name="theme-color"]');
@@ -915,15 +958,17 @@ function toggleHC(){
 }
 const hcBtn = () => `<button class="iconbtn ${SET.hc ? 'tgl' : ''}" id="hcbtn" onclick="toggleHC()" aria-label="고대비 ${SET.hc ? '끄기' : '켜기'}" aria-pressed="${SET.hc}">◐</button>`;
 function toggleBlack(){
-  if(SET.theme === 'black') SET.theme = (SET.prevTheme && SET.prevTheme !== 'black') ? SET.prevTheme : 'auto';
-  else { SET.prevTheme = SET.theme; SET.theme = 'black'; }
-  saveSet(); applyTheme();
+  SET.flashBlack = !SET.flashBlack; saveSet(); applyTheme();
   if(S.screen !== 'flash'){ render(); return; }
-  // 깜빡이 중에는 화면을 다시 그리지 않는다(타이머·소리 유지). 색만 바뀐다.
+  // 깜빡이 중에는 화면을 다시 그리지 않는다(타이머·소리 유지). 색과 버튼 글자만 바뀐다.
   const b = document.getElementById('blackbtn');
-  if(b){ if(b.classList) b.classList.toggle('tgl', SET.theme === 'black'); b.setAttribute('aria-pressed', String(SET.theme === 'black')); }
+  if(b){
+    if(b.classList) b.classList.toggle('tgl', !!SET.flashBlack);
+    b.textContent = '◐ 블랙 ' + (SET.flashBlack ? '켬' : '끔');
+    if(b.setAttribute) b.setAttribute('aria-pressed', String(!!SET.flashBlack));
+  }
 }
-const blackBtn = () => `<button class="iconbtn ${SET.theme === 'black' ? 'tgl' : ''}" id="blackbtn" onclick="toggleBlack()" aria-label="블랙 화면 ${SET.theme === 'black' ? '끄기' : '켜기'}" aria-pressed="${SET.theme === 'black'}">◐</button>`;
+const blackBtn = () => `<button class="${SET.flashBlack ? 'tgl' : ''}" id="blackbtn" onclick="toggleBlack()" aria-label="블랙 화면 ${SET.flashBlack ? '끄기' : '켜기'}" aria-pressed="${!!SET.flashBlack}">◐ 블랙 ${SET.flashBlack ? '켬' : '끔'}</button>`;
 function toggleSetSheet(v){ UI.setSheet = v; render(); }
 function themeSheetHtml(){
   if(!UI.setSheet) return '';
@@ -1036,6 +1081,7 @@ function pickTrack(id){ UI.sheet = false; setPick('track', id); }
 function render(){
   try{ speechSynthesis.cancel(); }catch(e){}
   autoStop();
+  applyTheme();
   if(S.screen !== 'flash') wakeOff();
   if(S.screen === 'quiz' || S.screen === 'study') saveSession();
   else if(S.screen === 'result') clearSession();
@@ -1320,7 +1366,7 @@ function wordItem(w){
   const st = stat(w.id), sv = statusOf(st);
   const rate = st && st.n ? ` · ${st.n - (st.w||0)}/${st.n}` : '';
   const conf = st && st.lw ? (w.confusions.find(c => c.id === st.lw) || {}).note : null;
-  return `<div class="item" data-lv="${w.level}" data-s="${esc((w.term + ' ' + w.meaningKo).toLowerCase())}">
+  return `<div class="item" data-st="${sv[0]}" data-lv="${w.level}" data-s="${esc((w.term + ' ' + w.meaningKo).toLowerCase())}">
     <div class="top"><b>${esc(w.term)}</b><span class="badge ${sv[0]}">${sv[1]}${rate}</span></div>
     ${ipaOf(w) ? `<div style="margin-top:6px">${ipaOf(w)}</div>` : ''}
     <div class="ko">${esc(w.meaningKo)}</div>
@@ -1334,7 +1380,7 @@ function wordItem(w){
 function gramItem(g){
   const st = stat('g:' + g.id), sv = statusOf(st);
   const rate = st && st.n ? ` · ${st.n - (st.w||0)}/${st.n}` : '';
-  return `<div class="item" data-lv="${g.level}" data-s="${esc((g.topic + ' ' + g.full + ' ' + g.ko).toLowerCase())}">
+  return `<div class="item" data-st="${sv[0]}" data-lv="${g.level}" data-s="${esc((g.topic + ' ' + g.full + ' ' + g.ko).toLowerCase())}">
     <div class="top"><span class="topic">${esc(g.topic)}</span><span class="badge ${sv[0]}">${sv[1]}${rate}</span></div>
     <div style="margin-top:10px;font-size:16px;font-weight:700">${esc(g.full)}</div>
     <div class="ex">${esc(g.ko)}</div>
@@ -1343,46 +1389,72 @@ function gramItem(g){
   </div>`;
 }
 
-function openLibrary(){ LIB = {tab:'weak', level:0, q:''}; S = {screen:'library'}; render(); }
-function libTab(t){ LIB.tab = t; LIB.level = 0; LIB.q = ''; render(); }
+function openLibrary(){ LIB = {tab:'weak', level:0, q:'', st:''}; S = {screen:'library'}; render(); }
+function libTab(t){ LIB.tab = t; LIB.level = 0; LIB.q = ''; LIB.st = ''; render(); }
 
 function library(){
   const T = TRACK(PICK.track);
   const WORDS_T = WORDS.filter(w => w.track === T.id), GRAMMAR_T = GRAMMAR.filter(g => g.track === T.id);
   const tab = (t, name) => `<button class="tab ${LIB.tab===t?'on':''}" onclick="libTab('${t}')">${name}</button>`;
   const lvBtn = l => `<button class="chip ${LIB.level===l?'on':''}" data-l="${l}" onclick="setLibLevel(${l})">${l===0?'전체':LEVEL_KO[l]}</button>`;
+  const stBtn = (v, name) => `<button class="chip ${(LIB.st || '') === v ? 'on' : ''}" data-st="${v}" onclick="setLibStatus('${v}')">${name}</button>`;
 
-  let body;
+  let body, cta = '';
   if(LIB.tab === 'weak'){
     // 많이 틀린 순 → 아직 안 잡힌 순
     const ws = WORDS_T.filter(w => (stat(w.id)||{}).w > 0)
       .sort((a,b) => (stat(b.id).w - stat(a.id).w) || (stat(a.id).box - stat(b.id).box));
     const gs = GRAMMAR_T.filter(g => (stat('g:'+g.id)||{}).w > 0)
       .sort((a,b) => stat('g:'+b.id).w - stat('g:'+a.id).w);
-    body = (ws.length || gs.length)
-      ? ws.map(wordItem).join('') + gs.map(gramItem).join('')
-      : `<div class="empty">아직 틀린 문제가 없습니다.<br>퀴즈를 몇 번 풀고 나면<br>자주 틀리는 것만 여기 모입니다.</div>`;
+    if(ws.length || gs.length){
+      cta = `<div class="weakcta">
+        <div class="meta">틀린 단어 ${ws.length}개 · 문법 ${gs.length}개 — 많이 틀린 순서예요</div>
+        <button class="primary" onclick="weakQuiz()">약점만 퀴즈 풀기<small>자주 틀린 것 위주로 최대 10문제</small></button>
+        ${ws.length ? '<button class="ghost" onclick="flashWeak()">⚡ 약점 단어 깜빡이로 보기</button>' : ''}
+      </div>`;
+      body = ws.map(wordItem).join('') + gs.map(gramItem).join('');
+    } else {
+      body = `<div class="empty">아직 틀린 문제가 없습니다.<br>퀴즈를 몇 번 풀고 나면<br>자주 틀리는 것만 여기 모입니다.
+        <button class="primary" onclick="start()">퀴즈 시작하기</button></div>`;
+    }
   } else if(LIB.tab === 'words'){
     body = WORDS_T.map(wordItem).join('');
   } else {
     body = GRAMMAR_T.map(gramItem).join('');
   }
 
-  const filter = LIB.tab === 'weak' ? '' : `
-    <input class="search" placeholder="단어나 뜻으로 검색" oninput="libSearch(this.value)">
+  const isList = LIB.tab !== 'weak';
+  const filter = !isList ? '' : `
     ${T.id === 'work' ? `<div class="chips" id="libLevels">${lvBtn(0)}${lvBtn(1)}${lvBtn(2)}${lvBtn(3)}</div>` : ''}
+    <div class="chips" id="libStatus">${stBtn('', '전체')}${stBtn('b-bad', '약점')}${stBtn('b-go', '학습중')}${stBtn('b-ok', '습득')}${stBtn('b-new', '미학습')}</div>
     <div class="meta" style="margin-top:12px" id="libCount"></div>`;
 
   return `
-  <div class="row">
-    <h1 style="font-size:26px;margin:6px 0">학습 노트 · ${T.emoji} ${T.name}</h1>
-    <button class="link" onclick="S={screen:'home'};render()">홈으로</button>
+  <div class="nav"><button onclick="goHome()" aria-label="홈으로">🏠 홈</button></div>
+  <h1 style="font-size:28px;margin:12px 0 0">📒 학습 노트</h1>
+  <div class="sub" style="margin-bottom:0">${T.emoji} ${T.name} · 틀린 문제와 전체 목록</div>
+  <div class="libbar">
+    <div class="tabs">${tab('weak','약점 노트')}${tab('words','단어 '+WORDS_T.length)}${tab('grammar','문법 '+GRAMMAR_T.length)}</div>
+    ${isList ? '<input class="search" placeholder="단어나 뜻으로 검색" oninput="libSearch(this.value)">' : ''}
   </div>
-  <div class="tabs">${tab('weak','약점 노트')}${tab('words','단어 '+WORDS_T.length)}${tab('grammar','문법 '+GRAMMAR_T.length)}</div>
+  ${cta}
   ${filter}
   <div id="libList">${body}</div>
   <div style="height:24px"></div>`;
 }
+
+// 약점만 모아서 바로 퀴즈 (자주 틀린 순, 단어 최대 7개 + 나머지는 문법)
+function weakQuiz(){
+  const ws = WORDS.filter(w => w.track === PICK.track && (stat(w.id)||{}).w > 0)
+    .sort((a, b) => stat(b.id).w - stat(a.id).w).slice(0, 7);
+  const gs = GRAMMAR.filter(g => g.track === PICK.track && (stat('g:'+g.id)||{}).w > 0)
+    .sort((a, b) => stat('g:'+b.id).w - stat('g:'+a.id).w).slice(0, SIZE - ws.length);
+  const qs = shuffle([...ws.map(w => build(w, 'MEANING')), ...gs.map(g => buildG(g))]);
+  if(!qs.length){ toast('틀린 문제가 아직 없어요.', 2000); return; }
+  S = {screen:'quiz', deck:[], si:0, qs, i:0, score:0, streak:0, best:0, right:0, fb:null, wrong:[]};
+  render();
+}
+function flashWeak(){ SET.flashDeck = 'weak'; saveSet(); startFlash(); }
 
 // 필터는 화면을 다시 그리지 않고 DOM만 숨긴다. 다시 그리면 검색창 포커스가 날아간다.
 function libFilter(){
@@ -1391,12 +1463,18 @@ function libFilter(){
   rows.forEach(r => {
     const okLv = LIB.level === 0 || Number(r.dataset.lv) === LIB.level;
     const okQ  = !LIB.q || (r.dataset.s || '').indexOf(LIB.q) >= 0;
-    const show = okLv && okQ;
+    const okSt = !LIB.st || r.dataset.st === LIB.st;
+    const show = okLv && okQ && okSt;
     r.style.display = show ? '' : 'none';
     if(show) n++;
   });
   const c = document.getElementById('libCount');
   if(c) c.textContent = n + '개';
+}
+function setLibStatus(v){
+  LIB.st = v;
+  document.querySelectorAll('#libStatus .chip').forEach(b => b.classList.toggle('on', (b.dataset.st || '') === v));
+  libFilter();
 }
 function libSearch(v){ LIB.q = (v || '').toLowerCase().trim(); libFilter(); }
 function setLibLevel(l){
