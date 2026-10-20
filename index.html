@@ -15,7 +15,7 @@
   :root{
     --indigo:#4F46E5; --indigo-d:#3730A3; --amber:#B45309;
     --ok:#15803D; --ok-bg:#DCFCE7; --no:#B91C1C; --no-bg:#FEE2E2;
-    --ink:#0F172A; --muted:#475569; --cloud:#F4F5FD; --line:#E6E9F5;
+    --ink:#0F172A; --muted:#475569; --cloud:#F4F5FD; --line:#D2D8EE;
     --surface:#FFFFFF; --chipbg:#E0E7FF; --chipink:#312E81;
     --shadow:0 1px 3px rgba(15,23,42,.07); --chippress:#C7D2FE; --toastbg:#0F172A;
   }
@@ -35,7 +35,7 @@
   #app{max-width:520px; margin:0 auto; padding:18px 18px 32px;}
   h1{font-size:34px; font-weight:900; color:var(--indigo); margin:8px 0 4px; letter-spacing:-.5px}
   .sub{color:var(--muted); font-size:15px; margin-bottom:20px}
-  .card{background:var(--surface); border-radius:22px; padding:20px; box-shadow:0 1px 3px rgba(17,24,39,.06)}
+  .card{background:var(--surface); border-radius:22px; padding:20px; border:1px solid var(--line); box-shadow:0 1px 3px rgba(17,24,39,.06)}
   .row{display:flex; align-items:center; justify-content:space-between}
   .stats{display:flex; justify-content:space-around; text-align:center}
   .stat b{display:block; font-size:24px; font-weight:900}
@@ -45,9 +45,9 @@
     color:var(--cloud); font-size:19px; font-weight:800; margin-top:18px}
   .primary:active{background:var(--indigo-d)}
   .ghost{width:100%; min-height:52px; border-radius:18px; background:transparent;
-    border:1.5px solid #D1D5DB; color:var(--muted); font-size:15px; font-weight:700; margin-top:10px}
+    border:2px solid var(--line); color:var(--ink); font-size:16px; font-weight:800; margin-top:10px}
   .link{background:none; color:var(--muted); font-size:14px; text-decoration:underline; padding:8px}
-  .bar{height:12px; border-radius:6px; background:var(--line); overflow:hidden; margin-top:8px}
+  .bar{height:10px; border-radius:6px; background:var(--line); overflow:hidden; margin-top:8px}
   .qhead{position:sticky; top:0; z-index:20; background:var(--cloud); margin:0 -18px;
     padding:10px 18px 12px}
   .qhead .sc{display:flex; gap:16px; align-items:baseline}
@@ -210,7 +210,7 @@
   :root[data-mode="light"]{
     --indigo:#4F46E5; --indigo-d:#3730A3; --amber:#B45309;
     --ok:#15803D; --ok-bg:#DCFCE7; --no:#B91C1C; --no-bg:#FEE2E2;
-    --ink:#0F172A; --muted:#475569; --cloud:#F4F5FD; --line:#E6E9F5;
+    --ink:#0F172A; --muted:#475569; --cloud:#F4F5FD; --line:#D2D8EE;
     --surface:#FFFFFF; --chipbg:#E0E7FF; --chipink:#312E81;
     --shadow:0 1px 3px rgba(15,23,42,.07); --chippress:#C7D2FE; --toastbg:#0F172A;
   }
@@ -249,8 +249,20 @@
   [data-hc="1"] .meta, [data-hc="1"] .sub, [data-hc="1"] .fexko, [data-hc="1"] .stat span{color:var(--ink)}
   [data-hc="1"] .fipa, [data-hc="1"] .ipa{border:2px solid var(--ink); background:var(--surface)}
   .fsbanner{display:flex; align-items:center; gap:6px; margin-top:12px}
-  .fsgo{flex:1; min-height:56px; border-radius:16px; background:var(--indigo); color:var(--cloud); font-size:16px; font-weight:800}
-  .fsgo small{display:block; font-size:12px; font-weight:600; opacity:.9}
+  .fsgo{flex:1; min-height:46px; border-radius:14px; background:var(--chipbg); color:var(--chipink); font-size:15px; font-weight:800}
+  .opt .optl{display:flex; align-items:center; gap:12px; min-width:0}
+  .opt .num{display:inline-flex; align-items:center; justify-content:center; flex:none; width:30px; height:30px;
+    border-radius:15px; background:var(--chipbg); color:var(--chipink); font-size:14px; font-weight:800}
+  .opt.correct .num, .opt.wrong .num{background:transparent}
+  .split{display:flex; margin-top:12px; border:2px solid var(--indigo); border-radius:18px; overflow:hidden; background:var(--surface)}
+  .split .main{flex:1; min-height:62px; background:transparent; color:var(--ink); font-size:17px; font-weight:900;
+    text-align:left; padding:0 18px}
+  .split .main small{display:block; font-size:13px; font-weight:600; color:var(--muted); margin-top:1px}
+  .split .gear{width:62px; border-left:2px solid var(--indigo); background:var(--chipbg); color:var(--chipink); font-size:22px}
+  .tert{display:flex; gap:10px; margin-top:12px}
+  .tert button{flex:1; min-height:54px; border-radius:16px; background:var(--surface); border:2px solid var(--line);
+    color:var(--ink); font-size:16px; font-weight:800}
+  .abar:empty{background:var(--line)}
   .iconbtn.tgl{border-color:var(--indigo); box-shadow:0 0 0 2px var(--indigo)}
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
@@ -579,8 +591,8 @@ function closeSession(){
 const navBar = (extra) => `<div class="nav">
     <button onclick="goHome()" aria-label="홈으로">🏠 홈</button>
     <span class="sp"></span>${extra || ''}
-    ${soundBtn()}${fsBtn()}
-    <button onclick="closeSession()" aria-label="닫기">✕ 닫기</button>
+    ${soundBtn(true)}
+    <button onclick="closeSession()" aria-label="끝내기">✕ 끝내기</button>
   </div>`;
 
 function retryWrong(){
@@ -624,13 +636,14 @@ function toggleSound(){
   store.set('bvq_snd', SND.on ? '1' : '0');
   if(!SND.on){ try{ speechSynthesis.cancel(); }catch(e){} }
   document.querySelectorAll('[data-snd]').forEach(b => {
-    b.textContent = SND.on ? '🔊' : '🔇';
+    b.textContent = soundLabel(b.dataset.l === '1');
     b.setAttribute('aria-label', '자동 발음 ' + (SND.on ? '끄기' : '켜기'));
   });
   toast(SND.on ? '자동 발음을 켰어요' : '자동 발음을 껐어요. 🔊 버튼을 누르면 들을 수 있어요', 1800);
 }
 const autoSay = (text, delay) => { if(SND.on) setTimeout(() => TTS.say(text), delay || 0); };
-const soundBtn = () => `<button class="iconbtn" data-snd="1" onclick="toggleSound()" aria-label="자동 발음 ${SND.on ? '끄기' : '켜기'}">${SND.on ? '🔊' : '🔇'}</button>`;
+const soundLabel = lab => SND.on ? (lab ? '🔊 소리 켬' : '🔊') : (lab ? '🔇 소리 끔' : '🔇');
+const soundBtn = lab => `<button class="iconbtn" data-snd="1" data-l="${lab ? 1 : 0}" onclick="toggleSound()" aria-label="자동 발음 ${SND.on ? '끄기' : '켜기'}">${soundLabel(lab)}</button>`;
 
 /* ---------- 이어서 하기: 진행 중인 세션을 자동 저장한다 ---------- */
 const SES_KEY = 'bvq_session';      // 예전 버전의 단일 저장. 읽을 때 트랙별 저장소로 옮긴다
@@ -915,9 +928,21 @@ function toggleSetSheet(v){ UI.setSheet = v; render(); }
 function themeSheetHtml(){
   if(!UI.setSheet) return '';
   const th = v => `<button class="chip ${SET.theme === v ? 'on' : ''}" onclick="setTheme('${v}')">${THEME_KO[v]}</button>`;
+  const cur = SET.auto ? SET.autoSec : 0;
+  const au = (v, label) => `<button class="chip ${cur === v ? 'on' : ''}" onclick="setAuto(${v})">${label}</button>`;
   return `<div class="sheetbg" onclick="toggleSetSheet(false)">
-    <div class="sheet" role="dialog" aria-label="화면 설정" onclick="event.stopPropagation()">
-      <div class="row"><h2>🎨 화면 설정</h2><button class="link" onclick="toggleSetSheet(false)">닫기</button></div>
+    <div class="sheet" role="dialog" aria-label="설정" onclick="event.stopPropagation()">
+      <div class="row"><h2>⚙ 설정</h2><button class="link" onclick="toggleSetSheet(false)">닫기</button></div>
+
+      <div class="label">소리</div>
+      <div class="chips">
+        <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊 자동 발음 켜짐' : '🔇 자동 발음 꺼짐'}</button>
+        <button class="chip" onclick="TTS.diagnose()">🔊 소리 테스트</button>
+      </div>
+
+      <div class="label">새 단어 카드 자동 넘김</div>
+      <div class="chips">${au(0, '끄기')}${au(4, '4초')}${au(6, '6초')}${au(9, '9초')}</div>
+
       <div class="label">테마</div>
       <div class="chips">${th('auto')}${th('light')}${th('dark')}${th('black')}</div>
       <p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">자동은 폰의 다크 모드 설정을 따라가요. 블랙은 배경이 완전한 검정이라 OLED 화면에서 배터리를 아끼고 눈이 편해요.</p>
@@ -926,19 +951,33 @@ function themeSheetHtml(){
         <button class="chip ${SET.hc ? '' : 'on'}" onclick="if(SET.hc) toggleHC()">보통</button>
         <button class="chip ${SET.hc ? 'on' : ''}" onclick="if(!SET.hc) toggleHC()">고대비<small>글자·테두리를 더 진하게</small></button>
       </div>
+
       <div class="label">전체화면</div>
       <div class="chips">
         <button class="chip ${SET.autoFs ? 'on' : ''}" onclick="setAutoFs(true)">모바일 자동 전체화면<small>폰에서 처음 누를 때</small></button>
         <button class="chip ${SET.autoFs ? '' : 'on'}" onclick="setAutoFs(false)">끄기</button>
       </div>
-      ${fsOK() ? '' : '<p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">이 브라우저는 전체화면을 지원하지 않아요. 홈 화면에 추가하면 전체화면으로 열려요.</p>'}
+      ${fsOK() ? '<button class="ghost" onclick="toggleFullscreen()">⛶ 지금 전체화면으로</button>' : '<p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">이 브라우저는 전체화면을 지원하지 않아요. 홈 화면에 추가하면 전체화면으로 열려요.</p>'}
+
       <div class="card" style="margin-top:16px;text-align:center">
         <div class="term" style="font-size:30px">look up</div>
         <div style="margin-top:8px"><span class="ipa">/lʊk ʌp/</span></div>
         <div style="font-size:18px;font-weight:700;margin-top:10px">찾아보다</div>
         <div class="meta" style="margin-top:4px">미리보기</div>
       </div>
+
+      <details class="how"><summary>학습 방법</summary>
+        새 단어는 카드로 먼저 보고, 익숙해질수록 문제가 어려워집니다(뜻 → 영어 인출 → 문장 빈칸).
+        오답 보기는 실제로 헷갈리는 짝으로 구성했고, 틀린 문제는 세션 안에서 다시 나오며 며칠 뒤 복습으로 돌아옵니다.
+        깜빡이 암기는 눈으로 보기만 하는 반복이라 학습 기록에는 반영되지 않아요.
+      </details>
+      <button class="ghost" style="color:var(--no)" onclick="if(confirm('모든 트랙의 학습 기록을 지웁니다.')){P={items:{},total:0,best:0};saveP(P);UI.setSheet=false;render();}">학습 기록 초기화</button>
     </div></div>`;
+}
+function setAuto(v){ SET.auto = v > 0; if(v > 0) SET.autoSec = v; saveSet(); render(); }
+function cycleAuto(){          // 학습 카드 위 버튼: 끔 → 4초 → 6초 → 9초 → 끔
+  const o = [0, 4, 6, 9], cur = SET.auto ? SET.autoSec : 0;
+  setAuto(o[(o.indexOf(cur) + 1) % o.length]);
 }
 
 /* ---------- 모바일 자동 전체화면 ----------
@@ -977,7 +1016,7 @@ function fsBannerHtml(){
   const on = fsBannerWanted({mobile:isMobile(), supported:fsOK(), standalone:isStandalone(),
                              active:!!document.fullscreenElement, dismissed:store.get('bvq_fsno') === '1', exited:FS_EXITED});
   if(!on) return '';
-  return `<div class="fsbanner"><button class="fsgo" onclick="toggleFullscreen()">⛶ 전체화면으로 보기<small>한 번 누르면 주소창이 사라져요</small></button>
+  return `<div class="fsbanner"><button class="fsgo" onclick="toggleFullscreen()">⛶ 전체화면으로 보기</button>
     <button class="link" onclick="store.set('bvq_fsno','1');render()" aria-label="배너 닫기">닫기</button></div>`;
 }
 // 사용자가 직접 전체화면을 나가면(FS_DONE 유지) 다시 강제로 들어가지 않는다. ⛶ 버튼으로 다시 켠다.
@@ -1001,7 +1040,7 @@ function render(){
   if(S.screen === 'quiz' || S.screen === 'study') saveSession();
   else if(S.screen === 'result') clearSession();
   if(!LOADED.has(PICK.track) && !(S.screen === 'home' && UI.sheet)){
-    app.innerHTML = '<div class="empty" style="padding-top:120px">불러오는 중…</div>';
+    app.innerHTML = '<div class="top"><h1>English</h1></div><div class="empty" style="padding-top:90px">불러오는 중…</div>';
     loadTrack(PICK.track).then(() => render()).catch(() => {
       app.innerHTML = '<div class="empty" style="padding-top:100px">데이터를 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</div><button class="primary" onclick="render()">다시 시도</button>';
     });
@@ -1037,8 +1076,7 @@ function home(){
   const gCount  = l => tg.filter(g => l===0 || g.level===l).length;
   const lvChip = (l, name) => `<button class="chip ${PICK.level===l?'on':''}" onclick="setPick('level',${l})">
       ${name}<small>단어 ${lvCount(l)} · 문법 ${gCount(l)}</small></button>`;
-  const seg = (c, name, desc) => `<button class="seg ${PICK.cat===c?'on':''}" onclick="setPick('cat','${c}')">
-      ${name}<small>${desc}</small></button>`;
+  const seg = (c, name) => `<button class="seg ${PICK.cat===c?'on':''}" onclick="setPick('cat','${c}')">${name}</button>`;
   const levels = () => T.id === 'work' ? `
     <div class="label">분야</div>
     <div class="chips">${lvChip(0,'전체')}${lvChip(1,'기초 업무')}</div>
@@ -1058,26 +1096,27 @@ function home(){
       ${TRACKS.map(trRow).join('')}
     </div></div>` : '';
 
+  // 주 버튼은 딱 하나: 저장된 학습이 있으면 '이어서 하기', 없으면 '시작'
   const ses = readSession();
-  let resumeHtml = '';
+  const first = pr.seen === 0;
+  const ctaSub = PICK.cat === 'word' ? '단어 10문제' : PICK.cat === 'grammar' ? '문법 10문제' : '단어 7 + 문법 3';
+  const ctaMain = first ? '첫 학습 시작하기' : (pr.due ? '복습하고 이어서 풀기' : '10문제 시작');
+  let cta;
   if(ses){
     const ST = TRACK(ses.track);
     const where = ses.screen === 'study'
       ? `새 단어 카드 ${ses.si + 1} / ${ses.deck.length}`
       : `${Math.min(ses.i + (ses.fb ? 1 : 0), ses.qs.length)} / ${ses.qs.length}문제 푼 상태`;
-    resumeHtml = `<button class="primary" onclick="resumeSession()">▶ 이어서 하기<small>${ST.emoji} ${ST.name} · ${where} · ${agoKo(ses.t)}</small></button>`;
+    cta = `<button class="primary" onclick="resumeSession()">▶ 이어서 하기<small>${where} · ${agoKo(ses.t)}</small></button>
+      <button class="ghost" onclick="start()">새로 시작하기 · ${ctaSub}</button>`;
+  } else {
+    cta = `<button class="primary" onclick="start()">${ctaMain}<small>${ctaSub}${pr.due ? ' · 복습 ' + pr.due + '개 대기 중' : ''}</small></button>`;
   }
-  const first = pr.seen === 0;
-  const ctaSub = PICK.cat === 'word' ? '단어 10문제' : PICK.cat === 'grammar' ? '문법 10문제' : '단어 7 + 문법 3';
-  const ctaMain = first ? '첫 학습 시작하기' : (pr.due ? '복습하고 이어서 풀기' : '10문제 시작');
 
   return `
   <div class="top">
     <h1>English</h1>
-    <span style="display:flex; gap:8px; align-items:center">
-      ${soundBtn()}
-      <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} <i>▼</i></button>
-    </span>
+    <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} <i>▼</i></button>
   </div>
   <div class="sub" style="margin-bottom:0">${T.sub}</div>
   ${fsBannerHtml()}
@@ -1087,39 +1126,28 @@ function home(){
     <div class="bar"><i style="width:${pct}%"></i></div>
     <div class="stats">
       <div class="stat"><b style="color:var(--indigo)">${P.total}</b><span>누적 점수</span></div>
-      <div class="stat"><b style="color:var(--no)">${pr.due}</b><span>복습 대기</span></div>
+      <div class="stat"><b style="color:${pr.due ? 'var(--no)' : 'var(--muted)'}">${pr.due}</b><span>복습 대기</span></div>
       <div class="stat"><b style="color:var(--amber)">${P.best}</b><span>최고 연속</span></div>
     </div>
   </div>
 
-  ${resumeHtml}
-
-  <div class="label">문제 유형</div>
-  <div class="segs">
-    ${seg('mix','섞어서','단어 7 + 문법 3')}
-    ${seg('word','단어','뜻·인출·빈칸')}
-    ${seg('grammar','문법','빈칸 채우기')}
-  </div>
   ${levels()}
+  <div class="label">문제 유형</div>
+  <div class="segs">${seg('mix','섞어서')}${seg('word','단어')}${seg('grammar','문법')}</div>
 
-  <button class="${ses ? 'ghost' : 'primary'}" onclick="start()">${ses ? '새로 시작하기' : ctaMain}<small>${ctaSub}${pr.due ? ' · 복습 ' + pr.due + '개 대기 중' : ''}</small></button>
-  <div class="flashrow"><button class="flashbtn" onclick="startFlash()">⚡ 깜빡이 암기<small>${FDECK_KO[SET.flashDeck]} ${SET.flashCount}개 · ${FSPEED_KO[SET.flashSpeed]} · 소리 ${SND.on ? "켜짐" : "꺼짐"}</small></button><button class="iconbtn" onclick="toggleFlashSheet(true)" aria-label="깜빡이 설정">⚙</button></div>
-  <button class="ghost" onclick="openLibrary()">📒 학습 노트 · 약점 확인</button>
+  ${cta}
+
+  <div class="split">
+    <button class="main" onclick="startFlash()">⚡ 깜빡이 암기<small>${FDECK_KO[SET.flashDeck]} ${SET.flashCount}개 · ${FSPEED_KO[SET.flashSpeed]} · 소리 ${SND.on ? '켬' : '끔'}</small></button>
+    <button class="gear" onclick="toggleFlashSheet(true)" aria-label="깜빡이 설정">⚙</button>
+  </div>
+  <div class="tert">
+    <button onclick="openLibrary()">📒 학습 노트</button>
+    <button onclick="toggleSetSheet(true)">⚙ 설정</button>
+  </div>
   <button class="install" id="installBtn" style="display:${deferredPrompt ? 'block' : 'none'}" onclick="installApp()">📲 홈 화면에 추가하면 앱처럼 써요</button>
   ${ttsNotice()}
-
   ${iosHintHtml()}
-  <details class="how"><summary>학습 방법</summary>
-    새 단어는 카드로 먼저 보고, 익숙해질수록 문제가 어려워집니다(뜻 → 영어 인출 → 문장 빈칸).
-    오답 보기는 실제로 헷갈리는 짝으로 구성했고, 틀린 문제는 세션 안에서 다시 나오며 며칠 뒤 복습으로 돌아옵니다.
-  </details>
-
-  <div class="foot">
-    <button class="link" onclick="toggleSetSheet(true)">🎨 화면 설정</button>
-    ${fsOK() ? '<button class="link" onclick="toggleFullscreen()">⛶ 전체화면</button>' : ''}
-    <button class="link" onclick="TTS.diagnose()">🔊 음성 테스트</button>
-    <button class="link" onclick="if(confirm('모든 트랙의 학습 기록을 지웁니다.')){P={items:{},total:0,best:0};saveP(P);render();}">학습 기록 초기화</button>
-  </div>
   ${sheet}
   ${flashSheetHtml()}${themeSheetHtml()}`;
 }
@@ -1131,22 +1159,21 @@ function study(){
   if(ms) autoStart(ms, studyNext);
   return `
   ${navBar()}
-  <div class="row" style="margin:14px 0 0">
+  <div class="row" style="margin:16px 0 0">
     <span class="meta">새 단어 ${S.si+1} / ${S.deck.length}</span>
-    <button class="link" onclick="S.screen='quiz';render()">건너뛰고 퀴즈로</button>
+    <button class="link" onclick="S.screen='quiz';render()">퀴즈로 건너뛰기 ›</button>
   </div>
-  ${ms ? autoBar(ms) : ''}
+  ${ms ? autoBar(ms) : '<div class="abar"></div>'}
   <div class="autorow">
-    <button onclick="toggleStudyAuto()">${SET.auto ? '⏩ 자동 넘김 켜짐' : '자동 넘김 꺼짐'}</button>
-    ${SET.auto ? `<button onclick="cycleAutoSec()" aria-label="넘김 간격 바꾸기">${SET.autoSec}초</button>
-    <button id="pausebtn" onclick="togglePause()">⏸ 일시정지</button>` : ''}
+    <button onclick="cycleAuto()">${SET.auto ? '⏩ 자동 넘김 ' + SET.autoSec + '초' : '⏩ 자동 넘김 꺼짐'}</button>
+    ${SET.auto ? '<button id="pausebtn" onclick="togglePause()">⏸ 일시정지</button>' : ''}
   </div>
   <div class="card" style="margin-top:14px" onclick="TTS.say(BY['${w.id}'].term)">
     ${emojiOf(w)}<div class="term">${esc(w.term)}</div>
     ${ipaOf(w) ? `<div style="margin-top:10px">${ipaOf(w)}</div>` : ''}
-    <div style="font-size:21px;font-weight:700;margin-top:14px">${esc(w.meaningKo)}</div>
+    <div style="font-size:22px;font-weight:800;margin-top:14px">${esc(w.meaningKo)}</div>
     <div class="meta" style="margin-top:4px">${w.pos}</div>
-    <div style="font-size:16px;font-weight:600;margin-top:20px;line-height:1.6">${esc(w.example)}</div>
+    <div style="font-size:17px;font-weight:700;margin-top:20px;line-height:1.6">${esc(w.example)}</div>
     <div style="font-size:15px;color:var(--muted);margin-top:6px;line-height:1.6">${esc(w.exampleKo)}</div>
     <div style="margin-top:14px">
       <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this)">🔊 단어</button>
@@ -1164,7 +1191,7 @@ function quiz(){
   const correctId = isG ? g.answer : w.id;
   const canSpeak = isG ? reveal : (q.mode !== 'RECALL' || reveal);   // 정답 유출 방지
 
-  const opts = q.opts.map(o => {
+  const opts = q.opts.map((o, oi) => {
     let cls = '', mark = '';
     if(fb){
       if(o.id === correctId){ cls = 'correct'; mark = '✓'; }
@@ -1173,7 +1200,7 @@ function quiz(){
     }
     const safe = o.id.replace(/'/g, "\\'");
     return `<button class="opt ${cls}" onclick="answer('${safe}')">
-      <span>${esc(o.label)}</span><span class="mark" style="color:${cls==='correct'?'var(--ok)':'var(--no)'}">${mark}</span></button>`;
+      <span class="optl"><b class="num">${oi + 1}</b><span>${esc(o.label)}</span></span><span class="mark" style="color:${cls==='correct'?'var(--ok)':'var(--no)'}">${mark}</span></button>`;
   }).join('');
 
   const head = isG
@@ -1235,9 +1262,8 @@ function quiz(){
     <div class="bar"><i style="width:${(S.i / S.qs.length * 100).toFixed(1)}%"></i></div>
   </div>
   <div class="card" style="margin-top:18px" ${cardTap}>
-    <div class="meta" style="color:${q.retry?'var(--no)':'var(--muted)'};margin-bottom:10px">
-      ${q.retry ? '다시 도전 · ' : ''}${MODE_KO[q.mode]}</div>
-    ${fb ? '' : `<div class="instr">${INSTR[q.mode]}</div>`}
+    <div class="meta" style="color:${q.retry?'var(--no)':'var(--ink)'};font-size:15px;margin-bottom:10px">
+      ${q.retry ? '다시 도전 · ' : ''}${fb ? MODE_KO[q.mode] : INSTR[q.mode]}</div>
     ${head}${speakRow}
   </div>
   ${opts}${fbHtml}`;
