@@ -311,7 +311,7 @@
 const WORDS = [], GRAMMAR = [];      // 선택한 트랙의 데이터만 data/<트랙>.js 에서 불러와 채운다
 const BY = {}, GB = {};
 const LOADED = new Set(), LOADING = {};
-const TRACK_COUNTS = {"toddler":{"w":524,"g":203},"child":{"w":640,"g":335},"elem":{"w":550,"g":420},"mid":{"w":532,"g":429},"high":{"w":508,"g":407},"univ":{"w":644,"g":416},"work":{"w":512,"g":304}};   // tools/sync-counts.js 가 갱신 (홈의 개수 표시용)
+const TRACK_COUNTS = {"toddler":{"w":1022,"g":203},"child":{"w":1002,"g":335},"elem":{"w":1000,"g":420},"mid":{"w":1002,"g":429},"high":{"w":1024,"g":407},"univ":{"w":1002,"g":416},"work":{"w":1003,"g":304}};   // tools/sync-counts.js 가 갱신 (홈의 개수 표시용)
 function __bvqLoad(track, d){
   if(LOADED.has(track)) return;
   for(const w of d.words){ w.track = track; WORDS.push(w); BY[w.id] = w; }
