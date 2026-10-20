@@ -248,6 +248,9 @@
   [data-hc="1"] .iconbtn, [data-hc="1"] .ghost, [data-hc="1"] .trow{border-width:2px}
   [data-hc="1"] .meta, [data-hc="1"] .sub, [data-hc="1"] .fexko, [data-hc="1"] .stat span{color:var(--ink)}
   [data-hc="1"] .fipa, [data-hc="1"] .ipa{border:2px solid var(--ink); background:var(--surface)}
+  .fsbanner{display:flex; align-items:center; gap:6px; margin-top:12px}
+  .fsgo{flex:1; min-height:56px; border-radius:16px; background:var(--indigo); color:var(--cloud); font-size:16px; font-weight:800}
+  .fsgo small{display:block; font-size:12px; font-weight:600; opacity:.9}
   .iconbtn.tgl{border-color:var(--indigo); box-shadow:0 0 0 2px var(--indigo)}
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
@@ -937,16 +940,35 @@ const isStandalone = () => mq('(display-mode: standalone)') || mq('(display-mode
 const isMobile = () => mq('(pointer: coarse)') || /Android|iPhone|iPad|iPod/i.test(UA());
 const isIOS = () => /iPhone|iPad|iPod/i.test(UA());
 const autoFsWanted = e => !!(e.auto && e.mobile && e.supported && !e.standalone && !e.active && !e.done);
-let FS_TRIES = 0, FS_DONE = false;
+let FS_DONE = false, FS_WARNED = false, FS_EXITED = false;
 function tryAutoFs(){
   const wanted = autoFsWanted({auto:SET.autoFs, mobile:isMobile(), supported:fsOK(), standalone:isStandalone(),
                                active:!!document.fullscreenElement, done:FS_DONE});
   if(!wanted) return;
+  const fail = () => {          // 브라우저가 자동 요청을 막았다 → 다음 터치에 다시 시도하고, 직접 누르는 배너를 안내한다
+    if(!FS_WARNED){ FS_WARNED = true; toast('자동 전체화면이 막혔어요. 위쪽 ⛶ 전체화면 버튼을 눌러 주세요.', 3200); }
+  };
   try{
     const p = document.documentElement.requestFullscreen({navigationUI:'hide'});
-    if(p && p.then) p.then(() => { FS_DONE = true; }).catch(() => { if(++FS_TRIES >= 3) FS_DONE = true; });
+    if(p && p.then) p.then(() => { FS_DONE = true; }).catch(fail);
     else FS_DONE = true;
-  }catch(e){ if(++FS_TRIES >= 3) FS_DONE = true; }
+  }catch(e){ fail(); }
+}
+// 전체화면에 들어가거나 나올 때 홈의 배너·버튼 상태를 갱신한다. 사용자가 직접 나가면 이번 접속에서는 배너를 다시 띄우지 않는다.
+try{
+  document.addEventListener('fullscreenchange', () => {
+    if(!document.fullscreenElement){ FS_EXITED = true; FS_DONE = true; }
+    if(S.screen === 'home') render();
+  });
+}catch(e){}
+// 배너를 보여 줄지: 폰 브라우저에서, 아직 전체화면이 아니고, 사용자가 닫거나 나가지 않았을 때
+const fsBannerWanted = e => !!(e.mobile && e.supported && !e.standalone && !e.active && !e.dismissed && !e.exited);
+function fsBannerHtml(){
+  const on = fsBannerWanted({mobile:isMobile(), supported:fsOK(), standalone:isStandalone(),
+                             active:!!document.fullscreenElement, dismissed:store.get('bvq_fsno') === '1', exited:FS_EXITED});
+  if(!on) return '';
+  return `<div class="fsbanner"><button class="fsgo" onclick="toggleFullscreen()">⛶ 전체화면으로 보기<small>한 번 누르면 주소창이 사라져요</small></button>
+    <button class="link" onclick="store.set('bvq_fsno','1');render()" aria-label="배너 닫기">닫기</button></div>`;
 }
 // 사용자가 직접 전체화면을 나가면(FS_DONE 유지) 다시 강제로 들어가지 않는다. ⛶ 버튼으로 다시 켠다.
 ['pointerup', 'click', 'touchend'].forEach(ev => { try{ document.addEventListener(ev, tryAutoFs, true); }catch(e){} });
@@ -1048,6 +1070,7 @@ function home(){
     </span>
   </div>
   <div class="sub" style="margin-bottom:0">${T.sub}</div>
+  ${fsBannerHtml()}
 
   <div class="card hero">
     <div class="big"><b>${pr.mastered}</b>/ ${pr.total} 완전 습득</div>

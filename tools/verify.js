@@ -45,7 +45,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,getP:()=>P,getS:()=>S};',
     box
   );
   for (const t of TRACK_IDS)
@@ -452,7 +452,14 @@ console.log('\n[9] 화면 설정 (테마 · 음영 대비)');
   if (A.iosHintHtml() !== '') fail.push('아이폰이 아닌데 아이폰 안내가 보임');
   const mfx = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest.webmanifest'), 'utf8'));
   if (mfx.display !== 'fullscreen' || (mfx.display_override || [])[0] !== 'fullscreen') fail.push('manifest 가 전체화면으로 열리도록 설정돼 있지 않음');
-  note('자동 전체화면 조건 7가지 · 설정 토글 · manifest fullscreen 확인');
+  // 전체화면 배너(직접 누르는 방식): 폰 브라우저에서만, 전체화면이 아닐 때만
+  const bb = {mobile: true, supported: true, standalone: false, active: false, dismissed: false, exited: false};
+  for (const [e, want, label] of [[bb, true, '폰 브라우저'], [{...bb, mobile: false}, false, 'PC'], [{...bb, supported: false}, false, '미지원'],
+      [{...bb, standalone: true}, false, '설치한 앱'], [{...bb, active: true}, false, '이미 전체화면'],
+      [{...bb, dismissed: true}, false, '사용자가 닫음'], [{...bb, exited: true}, false, '사용자가 직접 나간 뒤']])
+    if (A.fsBannerWanted(e) !== want) fail.push('전체화면 배너 조건 오류: ' + label);
+  if (A.fsBannerHtml() !== '') fail.push('PC(비모바일)에서 전체화면 배너가 보임');
+  note('자동 전체화면 조건 7가지 · 배너 조건 7가지 · 설정 토글 · manifest fullscreen 확인');
 }
 
 /* ---------- 결과 ---------- */
