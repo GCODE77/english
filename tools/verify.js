@@ -45,7 +45,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,getP:()=>P,getS:()=>S};',
     box
   );
   for (const t of TRACK_IDS)
@@ -428,7 +428,31 @@ console.log('\n[9] 화면 설정 (테마 · 음영 대비)');
   // CSS: 라이트/다크 × 고대비 변수 블록이 모두 있어야 한다
   for (const sel of ['data-mode="light"', 'data-mode="dark"', 'data-mode="black"', 'data-hc="1"][data-mode="light"', 'data-hc="1"][data-mode="dark"'])
     if (!css.includes(sel)) fail.push('CSS 에 ' + sel + ' 블록이 없음');
-  note('테마(자동·밝게·어둡게) · 고대비 토글 · 저장 · CSS 변수 4블록 확인');
+  note('테마(자동·밝게·어둡게·블랙) · 고대비 토글 · 저장 · CSS 변수 블록 확인');
+
+  // 모바일 자동 전체화면: 조건표
+  const base = {auto: true, mobile: true, supported: true, standalone: false, active: false, done: false};
+  const cases = [
+    [base, true, '폰 브라우저에서 처음 누를 때'],
+    [{...base, auto: false}, false, '설정을 끄면'],
+    [{...base, mobile: false}, false, 'PC 에서는'],
+    [{...base, supported: false}, false, '전체화면 미지원(아이폰 사파리)'],
+    [{...base, standalone: true}, false, '이미 설치한 앱(manifest 로 전체화면)'],
+    [{...base, active: true}, false, '이미 전체화면'],
+    [{...base, done: true}, false, '이미 한 번 들어갔거나 사용자가 나간 뒤'],
+  ];
+  for (const [e, want, label] of cases)
+    if (A.autoFsWanted(e) !== want) fail.push('자동 전체화면 조건 오류: ' + label + ' → 기대 ' + want);
+  if (A.SET.autoFs !== true) fail.push('자동 전체화면 기본값이 켜짐이 아님');
+  A.UI.setSheet = true;
+  if (!A.themeSheetHtml().includes('모바일 자동 전체화면')) fail.push('화면 설정에 자동 전체화면 옵션이 없음');
+  A.UI.setSheet = false;
+  A.setAutoFs(false); if (A.SET.autoFs) fail.push('setAutoFs(false) 동작 오류');
+  A.setAutoFs(true);
+  if (A.iosHintHtml() !== '') fail.push('아이폰이 아닌데 아이폰 안내가 보임');
+  const mfx = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest.webmanifest'), 'utf8'));
+  if (mfx.display !== 'fullscreen' || (mfx.display_override || [])[0] !== 'fullscreen') fail.push('manifest 가 전체화면으로 열리도록 설정돼 있지 않음');
+  note('자동 전체화면 조건 7가지 · 설정 토글 · manifest fullscreen 확인');
 }
 
 /* ---------- 결과 ---------- */

@@ -272,3 +272,10 @@ PWA를 홈 화면에 설치하고 나면 **Android 네이티브의 존재 이유
 - **sw.js 수정**: \`caches.match(요청)\`은 옛 버전 캐시까지 뒤져서 업데이트 직후 옛 데이터(발음기호 없는 버전)를 줄 수 있었다. 현재 버전 캐시(\`caches.open(CACHE)\`)만 조회하도록 바꿨다. 이후에도 이 방식을 유지할 것.
 - 발음기호: 사전에 없는 복합어는 두 단어가 모두 사전에 있을 때만 이어 붙인다(gen-ipa.js \`compound\`). 지금 비어 있는 단어는 7개(simile, GPA, morpheme, salutation, rebrand, influencer 등).
 - **블랙 테마**(`SET.theme = 'black'`, `data-mode="black"`): 배경 `--cloud:#000000`(완전한 검정, OLED용), 카드 `--surface:#0B0D12`. 고대비와 함께 쓰면 '어둡게+고대비'와 같은 변수를 쓴다. 테마를 바꾸면 `<meta name="theme-color">`도 함께 바뀐다(블랙 #000000 / 어둡게 #0E1017 / 밝게 인디고).
+
+## 15. 기본 전체화면 (2026-10)
+
+- **설치한 앱**: manifest가 `display: fullscreen`(+ `display_override: [fullscreen, standalone]`)이라 처음부터 전체화면으로 열린다. 이미 설치해 둔 앱은 **지우고 다시 추가**해야 반영된다(설치 시점의 manifest가 고정되기 때문).
+- **모바일 브라우저**: 브라우저는 사용자 터치 없이는 전체화면에 들어갈 수 없어서, 폰(`pointer: coarse` 또는 모바일 UA)에서 **처음 화면을 누를 때** 한 번 자동으로 들어간다(`tryAutoFs`). 실패하면 최대 3번까지 다시 시도하고, 성공하거나 사용자가 직접 나간 뒤에는 다시 강제로 들어가지 않는다(⛶ 버튼으로 다시 켬). 이미 설치한 앱·PC에서는 동작하지 않는다. 끄는 방법: 화면 설정 → 전체화면 → 끄기(`SET.autoFs`).
+- **아이폰 사파리는 브라우저 전체화면(Fullscreen API)을 지원하지 않는다.** 대신 홈 화면에 추가하라는 안내를 홈에 보여 준다(`iosHintHtml`, '다시 보지 않기' 가능).
+- 판정 로직은 순수 함수 `autoFsWanted(조건)`이고 verify.js가 7가지 조건을 검사한다.

@@ -4,7 +4,7 @@
   "description": "유아부터 직장인까지 영어 단어와 문법을 게임처럼 익히는 학습 앱",
   "start_url": "./index.html",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "display_override": ["fullscreen", "standalone"],
   "orientation": "any",
   "background_color": "#F5F6FF",

@@ -690,7 +690,7 @@ const agoKo = t => { const m = Math.floor((Date.now() - t) / 60000);
 
 /* ---------- 설정 (자동 넘김 · 깜빡이 암기) ---------- */
 const SET = Object.assign(
-  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false},
+  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:true},
   (() => { try{ return JSON.parse(store.get('bvq_set') || '{}') || {}; }catch(e){ return {}; } })());
 const saveSet = () => { try{ store.set('bvq_set', JSON.stringify(SET)); }catch(e){} };
 
@@ -728,6 +728,7 @@ async function wakeOn(){ try{ if(!WAKE && navigator.wakeLock) WAKE = await navig
 function wakeOff(){ try{ if(WAKE){ WAKE.release(); WAKE = null; } }catch(e){} }
 const fsOK = () => typeof document !== 'undefined' && !!document.documentElement && !!document.documentElement.requestFullscreen;
 function toggleFullscreen(){
+  FS_DONE = true;
   const fail = () => toast('이 브라우저에서는 전체화면을 쓸 수 없어요. 홈 화면에 추가하면 전체화면으로 열려요.', 3200);
   try{
     const p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen({navigationUI:'hide'});
@@ -912,6 +913,12 @@ function themeSheetHtml(){
         <button class="chip ${SET.hc ? '' : 'on'}" onclick="if(SET.hc) toggleHC()">보통</button>
         <button class="chip ${SET.hc ? 'on' : ''}" onclick="if(!SET.hc) toggleHC()">고대비<small>글자·테두리를 더 진하게</small></button>
       </div>
+      <div class="label">전체화면</div>
+      <div class="chips">
+        <button class="chip ${SET.autoFs ? 'on' : ''}" onclick="setAutoFs(true)">모바일 자동 전체화면<small>폰에서 처음 누를 때</small></button>
+        <button class="chip ${SET.autoFs ? '' : 'on'}" onclick="setAutoFs(false)">끄기</button>
+      </div>
+      ${fsOK() ? '' : '<p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">이 브라우저는 전체화면을 지원하지 않아요. 홈 화면에 추가하면 전체화면으로 열려요.</p>'}
       <div class="card" style="margin-top:16px;text-align:center">
         <div class="term" style="font-size:30px">look up</div>
         <div style="margin-top:8px"><span class="ipa">/lʊk ʌp/</span></div>
@@ -919,6 +926,36 @@ function themeSheetHtml(){
         <div class="meta" style="margin-top:4px">미리보기</div>
       </div>
     </div></div>`;
+}
+
+/* ---------- 모바일 자동 전체화면 ----------
+   설치한 앱은 manifest(display: fullscreen)로 처음부터 전체화면이다.
+   브라우저에서는 사용자 터치가 있어야 전체화면에 들어갈 수 있으므로, 폰에서 처음 누를 때 한 번 들어간다. */
+const mq = q => { try{ return typeof matchMedia === 'function' && matchMedia(q).matches; }catch(e){ return false; } };
+const UA = () => (typeof navigator !== 'undefined' && navigator.userAgent) || '';
+const isStandalone = () => mq('(display-mode: standalone)') || mq('(display-mode: fullscreen)') || (typeof navigator !== 'undefined' && navigator.standalone === true);
+const isMobile = () => mq('(pointer: coarse)') || /Android|iPhone|iPad|iPod/i.test(UA());
+const isIOS = () => /iPhone|iPad|iPod/i.test(UA());
+const autoFsWanted = e => !!(e.auto && e.mobile && e.supported && !e.standalone && !e.active && !e.done);
+let FS_TRIES = 0, FS_DONE = false;
+function tryAutoFs(){
+  const wanted = autoFsWanted({auto:SET.autoFs, mobile:isMobile(), supported:fsOK(), standalone:isStandalone(),
+                               active:!!document.fullscreenElement, done:FS_DONE});
+  if(!wanted) return;
+  try{
+    const p = document.documentElement.requestFullscreen({navigationUI:'hide'});
+    if(p && p.then) p.then(() => { FS_DONE = true; }).catch(() => { if(++FS_TRIES >= 3) FS_DONE = true; });
+    else FS_DONE = true;
+  }catch(e){ if(++FS_TRIES >= 3) FS_DONE = true; }
+}
+// 사용자가 직접 전체화면을 나가면(FS_DONE 유지) 다시 강제로 들어가지 않는다. ⛶ 버튼으로 다시 켠다.
+['pointerup', 'click', 'touchend'].forEach(ev => { try{ document.addEventListener(ev, tryAutoFs, true); }catch(e){} });
+function setAutoFs(v){ SET.autoFs = v; saveSet(); if(v) FS_DONE = false; render(); }
+function iosHintHtml(){
+  if(!isIOS() || isStandalone() || store.get('bvq_ioshint') === '1') return '';
+  return `<div class="notice"><b>📲 전체화면으로 쓰려면</b><br>아이폰 사파리는 브라우저 전체화면을 지원하지 않아요.
+    아래 <b>공유 버튼(□↑)</b> → <b>홈 화면에 추가</b>를 누르면 앱처럼 전체화면으로 열려요.<br>
+    <button class="link" onclick="store.set('bvq_ioshint','1');render()">다시 보지 않기</button></div>`;
 }
 
 function toggleSheet(v){ UI.sheet = v; render(); }
@@ -1038,6 +1075,7 @@ function home(){
   <button class="install" id="installBtn" style="display:${deferredPrompt ? 'block' : 'none'}" onclick="installApp()">📲 홈 화면에 추가하면 앱처럼 써요</button>
   ${ttsNotice()}
 
+  ${iosHintHtml()}
   <details class="how"><summary>학습 방법</summary>
     새 단어는 카드로 먼저 보고, 익숙해질수록 문제가 어려워집니다(뜻 → 영어 인출 → 문장 빈칸).
     오답 보기는 실제로 헷갈리는 짝으로 구성했고, 틀린 문제는 세션 안에서 다시 나오며 며칠 뒤 복습으로 돌아옵니다.
