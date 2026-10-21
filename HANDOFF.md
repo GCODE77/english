@@ -322,3 +322,18 @@ PWA를 홈 화면에 설치하고 나면 **Android 네이티브의 존재 이유
 - **백업·복원**(`BK_KEYS`, `backupText`/`parseBackup`/`applyBackup`): 설정 → `내 학습 기록`. 파일 저장·복사·가져오기. 새 localStorage 키를 만들면 `BK_KEYS`에 추가해야 백업에 들어간다. 복원은 백업에 없는 키를 비우고 다시 불러온다.
 - **한 번에 푸는 문제 수** `SET.size`(5/10/20, 기본 10): 코드의 `SIZE` 상수는 없어졌다. `sizeN()`을 쓰고, 섞어서 풀 때 문법은 약 30%(`gramN()`).
 - **발음 속도** `SET.ttsSlow`(보통 0.92 / 느리게 0.65). 개별 `🐢 천천히` 버튼은 `TTS.say(text, btn, 0.55)`로 속도를 직접 지정한다.
+
+
+## 21. 앱 아이콘 · 프리미엄 디자인 (2026-10)
+
+- **아이콘**: 깊은 남색 그라데이션 바탕 + 금색 그라데이션 세리프 `E`(Bodoni MT Bold) + 작은 반짝임. `tools/make-icons.ps1`로 다시 만들 수 있다(Windows 내장 System.Drawing, 외부 패키지 없음).
+  - `icon-192/512.png`: 둥근 사각형 + 금색 테두리(투명 모서리)
+  - `icon-maskable-512.png`: 전체 채움, 글자를 안전 영역(지름 80%) 안에
+  - `apple-touch-icon.png`: 전체 채움(아이폰은 투명을 검게 칠함)
+  - `favicon-32.png`: 브라우저 탭
+  - 실행: `powershell -NoProfile -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName System.Drawing; & 'tools\make-icons.ps1'"` (스크립트 파일은 UTF-8 BOM으로 저장해야 한글 주석이 안 깨진다)
+  - 아이콘을 바꾸면 `sw.js` CACHE 버전을 올리고, 이미 설치한 사람은 홈 화면 아이콘을 지우고 다시 추가해야 새 아이콘이 보인다.
+- **디자인 레이어**: `<style>` 맨 끝의 `프리미엄 디자인 레이어`가 앞의 같은 선택자를 덮어쓴다. 색: 남색 `--indigo:#1B2A4A`(주 색) + 금색 `--gold`/`--gold-l`(강조) + 아이보리 `--cloud:#F6F3EC`(바탕). 다크·블랙에서는 금색이 주 색(`--indigo`)이 된다. 정답 초록/오답 빨강은 그대로(피드백 신호).
+- **글꼴**: 영어 단어·숫자·로고는 `--serif`(Bodoni → Didot → Palatino → Georgia 순). 한국어에는 세리프를 쓰지 않는다(대체 글꼴이 어색하다).
+- **아이콘 체계**: 화면 버튼의 이모지(🏠⚙📒⚡🔊⛶◐⏮⏭⏱☆ 등)는 선 아이콘 `ic(name)`으로 통일했다(`IC` 객체, 24×24 viewBox, currentColor). 버튼 글자를 바꿀 때 `textContent`가 아니라 `innerHTML`로 아이콘까지 넣는다. 유아·어린이 단어의 그림 이모지와 트랙 이모지(🧸🎒 등)는 내용이라 유지한다. verify.js `[14]`가 화면 버튼에 이모지가 다시 들어오면 실패시킨다.
+- 상단바 색(`theme-color`): 밝게 `#1B2A4A`, 어둡게 `#0C111D`, 블랙 `#000000`.

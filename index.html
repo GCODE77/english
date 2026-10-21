@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>English</title>
-<meta name="theme-color" content="#4F46E5">
+<meta name="theme-color" content="#1B2A4A">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="English">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <style>
   :root{
@@ -311,6 +312,99 @@
   .iconbtn.tgl{border-color:var(--indigo); box-shadow:0 0 0 2px var(--indigo)}
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
+  /* ================= 프리미엄 디자인 레이어 =================
+     남색(주 색) + 금색(강조) + 아이보리(바탕). 다크·블랙에서는 금색이 주 색이 된다.
+     정답 초록 / 오답 빨강은 바꾸지 않는다(피드백 신호). 아래 블록이 앞의 같은 선택자를 덮어쓴다. */
+  :root{
+    --indigo:#1B2A4A; --indigo-d:#0E1830; --amber:#9A6A12; --gold:#B8913A; --gold-l:#E6CF8E;
+    --ok:#167A3E; --ok-bg:#E3F4E8; --no:#B42318; --no-bg:#FDE8E6;
+    --ink:#141A26; --muted:#5E6676; --cloud:#F6F3EC; --line:#E2DCCD;
+    --surface:#FFFFFF; --chipbg:#EFEADF; --chipink:#1B2A4A;
+    --shadow:0 6px 22px rgba(27,42,74,.07); --chippress:#E4DCC8; --toastbg:#141A26;
+    --serif:"Bodoni MT","Didot","Bodoni 72","Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,"Times New Roman",serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --indigo:#E3C67F; --indigo-d:#F2DDA6; --amber:#E7B65A; --gold:#D9B565; --gold-l:#F2DFA9;
+      --ok:#4ADE80; --ok-bg:#0F2A1C; --no:#F87171; --no-bg:#371416;
+      --ink:#F2EFE6; --muted:#A7AEBC; --cloud:#0C111D; --line:#262D3E;
+      --surface:#141A29; --chipbg:#1F2740; --chipink:#EAD9AE;
+      --shadow:0 8px 26px rgba(0,0,0,.35); --chippress:#2C3554; --toastbg:#222A3F;
+    }
+  }
+  :root[data-mode="light"]{
+    --indigo:#1B2A4A; --indigo-d:#0E1830; --amber:#9A6A12; --gold:#B8913A; --gold-l:#E6CF8E;
+    --ok:#167A3E; --ok-bg:#E3F4E8; --no:#B42318; --no-bg:#FDE8E6;
+    --ink:#141A26; --muted:#5E6676; --cloud:#F6F3EC; --line:#E2DCCD;
+    --surface:#FFFFFF; --chipbg:#EFEADF; --chipink:#1B2A4A;
+    --shadow:0 6px 22px rgba(27,42,74,.07); --chippress:#E4DCC8; --toastbg:#141A26;
+  }
+  :root[data-mode="dark"]{
+    --indigo:#E3C67F; --indigo-d:#F2DDA6; --amber:#E7B65A; --gold:#D9B565; --gold-l:#F2DFA9;
+    --ok:#4ADE80; --ok-bg:#0F2A1C; --no:#F87171; --no-bg:#371416;
+    --ink:#F2EFE6; --muted:#A7AEBC; --cloud:#0C111D; --line:#262D3E;
+    --surface:#141A29; --chipbg:#1F2740; --chipink:#EAD9AE;
+    --shadow:0 8px 26px rgba(0,0,0,.35); --chippress:#2C3554; --toastbg:#222A3F;
+  }
+  :root[data-mode="black"]{
+    --indigo:#E3C67F; --indigo-d:#F2DDA6; --amber:#E7B65A; --gold:#D9B565; --gold-l:#F2DFA9;
+    --ink:#F2EFE6; --muted:#A7AEBC; --chipbg:#181D2B; --chipink:#EAD9AE; --chippress:#262E47;
+  }
+  :root[data-hc="1"][data-mode="light"]{
+    --indigo:#0B1530; --indigo-d:#050B1C; --gold:#7A5A12; --gold-l:#B8913A; --cloud:#FFFFFF;
+    --chipbg:#E8E3D6; --chipink:#000000; --line:#7E7766;
+  }
+  :root[data-hc="1"][data-mode="dark"], :root[data-hc="1"][data-mode="black"]{
+    --indigo:#FFD86B; --indigo-d:#FFFFFF; --gold:#FFD54A; --gold-l:#FFE89A; --chipink:#FFFFFF;
+  }
+
+  /* 글꼴: 영어 단어·숫자·로고는 세리프 */
+  body{letter-spacing:-.01em}
+  .brand{display:flex; align-items:center; gap:10px; min-width:0}
+  .brand .logo{width:42px; height:42px; flex:none; border-radius:12px; box-shadow:0 4px 14px rgba(10,16,34,.28)}
+  .brand h1, .top h1{font-family:var(--serif); font-weight:700; font-size:33px; color:var(--ink); letter-spacing:.3px; margin:0}
+  .term, .fword, .item b, .hero .big b, .stat b, .fcount b{font-family:var(--serif); font-weight:700; letter-spacing:.2px}
+  .term{color:var(--indigo)}
+  .fword{color:var(--indigo)}
+
+  /* 표면: 부드러운 그림자, 가는 테두리 */
+  .card, .item, .weakcta{box-shadow:var(--shadow)}
+  .card{border-radius:24px}
+  .opt{border-width:1.5px; box-shadow:0 2px 8px rgba(27,42,74,.04)}
+  .chip, .seg, .tab, .pill, .search{border-width:1px}
+  .ghost, .tert button{border-width:1.5px}
+  .hero .stats{border-top-color:var(--line)}
+
+  /* 강조: 금색 */
+  .bar > i, .abar i{background:linear-gradient(90deg, var(--gold), var(--gold-l))}
+  .bar.two > i.seen{background:var(--chippress)}
+  .split{border-color:var(--gold); border-width:1.5px}
+  .split .gear{border-left:1.5px solid var(--gold); background:var(--surface); color:var(--gold)}
+  .trow.on{border-color:var(--gold)}
+  .tip{border-left-color:var(--gold)}
+  .starbtn{color:var(--gold)}
+  .opt .num{background:var(--chipbg); color:var(--chipink)}
+  .primary{box-shadow:0 10px 24px rgba(14,24,48,.16); letter-spacing:-.01em}
+  .primary small{opacity:.78; font-weight:600}
+  .ipa, .fipa{background:var(--chipbg); color:var(--ink)}
+  .label{letter-spacing:.06em}
+
+  /* 선 아이콘 */
+  .ic{width:20px; height:20px; flex:none; display:inline-block; vertical-align:-4px}
+  .primary .ic, .ghost .ic, .split .main .ic{margin-right:6px}
+  .nav button, .tert button, .fopts button, .fclose, .miniSpeak, .autorow button, .fsgo, .split .gear,
+  .fctl button, .starbtn, .iconbtn{display:inline-flex; align-items:center; justify-content:center; gap:7px}
+  .fctl button .ic{width:24px; height:24px}
+  .fctl .big .ic{width:28px; height:28px}
+  .starbtn .ic{width:24px; height:24px}
+  .fstar .ic{width:28px; height:28px}
+  .split .gear .ic{width:22px; height:22px}
+  .chip .ic{width:18px; height:18px; margin-bottom:2px}
+  .pill .ic{width:16px; height:16px; color:var(--muted)}
+  .fopts{flex-wrap:nowrap; gap:6px}
+  .fopts button{flex:1 1 0; min-width:0; padding:0 4px; font-size:13px; gap:5px}
+  .fopts button .ic{width:17px; height:17px}
+  .hero .big .mastered{color:var(--amber)}
 </style>
 </head>
 <body>
@@ -338,6 +432,34 @@ function loadTrack(id){
     document.head.appendChild(el);
   });
 }
+
+/* ---------- 선 아이콘 (이모지 대신. 기기마다 모양이 달라지지 않고 테마 색을 따른다) ---------- */
+const IC = {
+  home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  vol:'<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+  mute:'<path d="M4 9v6h4l5 4V5L8 9z"/><path d="m17 9.5 5 5M22 9.5l-5 5"/>',
+  slow:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+  bolt:'<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z"/>',
+  sliders:'<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>',
+  max:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  half:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/>',
+  prev:'<path d="M6 5v14"/><path d="M19 5 9 12l10 7z" fill="currentColor"/>',
+  next:'<path d="M18 5v14"/><path d="M5 5l10 7-10 7z" fill="currentColor"/>',
+  play:'<path d="M7 4.5v15L19 12z" fill="currentColor"/>',
+  pause:'<path d="M8 5v14M16 5v14" stroke-width="3"/>',
+  ff:'<path d="M3.5 6.5 11 12l-7.5 5.5zM12.5 6.5 20 12l-7.5 5.5z"/>',
+  down:'<path d="m6 9 6 6 6-6"/>',
+  up:'<path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 15v4.5h14V15"/>',
+  get:'<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M5 15v4.5h14V15"/>',
+  copy:'<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M4 15.5V5a1 1 0 0 1 1-1h10.5"/>',
+  star:'<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'
+};
+const ic = (name, fill) => IC[name]
+  ? `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[name]}</svg>`
+  : '';
+const starIc = on => ic('star', on);
 
 /* ---------- 진도 저장 (localStorage 실패 시 메모리로 조용히 강등) ---------- */
 const mem = {};
@@ -635,10 +757,10 @@ function closeSession(){
   S.qs = S.qs.slice(0, done); S.fb = null; bank(); S.screen = 'result'; render();
 }
 const navBar = (extra) => `<div class="nav">
-    <button onclick="goHome()" aria-label="홈으로">🏠 홈</button>
+    <button onclick="goHome()" aria-label="홈으로">${ic('home')}홈</button>
     <span class="sp"></span>${extra || ''}
     ${soundBtn(true)}
-    <button onclick="closeSession()" aria-label="끝내기">✕ 끝내기</button>
+    <button onclick="closeSession()" aria-label="끝내기">${ic('x')}끝내기</button>
   </div>`;
 
 function retryWrong(){
@@ -682,13 +804,13 @@ function toggleSound(){
   store.set('bvq_snd', SND.on ? '1' : '0');
   if(!SND.on){ try{ speechSynthesis.cancel(); }catch(e){} }
   document.querySelectorAll('[data-snd]').forEach(b => {
-    b.textContent = soundLabel(b.dataset.l === '1');
+    b.innerHTML = soundLabel(b.dataset.l === '1');
     b.setAttribute('aria-label', '자동 발음 ' + (SND.on ? '끄기' : '켜기'));
   });
   toast(SND.on ? '자동 발음을 켰어요' : '자동 발음을 껐어요. 🔊 버튼을 누르면 들을 수 있어요', 1800);
 }
 const autoSay = (text, delay) => { if(SND.on) setTimeout(() => TTS.say(text), delay || 0); };
-const soundLabel = lab => SND.on ? (lab ? '🔊 소리 켬' : '🔊') : (lab ? '🔇 소리 끔' : '🔇');
+const soundLabel = lab => SND.on ? ic('vol') + (lab ? '소리 켬' : '') : ic('mute') + (lab ? '소리 끔' : '');
 const soundBtn = lab => `<button class="iconbtn" data-snd="1" data-l="${lab ? 1 : 0}" onclick="toggleSound()" aria-label="자동 발음 ${SND.on ? '끄기' : '켜기'}">${soundLabel(lab)}</button>`;
 
 /* ---------- 이어서 하기: 진행 중인 세션을 자동 저장한다 ---------- */
@@ -785,7 +907,7 @@ const autoBar = ms => `<div class="abar" id="abar"><i style="animation-duration:
 function setPaused(p){
   p ? autoPause() : autoResume();
   const bar = document.getElementById('abar'); if(bar && bar.classList) bar.classList.toggle('paused', p);
-  const b = document.getElementById('pausebtn'); if(b) b.textContent = p ? '▶ 계속' : '⏸ 일시정지';
+  const b = document.getElementById('pausebtn'); if(b) b.innerHTML = p ? ic('play') + '계속' : ic('pause') + '일시정지';
 }
 const togglePause = () => setPaused(!AUTO.paused);
 
@@ -802,7 +924,7 @@ function toggleFullscreen(){
     if(p && p.catch) p.catch(fail);
   }catch(e){ fail(); }
 }
-const fsBtn = () => fsOK() ? `<button class="iconbtn" onclick="toggleFullscreen()" aria-label="전체화면">⛶</button>` : '';
+const fsBtn = () => fsOK() ? `<button class="iconbtn" onclick="toggleFullscreen()" aria-label="전체화면">${ic('max')}</button>` : '';
 
 /* ---------- 학습 카드: 자동 넘김 ---------- */
 function studyNext(){
@@ -865,7 +987,7 @@ function exitFlash(){ flcSave(); wakeOff(); S = {screen:'home'}; render(); }
 function cycleFlashSpeed(){
   const o = ['fast', 'normal', 'slow'];
   SET.flashSpeed = o[(o.indexOf(SET.flashSpeed) + 1) % o.length]; saveSet();
-  const b = document.getElementById('spdbtn'); if(b) b.textContent = '⏱ ' + FSPEED_KO[SET.flashSpeed];
+  const b = document.getElementById('spdbtn'); if(b) b.innerHTML = ic('slow') + FSPEED_KO[SET.flashSpeed];
 }
 function flashQuiz(){          // 방금 본 단어로 바로 퀴즈
   const ws = S.fl.deck.slice(0, sizeN()).map(id => BY[id]);
@@ -883,7 +1005,7 @@ function flash(){
   if(!f.paused) autoStart(ms, flashAdvance);
   return `<div class="flash" onclick="flashTap()">
     <div class="fhead" onclick="event.stopPropagation()">
-      <button class="fclose" onclick="exitFlash()" aria-label="끝내기">✕ 끝내기</button>
+      <button class="fclose" onclick="exitFlash()" aria-label="끝내기">${ic('x')}끝내기</button>
       <span class="fstarwrap">${starBtn(w.id, 'fstar')}</span>
       <span class="fcount"><b>${f.i + 1}</b> / ${f.deck.length}<small>${f.round}바퀴째</small></span>
     </div>
@@ -895,17 +1017,17 @@ function flash(){
       ${f.phase === 1 ? `<div class="fko">${esc(w.meaningKo)}</div><div class="meta">${esc(w.pos)}</div>
         <div class="fex">${esc(w.example)}</div><div class="fexko">${esc(w.exampleKo)}</div>` : ''}
     </div>
-    <div class="fhint">${f.paused ? '⏸ 일시정지 · 화면을 누르면 계속' : '화면을 누르면 일시정지'}</div>
+    <div class="fhint">${f.paused ? '일시정지 · 화면을 누르면 계속' : '화면을 누르면 일시정지'}</div>
     <div class="fctl" onclick="event.stopPropagation()">
-      <button onclick="flashStep(-1)" aria-label="이전 단어">⏮</button>
-      <button class="big" onclick="flashTap()" aria-label="일시정지 또는 계속">${f.paused ? '▶' : '⏸'}</button>
-      <button onclick="flashStep(1)" aria-label="다음 단어">⏭</button>
+      <button onclick="flashStep(-1)" aria-label="이전 단어">${ic('prev')}</button>
+      <button class="big" onclick="flashTap()" aria-label="일시정지 또는 계속">${f.paused ? ic('play') : ic('pause')}</button>
+      <button onclick="flashStep(1)" aria-label="다음 단어">${ic('next')}</button>
     </div>
     <div class="fopts" onclick="event.stopPropagation()">
       ${soundBtn(true)}
-      <button id="spdbtn" onclick="cycleFlashSpeed()">⏱ ${FSPEED_KO[SET.flashSpeed]}</button>
+      <button id="spdbtn" onclick="cycleFlashSpeed()">${ic('slow')}${FSPEED_KO[SET.flashSpeed]}</button>
       ${blackBtn()}
-      ${fsOK() ? '<button onclick="toggleFullscreen()">⛶ 전체</button>' : ''}
+      ${fsOK() ? '<button onclick="toggleFullscreen()">' + ic('max') + '전체</button>' : ''}
     </div>
   </div>`;
 }
@@ -913,7 +1035,7 @@ function flash(){
 function flashdone(){
   const f = S.fl;
   return `
-  <div class="nav"><button onclick="exitFlash()" aria-label="홈으로">🏠 홈</button></div>
+  <div class="nav"><button onclick="exitFlash()" aria-label="홈으로">${ic('home')}홈</button></div>
   <h1 style="color:var(--ok)">한 바퀴 끝</h1>
   <div class="card" style="margin-top:16px"><div class="stat"><b style="color:var(--indigo)">${f.deck.length}</b><span>개 단어를 봤어요</span></div></div>
   <button class="primary" onclick="flashQuiz()">방금 본 단어로 퀴즈<small>눈으로 익힌 걸 바로 확인해요</small></button>
@@ -930,20 +1052,20 @@ function flashSheetHtml(){
   const tg = (k, label, on) => `<button class="chip ${on ? 'on' : ''}" onclick="setFlash('${k}', ${!SET[k]})">${label}<small>${on ? '켜짐' : '꺼짐'}</small></button>`;
   return `<div class="sheetbg" onclick="toggleFlashSheet(false)">
     <div class="sheet" role="dialog" aria-label="깜빡이 암기 설정" onclick="event.stopPropagation()">
-      <div class="row"><h2>⚡ 깜빡이 암기</h2><button class="link" onclick="toggleFlashSheet(false)">닫기</button></div>
+      <div class="row"><h2>깜빡이 암기</h2><button class="link" onclick="toggleFlashSheet(false)">닫기</button></div>
       <p class="meta" style="font-weight:400;margin:6px 0 0;line-height:1.6">영어 단어와 발음기호가 나오고, 잠시 뒤 뜻으로 자동 전환돼요. 화면만 켜 두고 눈으로 익히세요. (${T.emoji} ${T.name} 단어)</p>
       <div class="label">범위</div>
-      <div class="chips">${ch('flashDeck', 'least', '덜 본 단어')}${ch('flashDeck', 'weak', '약점 단어')}${ch('flashDeck', 'due', '복습 대기')}${ch('flashDeck', 'fav', '⭐ 즐겨찾기')}${ch('flashDeck', 'all', '전체 섞기')}</div>
+      <div class="chips">${ch('flashDeck', 'least', '덜 본 단어')}${ch('flashDeck', 'weak', '약점 단어')}${ch('flashDeck', 'due', '복습 대기')}${ch('flashDeck', 'fav', ic('star') + '즐겨찾기')}${ch('flashDeck', 'all', '전체 섞기')}</div>
       <div class="label">개수</div>
       <div class="chips">${ch('flashCount', 20, '20개')}${ch('flashCount', 50, '50개')}${ch('flashCount', 100, '100개')}</div>
       <div class="label">속도</div>
       <div class="chips">${ch('flashSpeed', 'fast', '빠르게')}${ch('flashSpeed', 'normal', '보통')}${ch('flashSpeed', 'slow', '느리게')}</div>
       <div class="label">옵션</div>
       <div class="chips opts2">
-        <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊' : '🔇'} 단어 읽어 주기<small>${SND.on ? '켜짐' : '꺼짐'}</small></button>
+        <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? ic('vol') : ic('mute')}단어 읽어 주기<small>${SND.on ? '켜짐' : '꺼짐'}</small></button>
         ${tg('flashEx', '예문도 읽기', SET.flashEx)}
         ${tg('flashLoop', '끝나면 반복', SET.flashLoop)}
-        <button class="chip ${SET.flashBlack ? 'on' : ''}" onclick="toggleBlack()">◐ 블랙 화면<small>${SET.flashBlack ? '켜짐' : '꺼짐'}</small></button>
+        <button class="chip ${SET.flashBlack ? 'on' : ''}" onclick="toggleBlack()">${ic('half')}블랙 화면<small>${SET.flashBlack ? '켜짐' : '꺼짐'}</small></button>
       </div>
       <button class="primary" onclick="startFlash()">시작</button>
     </div></div>`;
@@ -963,7 +1085,7 @@ function applyTheme(){
   root.setAttribute('data-mode', mode);
   // 브라우저 상단바 색도 테마에 맞춘다 (블랙이면 상단바까지 검정)
   const meta = document.querySelector && document.querySelector('meta[name="theme-color"]');
-  if(meta) meta.setAttribute('content', mode === 'black' ? '#000000' : mode === 'dark' ? '#0E1017' : '#4F46E5');
+  if(meta) meta.setAttribute('content', mode === 'black' ? '#000000' : mode === 'dark' ? '#0C111D' : '#1B2A4A');
   if(SET.hc) root.setAttribute('data-hc', '1'); else root.removeAttribute('data-hc');
 }
 try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(SET.theme === 'auto') applyTheme(); }); }catch(e){}
@@ -976,7 +1098,7 @@ function toggleHC(){
   const b = document.getElementById('hcbtn');
   if(b){ if(b.classList) b.classList.toggle('tgl', SET.hc); b.setAttribute('aria-pressed', String(SET.hc)); }
 }
-const hcBtn = () => `<button class="iconbtn ${SET.hc ? 'tgl' : ''}" id="hcbtn" onclick="toggleHC()" aria-label="고대비 ${SET.hc ? '끄기' : '켜기'}" aria-pressed="${SET.hc}">◐</button>`;
+const hcBtn = () => `<button class="iconbtn ${SET.hc ? 'tgl' : ''}" id="hcbtn" onclick="toggleHC()" aria-label="고대비 ${SET.hc ? '끄기' : '켜기'}" aria-pressed="${SET.hc}">${ic('half')}</button>`;
 function toggleBlack(){
   SET.flashBlack = !SET.flashBlack; saveSet(); applyTheme();
   if(S.screen !== 'flash'){ render(); return; }
@@ -984,11 +1106,11 @@ function toggleBlack(){
   const b = document.getElementById('blackbtn');
   if(b){
     if(b.classList) b.classList.toggle('tgl', !!SET.flashBlack);
-    b.textContent = '◐ 블랙 ' + (SET.flashBlack ? '켬' : '끔');
+    b.innerHTML = ic('half') + '블랙 ' + (SET.flashBlack ? '켬' : '끔');
     if(b.setAttribute) b.setAttribute('aria-pressed', String(!!SET.flashBlack));
   }
 }
-const blackBtn = () => `<button class="${SET.flashBlack ? 'tgl' : ''}" id="blackbtn" onclick="toggleBlack()" aria-label="블랙 화면 ${SET.flashBlack ? '끄기' : '켜기'}" aria-pressed="${!!SET.flashBlack}">◐ 블랙 ${SET.flashBlack ? '켬' : '끔'}</button>`;
+const blackBtn = () => `<button class="${SET.flashBlack ? 'tgl' : ''}" id="blackbtn" onclick="toggleBlack()" aria-label="블랙 화면 ${SET.flashBlack ? '끄기' : '켜기'}" aria-pressed="${!!SET.flashBlack}">${ic('half')}블랙 ${SET.flashBlack ? '켬' : '끔'}</button>`;
 function toggleSetSheet(v){ UI.setSheet = v; render(); }
 function themeSheetHtml(){
   if(!UI.setSheet) return '';
@@ -997,17 +1119,17 @@ function themeSheetHtml(){
   const au = (v, label) => `<button class="chip ${cur === v ? 'on' : ''}" onclick="setAuto(${v})">${label}</button>`;
   return `<div class="sheetbg" onclick="toggleSetSheet(false)">
     <div class="sheet" role="dialog" aria-label="설정" onclick="event.stopPropagation()">
-      <div class="row"><h2>⚙ 설정</h2><button class="link" onclick="toggleSetSheet(false)">닫기</button></div>
+      <div class="row"><h2>설정</h2><button class="link" onclick="toggleSetSheet(false)">닫기</button></div>
 
       <div class="label">소리</div>
       <div class="chips">
-        <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊 자동 발음 켜짐' : '🔇 자동 발음 꺼짐'}</button>
-        <button class="chip" onclick="TTS.diagnose()">🔊 소리 테스트</button>
+        <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? ic('vol') + '자동 발음 켜짐' : ic('mute') + '자동 발음 꺼짐'}</button>
+        <button class="chip" onclick="TTS.diagnose()">${ic('vol')}소리 테스트</button>
       </div>
       <div class="label">발음 속도</div>
       <div class="chips">
         <button class="chip ${SET.ttsSlow ? '' : 'on'}" onclick="setTtsSlow(false)">보통</button>
-        <button class="chip ${SET.ttsSlow ? 'on' : ''}" onclick="setTtsSlow(true)">🐢 느리게</button>
+        <button class="chip ${SET.ttsSlow ? 'on' : ''}" onclick="setTtsSlow(true)">${ic('slow')}느리게</button>
       </div>
 
       <div class="label">한 번에 푸는 문제 수</div>
@@ -1034,7 +1156,7 @@ function themeSheetHtml(){
         <button class="chip ${SET.autoFs ? 'on' : ''}" onclick="setAutoFs(true)">모바일 자동 전체화면<small>폰에서 처음 누를 때</small></button>
         <button class="chip ${SET.autoFs ? '' : 'on'}" onclick="setAutoFs(false)">끄기</button>
       </div>
-      ${fsOK() ? '<button class="ghost" onclick="toggleFullscreen()">⛶ 지금 전체화면으로</button>' : '<p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">이 브라우저는 전체화면을 지원하지 않아요. 홈 화면에 추가하면 전체화면으로 열려요.</p>'}
+      ${fsOK() ? '<button class="ghost" onclick="toggleFullscreen()">' + ic('max') + '지금 전체화면으로</button>' : '<p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">이 브라우저는 전체화면을 지원하지 않아요. 홈 화면에 추가하면 전체화면으로 열려요.</p>'}
 
       <div class="card" style="margin-top:16px;text-align:center">
         <div class="term" style="font-size:30px">look up</div>
@@ -1045,9 +1167,9 @@ function themeSheetHtml(){
 
       <div class="label">내 학습 기록 (백업)</div>
       <div class="chips opts2">
-        <button class="chip" onclick="exportBackup()">📤 파일로 저장</button>
-        <button class="chip" onclick="copyBackup()">📋 복사하기</button>
-        <button class="chip" style="grid-column:1/-1" onclick="toggleImportSheet(true)">📥 백업 가져오기</button>
+        <button class="chip" onclick="exportBackup()">${ic('up')}파일로 저장</button>
+        <button class="chip" onclick="copyBackup()">${ic('copy')}복사하기</button>
+        <button class="chip" style="grid-column:1/-1" onclick="toggleImportSheet(true)">${ic('get')}백업 가져오기</button>
       </div>
       <p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">기록과 즐겨찾기는 이 기기의 브라우저에만 저장돼요. 폰을 바꾸거나 브라우저 데이터를 지우기 전에 저장해 두세요.</p>
 
@@ -1101,7 +1223,7 @@ function fsBannerHtml(){
   const on = fsBannerWanted({mobile:isMobile(), supported:fsOK(), standalone:isStandalone(),
                              active:!!document.fullscreenElement, dismissed:store.get('bvq_fsno') === '1', exited:FS_EXITED});
   if(!on) return '';
-  return `<div class="fsbanner"><button class="fsgo" onclick="toggleFullscreen()">⛶ 전체화면으로 보기</button>
+  return `<div class="fsbanner"><button class="fsgo" onclick="toggleFullscreen()">${ic('max')}전체화면으로 보기</button>
     <button class="link" onclick="store.set('bvq_fsno','1');render()" aria-label="배너 닫기">닫기</button></div>`;
 }
 // 사용자가 직접 전체화면을 나가면(FS_DONE 유지) 다시 강제로 들어가지 않는다. ⛶ 버튼으로 다시 켠다.
@@ -1146,14 +1268,14 @@ try{ window.addEventListener('popstate', onBack); }catch(e){}
 let FAV = null;
 const favs = () => { if(!FAV){ try{ FAV = JSON.parse(store.get('bvq_fav') || '{}') || {}; }catch(e){ FAV = {}; } } return FAV; };
 const isFav = id => !!favs()[id];
-const starBtn = (id, cls) => `<button class="starbtn ${cls || ''}" data-fav="${esc(id)}" onclick="event.stopPropagation();toggleFav(this)" aria-label="즐겨찾기">${isFav(id) ? '★' : '☆'}</button>`;
+const starBtn = (id, cls) => `<button class="starbtn ${cls || ''}" data-fav="${esc(id)}" onclick="event.stopPropagation();toggleFav(this)" aria-label="즐겨찾기" aria-pressed="${isFav(id)}">${starIc(isFav(id))}</button>`;
 function toggleFav(btn){
   const id = btn && btn.dataset && btn.dataset.fav;
   if(!id) return;
   const f = favs();
   if(f[id]) delete f[id]; else f[id] = 1;
   try{ store.set('bvq_fav', JSON.stringify(f)); }catch(e){}
-  document.querySelectorAll('[data-fav]').forEach(b => { if(b.dataset.fav === id) b.textContent = isFav(id) ? '★' : '☆'; });
+  document.querySelectorAll('[data-fav]').forEach(b => { if(b.dataset.fav === id){ b.innerHTML = starIc(isFav(id)); if(b.setAttribute) b.setAttribute('aria-pressed', String(isFav(id))); } });
   if(S.screen === 'library' && LIB.st === 'fav') libFilter();
   toast(isFav(id) ? '⭐ 즐겨찾기에 담았어요' : '즐겨찾기에서 뺐어요', 1400);
 }
@@ -1224,7 +1346,7 @@ function importSheetHtml(){
   if(!UI.importSheet) return '';
   return `<div class="sheetbg" onclick="toggleImportSheet(false)">
     <div class="sheet" role="dialog" aria-label="기록 가져오기" onclick="event.stopPropagation()">
-      <div class="row"><h2>📥 기록 가져오기</h2><button class="link" onclick="toggleImportSheet(false)">닫기</button></div>
+      <div class="row"><h2>기록 가져오기</h2><button class="link" onclick="toggleImportSheet(false)">닫기</button></div>
       <p class="meta" style="font-weight:400;margin:6px 0 0;line-height:1.6">저장해 둔 백업 파일을 고르거나, 복사한 내용을 붙여넣으세요. 지금 기록은 백업 내용으로 바뀌어요.</p>
       <div class="label">백업 파일</div>
       <input type="file" accept=".json,application/json" onchange="importFile(this)" style="margin-top:8px;max-width:100%">
@@ -1246,7 +1368,7 @@ function render(){
   if(S.screen === 'quiz' || S.screen === 'study') saveSession();
   else if(S.screen === 'result') clearSession();
   if(!LOADED.has(PICK.track) && !(S.screen === 'home' && UI.sheet)){
-    app.innerHTML = '<div class="top"><h1>English</h1></div><div class="empty" style="padding-top:90px">불러오는 중…</div>';
+    app.innerHTML = '<div class="top"><div class="brand"><img class="logo" src="./icons/icon-192.png" alt="" width="42" height="42"><h1>English</h1></div></div><div class="empty" style="padding-top:90px">불러오는 중…</div>';
     loadTrack(PICK.track).then(() => render()).catch(() => {
       app.innerHTML = '<div class="empty" style="padding-top:100px">데이터를 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</div><button class="primary" onclick="render()">다시 시도</button>';
     });
@@ -1316,7 +1438,7 @@ function home(){
     const where = ses.screen === 'study'
       ? `새 단어 카드 ${ses.si + 1} / ${ses.deck.length}`
       : `${Math.min(ses.i + (ses.fb ? 1 : 0), ses.qs.length)} / ${ses.qs.length}문제 푼 상태`;
-    cta = `<button class="primary" onclick="resumeSession()">▶ 이어서 하기<small>${where} · ${agoKo(ses.t)}</small></button>
+    cta = `<button class="primary" onclick="resumeSession()">${ic('play')}이어서 하기<small>${where} · ${agoKo(ses.t)}</small></button>
       <button class="ghost" onclick="start()">새로 시작하기 · ${ctaSub}</button>`;
   } else {
     cta = `<button class="primary" onclick="start()">${ctaMain}<small>${ctaSub}${pr.due ? ' · 복습 ' + pr.due + '개 대기 중' : ''}</small></button>`;
@@ -1324,8 +1446,8 @@ function home(){
 
   return `
   <div class="top">
-    <h1>English</h1>
-    <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} <i>▼</i></button>
+    <div class="brand"><img class="logo" src="./icons/icon-192.png" alt="" width="42" height="42"><h1>English</h1></div>
+    <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} ${ic('down')}</button>
   </div>
   <div class="sub" style="margin-bottom:0">${T.sub}</div>
   ${fsBannerHtml()}
@@ -1347,12 +1469,12 @@ function home(){
   ${cta}
 
   <div class="split">
-    <button class="main" onclick="startFlash()">⚡ 깜빡이 암기<small>${FDECK_KO[SET.flashDeck]} ${SET.flashCount}개 · ${FSPEED_KO[SET.flashSpeed]} · 소리 ${SND.on ? '켬' : '끔'}</small></button>
-    <button class="gear" onclick="toggleFlashSheet(true)" aria-label="깜빡이 설정">⚙</button>
+    <button class="main" onclick="startFlash()">${ic('bolt')}깜빡이 암기<small>${FDECK_KO[SET.flashDeck]} ${SET.flashCount}개 · ${FSPEED_KO[SET.flashSpeed]} · 소리 ${SND.on ? '켬' : '끔'}</small></button>
+    <button class="gear" onclick="toggleFlashSheet(true)" aria-label="깜빡이 설정">${ic('sliders')}</button>
   </div>
   <div class="tert">
-    <button onclick="openLibrary()">📒 학습 노트</button>
-    <button onclick="toggleSetSheet(true)">⚙ 설정</button>
+    <button onclick="openLibrary()">${ic('book')}학습 노트</button>
+    <button onclick="toggleSetSheet(true)">${ic('sliders')}설정</button>
   </div>
   <button class="install" id="installBtn" style="display:${deferredPrompt ? 'block' : 'none'}" onclick="installApp()">📲 홈 화면에 추가하면 앱처럼 써요</button>
   ${ttsNotice()}
@@ -1374,8 +1496,8 @@ function study(){
   </div>
   ${ms ? autoBar(ms) : '<div class="abar"></div>'}
   <div class="autorow">
-    <button onclick="cycleAuto()">${SET.auto ? '⏩ 자동 넘김 ' + SET.autoSec + '초' : '⏩ 자동 넘김 꺼짐'}</button>
-    ${SET.auto ? '<button id="pausebtn" onclick="togglePause()">⏸ 일시정지</button>' : ''}
+    <button onclick="cycleAuto()">${SET.auto ? ic('ff') + '자동 넘김 ' + SET.autoSec + '초' : ic('ff') + '자동 넘김 꺼짐'}</button>
+    ${SET.auto ? '<button id="pausebtn" onclick="togglePause()">' + ic('pause') + '일시정지</button>' : ''}
   </div>
   <div class="card" style="margin-top:14px" onclick="TTS.say(BY['${w.id}'].term)">
     <div class="cardstar">${starBtn(w.id)}</div>
@@ -1386,9 +1508,9 @@ function study(){
     <div style="font-size:17px;font-weight:700;margin-top:20px;line-height:1.6">${esc(w.example)}</div>
     <div style="font-size:15px;color:var(--muted);margin-top:6px;line-height:1.6">${esc(w.exampleKo)}</div>
     <div style="margin-top:14px">
-      <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this)">🔊 단어</button>
-      <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>
-      <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this, 0.55)">🐢 천천히</button>
+      <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this)">${ic('vol')}단어</button>
+      <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].example, this)">${ic('vol')}예문</button>
+      <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this, 0.55)">${ic('slow')}천천히</button>
     </div>
   </div>
   <div class="stick"><button class="primary" onclick="studyNext()">
@@ -1424,10 +1546,10 @@ function quiz(){
         : `<div class="prompt">${esc(q.prompt)}</div>${(reveal && ipaOf(w)) ? `<div style="margin-top:10px">${ipaOf(w)}</div>` : ''}`;
 
   const speakRow = !canSpeak ? '' : isG
-    ? `<div style="margin-top:14px"><button class="speak" onclick="event.stopPropagation();TTS.say(GB['${g.id}'].full, this)">🔊 완성 문장</button></div>`
+    ? `<div style="margin-top:14px"><button class="speak" onclick="event.stopPropagation();TTS.say(GB['${g.id}'].full, this)">${ic('vol')}완성 문장</button></div>`
     : `<div style="margin-top:14px">
-         <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this)">🔊 단어</button>
-         ${(q.mode !== 'CLOZE' || reveal) ? `<button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>` : ''}
+         <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this)">${ic('vol')}단어</button>
+         ${(q.mode !== 'CLOZE' || reveal) ? `<button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].example, this)">${ic('vol')}예문</button>` : ''}
        </div>`;
 
   const fbBody = !fb ? '' : isG
@@ -1436,7 +1558,7 @@ function quiz(){
        <p class="ko" style="margin-top:2px">${esc(g.ko)}</p>
        <div class="tip">${esc(g.tip)}</div>
        <div style="margin-top:12px">
-         <button class="speak" onclick="TTS.say(GB['${g.id}'].full, this)">🔊 완성 문장</button></div>`
+         <button class="speak" onclick="TTS.say(GB['${g.id}'].full, this)">${ic('vol')}완성 문장</button></div>`
     : `${fb.ok ? '' : `<p>${esc(fb.why)}</p>`}
        <p style="margin-top:14px"><b style="font-size:20px;color:var(--indigo)">${esc(w.term)}</b>
          ${ipaOf(w,"margin-left:8px")}${starBtn(w.id)}</p>
@@ -1444,8 +1566,8 @@ function quiz(){
        <p style="font-weight:600">${esc(w.example)}</p>
        <p class="ko" style="margin-top:2px">${esc(w.exampleKo)}</p>
        <div style="margin-top:10px">
-         <button class="speak" onclick="TTS.say(BY['${w.id}'].term, this)">🔊 단어</button>
-         <button class="speak" onclick="TTS.say(BY['${w.id}'].example, this)">🔊 예문</button></div>`;
+         <button class="speak" onclick="TTS.say(BY['${w.id}'].term, this)">${ic('vol')}단어</button>
+         <button class="speak" onclick="TTS.say(BY['${w.id}'].example, this)">${ic('vol')}예문</button></div>`;
 
   const fbHtml = !fb ? '' : `
     <div class="fb ${fb.ok?'ok':'no'}">
@@ -1492,17 +1614,17 @@ function result(){
          <div style="margin-top:8px;font-size:16px;font-weight:700">${esc(q.g.full)}</div>
          <div style="margin-top:4px;font-size:14px;color:var(--muted)">${esc(q.g.ko)}</div>
          <div class="tip">${esc(q.g.tip)}</div>
-         <button class="speak" onclick="TTS.say(GB['${q.g.id}'].full, this)">🔊 문장</button>
+         <button class="speak" onclick="TTS.say(GB['${q.g.id}'].full, this)">${ic('vol')}문장</button>
        </div>`
     : `<div class="wrongitem">
          <b>${esc(q.w.term)}</b> ${ipaOf(q.w,"margin-left:8px")}
          <div style="margin-top:6px;font-size:16px">${esc(q.w.meaningKo)}</div>
          <div style="margin-top:8px;font-size:15px;color:var(--muted);line-height:1.6">${esc(q.w.example)}</div>
-         <button class="speak" onclick="TTS.say(BY['${q.w.id}'].term, this)">🔊 발음</button>
+         <button class="speak" onclick="TTS.say(BY['${q.w.id}'].term, this)">${ic('vol')}발음</button>
        </div>`;
 
   return `
-  <div class="nav"><button onclick="goHome()" aria-label="홈으로">🏠 홈</button></div>
+  <div class="nav"><button onclick="goHome()" aria-label="홈으로">${ic('home')}홈</button></div>
   <h1 style="color:${acc>=70?'var(--ok)':'var(--amber)'}">${title}</h1>
   <div class="card" style="margin-top:16px">
     <div class="stats">
@@ -1513,7 +1635,7 @@ function result(){
   </div>
   ${uniq.length
     ? `<button class="primary" onclick="retryWrong()">틀린 ${uniq.length}문제 바로 다시 풀기<small>기억이 남아 있을 때 한 번 더</small></button>
-       ${wrongWords ? '<button class="ghost" onclick="flashWrong()">⚡ 틀린 단어 깜빡이로 외우기</button>' : ''}
+       ${wrongWords ? '<button class="ghost" onclick="flashWrong()">' + ic('bolt') + '틀린 단어 깜빡이로 외우기</button>' : ''}
        <button class="ghost" onclick="start()">새 문제 ${sizeN()}개 풀기</button>`
     : `<button class="primary" onclick="start()">한 세션 더<small>새 문제 ${sizeN()}개</small></button>`}
   <button class="ghost" onclick="goHome()">홈으로</button>
@@ -1539,9 +1661,9 @@ function wordItem(w){
     <div class="ko">${esc(w.meaningKo)}</div>
     <div class="ex">${esc(w.example)}</div>
     ${conf ? `<div class="tip">자주 헷갈린 짝 — ${esc(conf)}</div>` : ''}
-    <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].term, this)">🔊 발음</button>
-    <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>
-    <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].term, this, 0.55)">🐢 천천히</button>
+    <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].term, this)">${ic('vol')}발음</button>
+    <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].example, this)">${ic('vol')}예문</button>
+    <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].term, this, 0.55)">${ic('slow')}천천히</button>
   </div>`;
 }
 
@@ -1553,7 +1675,7 @@ function gramItem(g){
     <div style="margin-top:10px;font-size:16px;font-weight:700">${esc(g.full)}</div>
     <div class="ex">${esc(g.ko)}</div>
     <div class="tip">${esc(g.tip)}</div>
-    <button class="miniSpeak" onclick="TTS.say(GB['${g.id}'].full, this)">🔊 문장</button>
+    <button class="miniSpeak" onclick="TTS.say(GB['${g.id}'].full, this)">${ic('vol')}문장</button>
   </div>`;
 }
 
@@ -1578,7 +1700,7 @@ function library(){
       cta = `<div class="weakcta">
         <div class="meta">틀린 단어 ${ws.length}개 · 문법 ${gs.length}개 — 많이 틀린 순서예요</div>
         <button class="primary" onclick="weakQuiz()">약점만 퀴즈 풀기<small>자주 틀린 것 위주로 최대 ${sizeN()}문제</small></button>
-        ${ws.length ? '<button class="ghost" onclick="flashWeak()">⚡ 약점 단어 깜빡이로 보기</button>' : ''}
+        ${ws.length ? '<button class="ghost" onclick="flashWeak()">' + ic('bolt') + '약점 단어 깜빡이로 보기</button>' : ''}
       </div>`;
       body = ws.map(wordItem).join('') + gs.map(gramItem).join('');
     } else {
@@ -1594,12 +1716,12 @@ function library(){
   const isList = LIB.tab !== 'weak';
   const filter = !isList ? '' : `
     ${T.id === 'work' ? `<div class="chips" id="libLevels">${lvBtn(0)}${lvBtn(1)}${lvBtn(2)}${lvBtn(3)}</div>` : ''}
-    <div class="chips" id="libStatus">${stBtn('', '전체')}${stBtn('b-bad', '약점')}${stBtn('b-go', '학습중')}${stBtn('b-ok', '습득')}${stBtn('b-new', '미학습')}${LIB.tab === 'words' ? stBtn('fav', '⭐ 즐겨찾기') : ''}</div>
+    <div class="chips" id="libStatus">${stBtn('', '전체')}${stBtn('b-bad', '약점')}${stBtn('b-go', '학습중')}${stBtn('b-ok', '습득')}${stBtn('b-new', '미학습')}${LIB.tab === 'words' ? stBtn('fav', ic('star') + '즐겨찾기') : ''}</div>
     <div class="meta" style="margin-top:12px" id="libCount"></div>`;
 
   return `
-  <div class="nav"><button onclick="goHome()" aria-label="홈으로">🏠 홈</button></div>
-  <h1 style="font-size:28px;margin:12px 0 0">📒 학습 노트</h1>
+  <div class="nav"><button onclick="goHome()" aria-label="홈으로">${ic('home')}홈</button></div>
+  <h1 style="font-size:28px;margin:12px 0 0">학습 노트</h1>
   <div class="sub" style="margin-bottom:0">${T.emoji} ${T.name} · 틀린 문제와 전체 목록</div>
   <div class="libbar">
     <div class="tabs">${tab('weak','약점 노트')}${tab('words','단어 '+WORDS_T.length)}${tab('grammar','문법 '+GRAMMAR_T.length)}</div>

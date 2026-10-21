@@ -497,7 +497,7 @@ console.log('\n[10] 학습 노트');
   A.setPick('track', 'elem');
   A.openLibrary();
   let h = A.library();
-  for (const t of ['🏠 홈', '학습 노트', '약점 노트'])
+  for (const t of ['aria-label="홈으로"', '학습 노트', '약점 노트'])
     if (!h.includes(t)) fail.push('학습 노트에 "' + t + '" 가 없음');
   if (/undefined|NaN|\[object /.test(h)) fail.push('학습 노트 템플릿 오류');
   if (h.includes('아직 틀린 문제가 없습니다')) fail.push('약점 노트가 비어 있음(통계 연결 실패)');
@@ -598,9 +598,9 @@ console.log('\n[13] 즐겨찾기 · 백업 · 문제 수 · 발음 속도');
   if (A.isFav(ws[0].id) || A.flashDeck().length !== 2) fail.push('즐겨찾기 해제가 반영되지 않음');
   A.setPick('cat', 'word'); A.libTab ? A.openLibrary() : 0; A.libTab('words');
   const libHtml = A.library();
-  if (!libHtml.includes('⭐ 즐겨찾기') || !libHtml.includes('data-fav="')) fail.push('학습 노트 단어 탭에 즐겨찾기 필터/별이 없음');
+  if (!libHtml.includes('data-st="fav"') || !libHtml.includes('data-fav="')) fail.push('학습 노트 단어 탭에 즐겨찾기 필터/별이 없음');
   A.libTab('grammar');
-  if (A.library().includes('⭐ 즐겨찾기')) fail.push('문법 탭에 즐겨찾기 필터가 나옴');
+  if (A.library().includes('data-st="fav"')) fail.push('문법 탭에 즐겨찾기 필터가 나옴');
   A.SET.flashDeck = 'least';
   A.toggleFav({dataset: {fav: ws[1].id}}); A.toggleFav({dataset: {fav: ws[2].id}});
 
@@ -644,6 +644,18 @@ console.log('\n[13] 즐겨찾기 · 백업 · 문제 수 · 발음 속도');
   box.speechSynthesis.speak = origSpeak; A.setTtsSlow(false);
   if (rates.join() !== '0.92,0.65,0.55') fail.push('발음 속도 오류: ' + rates.join());
   note('즐겨찾기 · 백업 형식 검증 · 문제 수 5/10/20 · 발음 속도 확인');
+}
+
+/* ---------- 14. 디자인 일관성 ---------- */
+console.log('\n[14] 디자인 일관성');
+{
+  const ui = src.replace(/const IC = \{[\s\S]*?\n\};/, '');
+  for (const e of ['🏠', '⚙', '📒', '⛶', '⏮', '⏭', '⏩', '⏱', '◐', '📤', '📋', '📥', '☆'])
+    if (ui.includes('>' + e) || ui.includes("'" + e)) fail.push('화면 버튼에 이모지 아이콘이 남아 있음: ' + e + ' (ic() 선 아이콘을 쓸 것)');
+  for (const v of ['--gold', '--gold-l', '--serif']) if (!new RegExp(v + '\\s*:').test(css)) fail.push('CSS 변수 정의 없음: ' + v);
+  for (const f of ['icons/favicon-32.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'])
+    if (!fs.existsSync(path.join(__dirname, '..', f))) fail.push('아이콘 파일 없음: ' + f);
+  note('화면 버튼 선 아이콘 통일 · 프리미엄 색 변수 · 아이콘 파일 확인');
 }
 
 /* ---------- 결과 ---------- */
