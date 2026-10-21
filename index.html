@@ -299,6 +299,15 @@
   .sheet .chip{word-break:keep-all}
   .opts2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
   .opts2 .chip{min-width:0; min-height:58px}
+  .starbtn{min-width:44px; min-height:44px; padding:0 6px; border-radius:22px; background:transparent;
+    color:var(--amber); font-size:26px; line-height:1}
+  .starbtn:active{background:var(--chipbg)}
+  .card{position:relative}
+  .cardstar{position:absolute; top:8px; right:8px}
+  .toprt{display:flex; align-items:center; gap:2px}
+  .fstarwrap{margin-left:auto}
+  .fstarwrap + .fcount{margin-left:12px}
+  .fstar{font-size:30px}
   .iconbtn.tgl{border-color:var(--indigo); box-shadow:0 0 0 2px var(--indigo)}
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
@@ -367,7 +376,7 @@ const TTS = {
         || this.voices[0] || null;
   },
 
-  say(text, btn){
+  say(text, btn, rate){
     if(!text) return;
     if(btn){ btn.classList.add('busy'); setTimeout(()=>btn.classList.remove('busy'), 700); }
 
@@ -385,7 +394,7 @@ const TTS = {
         try{
           const u = new SpeechSynthesisUtterance(text);
           u.lang = 'en-US';                 // 한국어 엔진이 영어를 읽지 않도록 명시
-          u.rate = 0.92;
+          u.rate = (typeof rate === 'number') ? rate : (SET.ttsSlow ? 0.65 : 0.92);
           const v = this.pick(); if(v) u.voice = v;
 
           let fired = false;
@@ -438,7 +447,7 @@ function toast(msg, ms){
 }
 
 /* ---------- 퀴즈 엔진 ---------- */
-const SIZE = 10, BLANK = '______';
+const BLANK = '______';
 const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
 
 let PICK = { track: 'work', level: 0, cat: 'mix' };   // level 0 = 전체, cat: word | grammar | mix
@@ -456,7 +465,7 @@ const TRACK = id => TRACKS.find(t => t.id === id) || TRACKS[TRACKS.length-1];
 const TR_PREFIX = {td:'toddler', ch:'child', el:'elem', md:'mid', hs:'high', un:'univ'};
 const trackOfKey = k => { const m = /^(?:g:)?(td|ch|el|md|hs|un)_/.exec(k); return m ? TR_PREFIX[m[1]] : 'work'; };
 // 마지막으로 고른 트랙·유형을 기억한다. 처음 접속이면 트랙 선택창을 먼저 연다.
-let UI = { sheet: true, firstRun: true, flashSheet: false, setSheet: false };
+let UI = { sheet: true, firstRun: true, flashSheet: false, setSheet: false, importSheet: false };
 try{
   const sv = JSON.parse(store.get('bvq_pick') || 'null');
   if(sv && TRACKS.some(t => t.id === sv.track)){
@@ -542,8 +551,9 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const app = document.getElementById('app');
 
 function start(){
-  const nG = PICK.cat === 'grammar' ? SIZE : PICK.cat === 'word' ? 0 : 3;
-  const nW = SIZE - nG;
+  const sz = sizeN();
+  const nG = PICK.cat === 'grammar' ? sz : PICK.cat === 'word' ? 0 : gramN();
+  const nW = sz - nG;
 
   const ws = nW ? pickPool(WORDS, 'w', nW) : [];
   const gs = nG ? pickPool(GRAMMAR, 'g', nG) : [];
@@ -742,7 +752,7 @@ const agoKo = t => { const m = Math.floor((Date.now() - t) / 60000);
 
 /* ---------- 설정 (자동 넘김 · 깜빡이 암기) ---------- */
 const SET = Object.assign(
-  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:true, flashBlack:false},
+  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:true, flashBlack:false, size:10, ttsSlow:false},
   (() => { try{ return JSON.parse(store.get('bvq_set') || '{}') || {}; }catch(e){ return {}; } })());
 const saveSet = () => { try{ store.set('bvq_set', JSON.stringify(SET)); }catch(e){} };
 // 이전 버전(v20)은 깜빡이의 ◐ 버튼이 앱 전체 테마를 'black'으로 바꿔 저장했다 → 원래 테마로 되돌리고 '깜빡이 블랙'으로 옮긴다
@@ -806,7 +816,7 @@ function cycleAutoSec(){ const o = [4, 6, 9]; SET.autoSec = o[(o.indexOf(SET.aut
 /* ---------- 깜빡이 암기: 영어(+발음기호) → 잠시 뒤 뜻으로 자동 전환, 계속 반복 ---------- */
 const FDUR = {fast:[1500, 2200], normal:[2500, 3200], slow:[4000, 4500]};   // [영어 보여 주는 시간, 뜻 보여 주는 시간] ms
 const FSPEED_KO = {fast:'빠르게', normal:'보통', slow:'느리게'};
-const FDECK_KO = {least:'덜 본 단어', weak:'약점 단어', due:'복습 대기', all:'전체 섞기'};
+const FDECK_KO = {least:'덜 본 단어', weak:'약점 단어', due:'복습 대기', fav:'즐겨찾기', all:'전체 섞기'};
 let FLC = null, flcDirty = 0;              // 깜빡이로 본 횟수 { 단어id: n }  → '덜 본 단어'를 먼저 보여 준다
 const flc = () => { if(!FLC){ try{ FLC = JSON.parse(store.get('bvq_flash') || '{}') || {}; }catch(e){ FLC = {}; } } return FLC; };
 function flcSave(){ if(!FLC || !flcDirty) return; flcDirty = 0; try{ store.set('bvq_flash', JSON.stringify(FLC)); }catch(e){} }
@@ -817,6 +827,7 @@ function flashDeck(){
   let list;
   if(SET.flashDeck === 'weak') list = ws.filter(w => it[w.id] && it[w.id].w > 0).sort((a, b) => it[b.id].w - it[a.id].w);
   else if(SET.flashDeck === 'due') list = ws.filter(w => it[w.id] && it[w.id].due <= now);
+  else if(SET.flashDeck === 'fav') list = ws.filter(w => isFav(w.id));
   else if(SET.flashDeck === 'all') list = shuffle(ws);
   else list = shuffle(ws).sort((a, b) => (fc[a.id] || 0) - (fc[b.id] || 0));
   return list.slice(0, SET.flashCount).map(w => w.id);
@@ -825,7 +836,7 @@ function startFlash(){
   UI.flashSheet = false;
   const deck = flashDeck();
   if(!deck.length){
-    toast('이 범위에는 보여 줄 단어가 없어요. 다른 범위를 골라 보세요.', 2800);
+    toast(SET.flashDeck === 'fav' ? '즐겨찾기한 단어가 아직 없어요. 단어 옆 ☆를 눌러 담아 보세요.' : '이 범위에는 보여 줄 단어가 없어요. 다른 범위를 골라 보세요.', 3000);
     UI.flashSheet = true; render(); return;
   }
   S = {screen:'flash', fl:{deck, i:0, phase:0, round:1, paused:false}};
@@ -857,7 +868,7 @@ function cycleFlashSpeed(){
   const b = document.getElementById('spdbtn'); if(b) b.textContent = '⏱ ' + FSPEED_KO[SET.flashSpeed];
 }
 function flashQuiz(){          // 방금 본 단어로 바로 퀴즈
-  const ws = S.fl.deck.slice(0, SIZE).map(id => BY[id]);
+  const ws = S.fl.deck.slice(0, sizeN()).map(id => BY[id]);
   const qs = shuffle(ws.map(w => build(w, modeFor(P.items[w.id] ? P.items[w.id].box : 0))));
   S = {screen:'quiz', deck:[], si:0, qs, i:0, score:0, streak:0, best:0, right:0, fb:null, wrong:[]};
   render();
@@ -873,6 +884,7 @@ function flash(){
   return `<div class="flash" onclick="flashTap()">
     <div class="fhead" onclick="event.stopPropagation()">
       <button class="fclose" onclick="exitFlash()" aria-label="끝내기">✕ 끝내기</button>
+      <span class="fstarwrap">${starBtn(w.id, 'fstar')}</span>
       <span class="fcount"><b>${f.i + 1}</b> / ${f.deck.length}<small>${f.round}바퀴째</small></span>
     </div>
     ${f.paused ? '<div class="abar"><i style="width:100%;animation:none"></i></div>' : autoBar(ms)}
@@ -921,7 +933,7 @@ function flashSheetHtml(){
       <div class="row"><h2>⚡ 깜빡이 암기</h2><button class="link" onclick="toggleFlashSheet(false)">닫기</button></div>
       <p class="meta" style="font-weight:400;margin:6px 0 0;line-height:1.6">영어 단어와 발음기호가 나오고, 잠시 뒤 뜻으로 자동 전환돼요. 화면만 켜 두고 눈으로 익히세요. (${T.emoji} ${T.name} 단어)</p>
       <div class="label">범위</div>
-      <div class="chips">${ch('flashDeck', 'least', '덜 본 단어')}${ch('flashDeck', 'weak', '약점 단어')}${ch('flashDeck', 'due', '복습 대기')}${ch('flashDeck', 'all', '전체 섞기')}</div>
+      <div class="chips">${ch('flashDeck', 'least', '덜 본 단어')}${ch('flashDeck', 'weak', '약점 단어')}${ch('flashDeck', 'due', '복습 대기')}${ch('flashDeck', 'fav', '⭐ 즐겨찾기')}${ch('flashDeck', 'all', '전체 섞기')}</div>
       <div class="label">개수</div>
       <div class="chips">${ch('flashCount', 20, '20개')}${ch('flashCount', 50, '50개')}${ch('flashCount', 100, '100개')}</div>
       <div class="label">속도</div>
@@ -992,6 +1004,18 @@ function themeSheetHtml(){
         <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? '🔊 자동 발음 켜짐' : '🔇 자동 발음 꺼짐'}</button>
         <button class="chip" onclick="TTS.diagnose()">🔊 소리 테스트</button>
       </div>
+      <div class="label">발음 속도</div>
+      <div class="chips">
+        <button class="chip ${SET.ttsSlow ? '' : 'on'}" onclick="setTtsSlow(false)">보통</button>
+        <button class="chip ${SET.ttsSlow ? 'on' : ''}" onclick="setTtsSlow(true)">🐢 느리게</button>
+      </div>
+
+      <div class="label">한 번에 푸는 문제 수</div>
+      <div class="chips">
+        <button class="chip ${sizeN() === 5 ? 'on' : ''}" onclick="setSize(5)">5문제</button>
+        <button class="chip ${sizeN() === 10 ? 'on' : ''}" onclick="setSize(10)">10문제</button>
+        <button class="chip ${sizeN() === 20 ? 'on' : ''}" onclick="setSize(20)">20문제</button>
+      </div>
 
       <div class="label">새 단어 카드 자동 넘김</div>
       <div class="chips">${au(0, '끄기')}${au(4, '4초')}${au(6, '6초')}${au(9, '9초')}</div>
@@ -1018,6 +1042,14 @@ function themeSheetHtml(){
         <div style="font-size:18px;font-weight:700;margin-top:10px">찾아보다</div>
         <div class="meta" style="margin-top:4px">미리보기</div>
       </div>
+
+      <div class="label">내 학습 기록 (백업)</div>
+      <div class="chips opts2">
+        <button class="chip" onclick="exportBackup()">📤 파일로 저장</button>
+        <button class="chip" onclick="copyBackup()">📋 복사하기</button>
+        <button class="chip" style="grid-column:1/-1" onclick="toggleImportSheet(true)">📥 백업 가져오기</button>
+      </div>
+      <p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">기록과 즐겨찾기는 이 기기의 브라우저에만 저장돼요. 폰을 바꾸거나 브라우저 데이터를 지우기 전에 저장해 두세요.</p>
 
       <details class="how"><summary>학습 방법</summary>
         새 단어는 카드로 먼저 보고, 익숙해질수록 문제가 어려워집니다(뜻 → 영어 인출 → 문장 빈칸).
@@ -1082,6 +1114,126 @@ function iosHintHtml(){
     <button class="link" onclick="store.set('bvq_ioshint','1');render()">다시 보지 않기</button></div>`;
 }
 
+/* ---------- 뒤로가기(안드로이드 뒤로 버튼·제스처) ----------
+   앱이 한 화면짜리라서 가만두면 뒤로가기가 앱을 종료해 버린다. 홈이 아닌 화면이나 시트가 열려 있으면
+   히스토리에 항목 하나를 쌓아 두고, 뒤로가기를 그 항목으로 받아 '한 단계 위'로만 올라가게 한다. */
+let NAVD = 0, NAVSKIP = 0;       // NAVSKIP: 우리가 직접 부른 history.back()이 일으킬 popstate 이벤트 수(사용자의 뒤로가기가 아니다)
+const navBase = () => S.screen === 'home' && !UI.sheet && !UI.flashSheet && !UI.setSheet && !UI.importSheet;
+function syncHistory(){
+  if(typeof history === 'undefined' || !history.pushState) return;
+  try{
+    const base = navBase();
+    if(!base && !NAVD){ history.pushState({bvq:1}, ''); NAVD = 1; }
+    else if(base && NAVD){ NAVD = 0; NAVSKIP++; history.back(); }      // 우리가 직접 닫았으니 쌓아 둔 항목도 치운다
+  }catch(e){}
+}
+function onBack(){
+  if(NAVSKIP > 0){ NAVSKIP--; return; }                      // 위의 history.back()이 일으킨 이벤트는 무시 (그 직후 새로 쌓은 항목을 잘못 닫지 않게)
+  if(!NAVD) return;
+  NAVD = 0;
+  const layer = UI.sheet || UI.flashSheet || UI.setSheet || UI.importSheet;
+  UI.sheet = UI.flashSheet = UI.setSheet = UI.importSheet = false; UI.firstRun = false;
+  if(!layer){                                                // 화면에서 뒤로 → 진행 상황을 지키고 홈으로
+    if(S.screen === 'quiz' || S.screen === 'study'){ bank(); saveSession(); toast('홈으로 나왔어요. 이어서 하기로 계속할 수 있어요.', 2400); }
+    else if(S.screen === 'flash'){ flcSave(); wakeOff(); }
+    S = {screen:'home'};
+  }
+  render();
+}
+try{ window.addEventListener('popstate', onBack); }catch(e){}
+
+/* ---------- ⭐ 즐겨찾기(나만의 단어장) ---------- */
+let FAV = null;
+const favs = () => { if(!FAV){ try{ FAV = JSON.parse(store.get('bvq_fav') || '{}') || {}; }catch(e){ FAV = {}; } } return FAV; };
+const isFav = id => !!favs()[id];
+const starBtn = (id, cls) => `<button class="starbtn ${cls || ''}" data-fav="${esc(id)}" onclick="event.stopPropagation();toggleFav(this)" aria-label="즐겨찾기">${isFav(id) ? '★' : '☆'}</button>`;
+function toggleFav(btn){
+  const id = btn && btn.dataset && btn.dataset.fav;
+  if(!id) return;
+  const f = favs();
+  if(f[id]) delete f[id]; else f[id] = 1;
+  try{ store.set('bvq_fav', JSON.stringify(f)); }catch(e){}
+  document.querySelectorAll('[data-fav]').forEach(b => { if(b.dataset.fav === id) b.textContent = isFav(id) ? '★' : '☆'; });
+  if(S.screen === 'library' && LIB.st === 'fav') libFilter();
+  toast(isFav(id) ? '⭐ 즐겨찾기에 담았어요' : '즐겨찾기에서 뺐어요', 1400);
+}
+
+/* ---------- 한 번에 푸는 문제 수 / 발음 속도 ---------- */
+const sizeN = () => SET.size || 10;
+const gramN = () => Math.max(1, Math.round(sizeN() * 0.3));       // 섞어서 풀 때의 문법 문제 수 (약 30%)
+function setSize(n){ SET.size = n; saveSet(); render(); }
+function setTtsSlow(v){ SET.ttsSlow = v; saveSet(); render(); }
+
+/* ---------- 학습 기록 백업 · 복원 ----------
+   기록은 이 기기의 브라우저(localStorage)에만 있다. 폰을 바꾸거나 브라우저 데이터를 지우면 사라지므로 내보내기/가져오기를 둔다. */
+const BK_KEYS = ['bvq', 'bvq_set', 'bvq_flash', 'bvq_sessions', 'bvq_pick', 'bvq_snd', 'bvq_fav'];
+function backupText(){
+  const data = {};
+  BK_KEYS.forEach(k => { const v = store.get(k); if(v) data[k] = v; });
+  return JSON.stringify({app:'english', v:1, t:Date.now(), data});
+}
+function parseBackup(text){
+  let o;
+  try{ o = JSON.parse(text); }catch(e){ return {ok:false, msg:'백업 내용을 읽지 못했어요. 파일이나 복사한 내용이 맞는지 확인해 주세요.'}; }
+  if(!o || o.app !== 'english' || o.v !== 1 || !o.data || typeof o.data !== 'object') return {ok:false, msg:'이 앱의 백업이 아니에요.'};
+  const data = {};
+  for(const k of BK_KEYS){
+    if(o.data[k] === undefined) continue;
+    if(typeof o.data[k] !== 'string') return {ok:false, msg:'백업 내용이 올바르지 않아요 (' + k + ').'};
+    if(k !== 'bvq_snd'){ try{ JSON.parse(o.data[k]); }catch(e){ return {ok:false, msg:'백업 내용이 손상됐어요 (' + k + ').'}; } }
+    data[k] = o.data[k];
+  }
+  let n = 0; try{ n = Object.keys((JSON.parse(data.bvq || '{}').items) || {}).length; }catch(e){}
+  return {ok:true, data, items:n, t:o.t};
+}
+function applyBackup(text){
+  const r = parseBackup(text);
+  if(!r.ok){ toast(r.msg, 3200); return false; }
+  if(!confirm('백업 내용(학습한 항목 ' + r.items + '개)으로 복원할까요?\n지금 이 기기의 기록은 백업 내용으로 바뀌어요.')) return false;
+  BK_KEYS.forEach(k => store.set(k, r.data[k] !== undefined ? r.data[k] : ''));     // 백업에 없는 항목은 비운다
+  toast('복원했어요. 다시 불러옵니다.', 1800);
+  setTimeout(() => { try{ location.reload(); }catch(e){} }, 700);
+  return true;
+}
+function exportBackup(){
+  const text = backupText(), name = 'english-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  try{
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], {type:'application/json'}));
+    a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => { try{ URL.revokeObjectURL(a.href); }catch(e){} }, 3000);
+    toast('백업 파일을 저장했어요 (' + name + ')', 3000);
+  }catch(e){ copyBackup(); }
+}
+function copyBackup(){
+  const t = backupText();
+  const ok = () => toast('백업 내용을 복사했어요. 메모 앱 등에 붙여넣어 보관하세요.', 3200);
+  const no = () => toast('복사하지 못했어요. 파일로 저장해 주세요.', 3000);
+  try{ navigator.clipboard.writeText(t).then(ok).catch(no); }catch(e){ no(); }
+}
+function importFile(input){
+  const f = input && input.files && input.files[0];
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => applyBackup(String(rd.result));
+  rd.readAsText(f);
+}
+function importPaste(){ const t = document.getElementById('bkText'); applyBackup(t ? t.value : ''); }
+function toggleImportSheet(v){ UI.importSheet = v; if(v) UI.setSheet = false; render(); }
+function importSheetHtml(){
+  if(!UI.importSheet) return '';
+  return `<div class="sheetbg" onclick="toggleImportSheet(false)">
+    <div class="sheet" role="dialog" aria-label="기록 가져오기" onclick="event.stopPropagation()">
+      <div class="row"><h2>📥 기록 가져오기</h2><button class="link" onclick="toggleImportSheet(false)">닫기</button></div>
+      <p class="meta" style="font-weight:400;margin:6px 0 0;line-height:1.6">저장해 둔 백업 파일을 고르거나, 복사한 내용을 붙여넣으세요. 지금 기록은 백업 내용으로 바뀌어요.</p>
+      <div class="label">백업 파일</div>
+      <input type="file" accept=".json,application/json" onchange="importFile(this)" style="margin-top:8px;max-width:100%">
+      <div class="label">또는 붙여넣기</div>
+      <textarea id="bkText" class="search" style="min-height:120px;padding:12px;margin-top:8px" placeholder="복사한 백업 내용을 여기에 붙여넣으세요"></textarea>
+      <button class="primary" onclick="importPaste()">붙여넣은 내용으로 복원</button>
+    </div></div>`;
+}
+
 function toggleSheet(v){ UI.sheet = v; if(!v) UI.firstRun = false; render(); }
 function pickTrack(id){ UI.sheet = false; UI.firstRun = false; setPick('track', id); }
 
@@ -1105,6 +1257,7 @@ function render(){
   if(fbEl && fbEl.scrollIntoView) fbEl.scrollIntoView({block:'start', behavior:'smooth'});
   else window.scrollTo(0,0);
   if(S.screen === 'library') libFilter();
+  syncHistory();
 }
 
 function ttsNotice(){
@@ -1154,8 +1307,9 @@ function home(){
   // 주 버튼은 딱 하나: 저장된 학습이 있으면 '이어서 하기', 없으면 '시작'
   const ses = readSession();
   const first = pr.seen === 0;
-  const ctaSub = PICK.cat === 'word' ? '단어 10문제' : PICK.cat === 'grammar' ? '문법 10문제' : '단어 7 + 문법 3';
-  const ctaMain = first ? '첫 학습 시작하기' : (pr.due ? '복습하고 이어서 풀기' : '10문제 시작');
+  const sz = sizeN();
+  const ctaSub = PICK.cat === 'word' ? `단어 ${sz}문제` : PICK.cat === 'grammar' ? `문법 ${sz}문제` : `단어 ${sz - gramN()} + 문법 ${gramN()}`;
+  const ctaMain = first ? '첫 학습 시작하기' : (pr.due ? '복습하고 이어서 풀기' : `${sz}문제 시작`);
   let cta;
   if(ses){
     const ST = TRACK(ses.track);
@@ -1204,7 +1358,7 @@ function home(){
   ${ttsNotice()}
   ${iosHintHtml()}
   ${sheet}
-  ${flashSheetHtml()}${themeSheetHtml()}`;
+  ${flashSheetHtml()}${themeSheetHtml()}${importSheetHtml()}`;
 }
 
 function study(){
@@ -1224,6 +1378,7 @@ function study(){
     ${SET.auto ? '<button id="pausebtn" onclick="togglePause()">⏸ 일시정지</button>' : ''}
   </div>
   <div class="card" style="margin-top:14px" onclick="TTS.say(BY['${w.id}'].term)">
+    <div class="cardstar">${starBtn(w.id)}</div>
     ${emojiOf(w)}<div class="term">${esc(w.term)}</div>
     ${ipaOf(w) ? `<div style="margin-top:10px">${ipaOf(w)}</div>` : ''}
     <div style="font-size:22px;font-weight:800;margin-top:14px">${esc(w.meaningKo)}</div>
@@ -1233,6 +1388,7 @@ function study(){
     <div style="margin-top:14px">
       <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this)">🔊 단어</button>
       <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>
+      <button class="speak" onclick="event.stopPropagation();TTS.say(BY['${w.id}'].term, this, 0.55)">🐢 천천히</button>
     </div>
   </div>
   <div class="stick"><button class="primary" onclick="studyNext()">
@@ -1283,7 +1439,7 @@ function quiz(){
          <button class="speak" onclick="TTS.say(GB['${g.id}'].full, this)">🔊 완성 문장</button></div>`
     : `${fb.ok ? '' : `<p>${esc(fb.why)}</p>`}
        <p style="margin-top:14px"><b style="font-size:20px;color:var(--indigo)">${esc(w.term)}</b>
-         ${ipaOf(w,"margin-left:8px")}</p>
+         ${ipaOf(w,"margin-left:8px")}${starBtn(w.id)}</p>
        <p style="margin-top:4px">${esc(w.meaningKo)}</p>
        <p style="font-weight:600">${esc(w.example)}</p>
        <p class="ko" style="margin-top:2px">${esc(w.exampleKo)}</p>
@@ -1358,8 +1514,8 @@ function result(){
   ${uniq.length
     ? `<button class="primary" onclick="retryWrong()">틀린 ${uniq.length}문제 바로 다시 풀기<small>기억이 남아 있을 때 한 번 더</small></button>
        ${wrongWords ? '<button class="ghost" onclick="flashWrong()">⚡ 틀린 단어 깜빡이로 외우기</button>' : ''}
-       <button class="ghost" onclick="start()">새 문제 10개 풀기</button>`
-    : `<button class="primary" onclick="start()">한 세션 더<small>새 문제 10개</small></button>`}
+       <button class="ghost" onclick="start()">새 문제 ${sizeN()}개 풀기</button>`
+    : `<button class="primary" onclick="start()">한 세션 더<small>새 문제 ${sizeN()}개</small></button>`}
   <button class="ghost" onclick="goHome()">홈으로</button>
   ${uniq.length ? `<h3 style="margin:24px 0 2px;font-size:19px">다시 볼 문제 ${uniq.length}개</h3>
     <div class="meta" style="font-weight:400">며칠 뒤 복습 문제로 다시 나옵니다.</div>` : ''}
@@ -1377,14 +1533,15 @@ function wordItem(w){
   const st = stat(w.id), sv = statusOf(st);
   const rate = st && st.n ? ` · ${st.n - (st.w||0)}/${st.n}` : '';
   const conf = st && st.lw ? (w.confusions.find(c => c.id === st.lw) || {}).note : null;
-  return `<div class="item" data-st="${sv[0]}" data-lv="${w.level}" data-s="${esc((w.term + ' ' + w.meaningKo).toLowerCase())}">
-    <div class="top"><b>${esc(w.term)}</b><span class="badge ${sv[0]}">${sv[1]}${rate}</span></div>
+  return `<div class="item" data-wid="${esc(w.id)}" data-st="${sv[0]}" data-lv="${w.level}" data-s="${esc((w.term + ' ' + w.meaningKo).toLowerCase())}">
+    <div class="top"><b>${esc(w.term)}</b><span class="toprt"><span class="badge ${sv[0]}">${sv[1]}${rate}</span>${starBtn(w.id)}</span></div>
     ${ipaOf(w) ? `<div style="margin-top:6px">${ipaOf(w)}</div>` : ''}
     <div class="ko">${esc(w.meaningKo)}</div>
     <div class="ex">${esc(w.example)}</div>
     ${conf ? `<div class="tip">자주 헷갈린 짝 — ${esc(conf)}</div>` : ''}
     <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].term, this)">🔊 발음</button>
     <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].example, this)">🔊 예문</button>
+    <button class="miniSpeak" onclick="TTS.say(BY['${w.id}'].term, this, 0.55)">🐢 천천히</button>
   </div>`;
 }
 
@@ -1420,7 +1577,7 @@ function library(){
     if(ws.length || gs.length){
       cta = `<div class="weakcta">
         <div class="meta">틀린 단어 ${ws.length}개 · 문법 ${gs.length}개 — 많이 틀린 순서예요</div>
-        <button class="primary" onclick="weakQuiz()">약점만 퀴즈 풀기<small>자주 틀린 것 위주로 최대 10문제</small></button>
+        <button class="primary" onclick="weakQuiz()">약점만 퀴즈 풀기<small>자주 틀린 것 위주로 최대 ${sizeN()}문제</small></button>
         ${ws.length ? '<button class="ghost" onclick="flashWeak()">⚡ 약점 단어 깜빡이로 보기</button>' : ''}
       </div>`;
       body = ws.map(wordItem).join('') + gs.map(gramItem).join('');
@@ -1437,7 +1594,7 @@ function library(){
   const isList = LIB.tab !== 'weak';
   const filter = !isList ? '' : `
     ${T.id === 'work' ? `<div class="chips" id="libLevels">${lvBtn(0)}${lvBtn(1)}${lvBtn(2)}${lvBtn(3)}</div>` : ''}
-    <div class="chips" id="libStatus">${stBtn('', '전체')}${stBtn('b-bad', '약점')}${stBtn('b-go', '학습중')}${stBtn('b-ok', '습득')}${stBtn('b-new', '미학습')}</div>
+    <div class="chips" id="libStatus">${stBtn('', '전체')}${stBtn('b-bad', '약점')}${stBtn('b-go', '학습중')}${stBtn('b-ok', '습득')}${stBtn('b-new', '미학습')}${LIB.tab === 'words' ? stBtn('fav', '⭐ 즐겨찾기') : ''}</div>
     <div class="meta" style="margin-top:12px" id="libCount"></div>`;
 
   return `
@@ -1457,9 +1614,9 @@ function library(){
 // 약점만 모아서 바로 퀴즈 (자주 틀린 순, 단어 최대 7개 + 나머지는 문법)
 function weakQuiz(){
   const ws = WORDS.filter(w => w.track === PICK.track && (stat(w.id)||{}).w > 0)
-    .sort((a, b) => stat(b.id).w - stat(a.id).w).slice(0, 7);
+    .sort((a, b) => stat(b.id).w - stat(a.id).w).slice(0, Math.max(1, sizeN() - gramN()));
   const gs = GRAMMAR.filter(g => g.track === PICK.track && (stat('g:'+g.id)||{}).w > 0)
-    .sort((a, b) => stat('g:'+b.id).w - stat('g:'+a.id).w).slice(0, SIZE - ws.length);
+    .sort((a, b) => stat('g:'+b.id).w - stat('g:'+a.id).w).slice(0, sizeN() - ws.length);
   const qs = shuffle([...ws.map(w => build(w, 'MEANING')), ...gs.map(g => buildG(g))]);
   if(!qs.length){ toast('틀린 문제가 아직 없어요.', 2000); return; }
   S = {screen:'quiz', deck:[], si:0, qs, i:0, score:0, streak:0, best:0, right:0, fb:null, wrong:[]};
@@ -1481,7 +1638,7 @@ function libFilter(){
   rows.forEach(r => {
     const okLv = LIB.level === 0 || Number(r.dataset.lv) === LIB.level;
     const okQ  = !LIB.q || (r.dataset.s || '').indexOf(LIB.q) >= 0;
-    const okSt = !LIB.st || r.dataset.st === LIB.st;
+    const okSt = !LIB.st || (LIB.st === 'fav' ? isFav(r.dataset.wid) : r.dataset.st === LIB.st);
     const show = okLv && okQ && okSt;
     r.style.display = show ? '' : 'none';
     if(show) n++;

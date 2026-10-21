@@ -313,3 +313,12 @@ PWA를 홈 화면에 설치하고 나면 **Android 네이티브의 존재 이유
 - **유아 신규 498개(id가 `td_`로 시작하는 뒤쪽 항목)의 해설은 틀에 맞춰 생성**했다(`A는 '뜻'이고, B는 '뜻'예요` 꼴, 짝은 같은 묶음의 이웃 단어). 다른 트랙은 단어마다 직접 쓴 해설이다. 유아 단어에서 헷갈림이 약한 짝이 보이면 `data/toddler.js`의 해당 항목을 고쳐 쓸 것.
 - **id와 term이 다른 단어가 하나 있다**: 직장인 `due diligence`의 id는 `diligence`다. 직장인 단어 id는 보통 term 그대로이므로, 새 단어에서 이 단어를 짝으로 가리킬 때는 id(`diligence`)를 써야 한다(verify.js의 '없는 참조' 검사가 잡는다).
 - 새 단어를 합친 뒤 순서: `node tools/gen-ipa.js <cmudict.dict> --write`(발음기호) → `node tools/sync-counts.js`(개수 표) → `node tools/verify.js` → `sw.js`의 CACHE 버전 올리기.
+
+
+## 20. 편의 기능 추가 (2026-10): 뒤로가기 · ⭐ 즐겨찾기 · 백업 · 문제 수 · 발음 속도
+
+- **뒤로가기**(`syncHistory`, `onBack`, `NAVD`/`NAVSKIP`): 안드로이드 뒤로가기가 앱을 종료하지 않게, 홈이 아닌 화면이나 시트가 열려 있으면 히스토리 항목을 하나 쌓고 뒤로가기를 '한 단계 위'로 받는다. 퀴즈·학습 중 뒤로가기는 `bank()` + `saveSession()` 후 홈으로(이어서 하기로 계속). 홈으로 돌아올 때 우리가 부른 `history.back()`이 일으키는 popstate는 `NAVSKIP`으로 무시한다(안 그러면 직후에 연 시트를 잘못 닫는다). 시트를 새로 만들면 `navBase()`에 `UI.xxxSheet`를 추가할 것.
+- **⭐ 즐겨찾기**(`bvq_fav`, `favs()`/`isFav()`/`toggleFav(btn)`/`starBtn(id)`): 학습 카드·퀴즈 해설·학습 노트·깜빡이 헤더에 별. 깜빡이 범위 `fav`, 학습 노트 단어 탭의 `⭐ 즐겨찾기` 필터. 버튼은 `data-fav`로 id를 들고 `toggleFav(this)`를 부른다(id에 따옴표가 있어도 안전).
+- **백업·복원**(`BK_KEYS`, `backupText`/`parseBackup`/`applyBackup`): 설정 → `내 학습 기록`. 파일 저장·복사·가져오기. 새 localStorage 키를 만들면 `BK_KEYS`에 추가해야 백업에 들어간다. 복원은 백업에 없는 키를 비우고 다시 불러온다.
+- **한 번에 푸는 문제 수** `SET.size`(5/10/20, 기본 10): 코드의 `SIZE` 상수는 없어졌다. `sizeN()`을 쓰고, 섞어서 풀 때 문법은 약 30%(`gramN()`).
+- **발음 속도** `SET.ttsSlow`(보통 0.92 / 느리게 0.65). 개별 `🐢 천천히` 버튼은 `TTS.say(text, btn, 0.55)`로 속도를 직접 지정한다.

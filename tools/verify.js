@@ -38,14 +38,15 @@ function makeBox() {
     localStorage: { getItem: k => store[k] || null, setItem: (k, v) => { store[k] = v; } },
     speechSynthesis: { speaking: false, pending: false, cancel(){}, resume(){},
                        getVoices: () => [{ lang: 'en-US' }], speak(u) { if (u.onstart) u.onstart(); } },
-    SpeechSynthesisUtterance: function (t) { this.text = t; }
+    SpeechSynthesisUtterance: function (t) { this.text = t; },
+    history: { hp: 0, hb: 0, onpop: null, pushState() { this.hp++; }, back() { this.hb++; if (this.onpop) this.onpop(); } }
   };
   box.window.speechSynthesis = box.speechSynthesis;
   vm.createContext(box);
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,flashWrong,setLibStatus,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,onBack,syncHistory,navBase,backupText,parseBackup,toggleFav,isFav,setSize,sizeN,importSheetHtml,setTtsSlow,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,flashWrong,setLibStatus,getP:()=>P,getS:()=>S};',
     box
   );
   for (const t of TRACK_IDS)
@@ -55,6 +56,7 @@ function makeBox() {
 
 const box = makeBox();
 const A = box.A;
+box.history.onpop = () => A.onBack();
 
 /* ---------- 1. 단어 데이터 ---------- */
 console.log('\n[1] 단어 데이터 ' + A.WORDS.length + '개');
@@ -541,6 +543,107 @@ console.log('\n[11] 결과 화면 흐름');
   if (!A.home().includes('선택됨')) fail.push('트랙을 고른 뒤 선택창에 선택됨 표시가 없음');
   A.UI.sheet = false;
   note('결과 → 틀린 단어 깜빡이 연결 · 첫 접속 선택 표시 확인');
+}
+
+/* ---------- 12. 뒤로가기 ---------- */
+console.log('\n[12] 뒤로가기');
+{
+  const h = box.history;
+  A.UI.sheet = false; A.UI.flashSheet = false; A.UI.setSheet = false;
+  A.setPick('track', 'elem'); A.SET.flashDeck = 'least';
+  A.exitFlash ? A.exitFlash() : 0;
+  // 퀴즈 중 뒤로가기 → 홈, 기록 보존
+  A.setPick('cat', 'word'); A.start();
+  let st = A.getS(); if (st.screen === 'study') { st.screen = 'quiz'; A.render(); }
+  const hp0 = h.hp;
+  st = A.getS();
+  const q = st.qs[st.i]; A.answer(q.kind === 'g' ? q.g.answer : q.w.id);
+  A.onBack();
+  if (A.getS().screen !== 'home') fail.push('퀴즈 중 뒤로가기가 홈으로 가지 않음');
+  if (!A.readSession()) fail.push('뒤로가기로 나갔는데 이어서 하기 저장본이 없음');
+  // 시트가 열려 있을 때 뒤로가기 → 시트만 닫힌다
+  A.UI.setSheet = true; A.render();
+  if (A.navBase()) fail.push('시트가 열려 있는데 navBase 가 참');
+  A.onBack();
+  if (A.UI.setSheet) fail.push('뒤로가기가 설정 시트를 닫지 않음');
+  if (A.getS().screen !== 'home') fail.push('시트 위에서 뒤로가기가 화면까지 바꿈');
+  // 화면 → 직접 홈 버튼으로 나가면 쌓아 둔 히스토리를 치운다
+  A.clearSession();
+  A.startFlash(); A.exitFlash();
+  if (h.hb < 1) fail.push('앱 안에서 홈으로 돌아갔는데 쌓아 둔 히스토리를 치우지 않음 (뒤로가기가 두 번 필요해짐)');
+  if (h.hp < 2) fail.push('화면 전환 때 히스토리를 쌓지 않음');
+  // 홈으로 돌아오며 history.back()을 부른 직후 바로 시트를 열어도, 그 popstate 가 시트를 닫아 버리면 안 된다
+  A.setPick('track', 'elem'); A.startFlash();
+  A.exitFlash();                                   // 내부에서 history.back() → popstate(무시되어야 함)
+  A.UI.setSheet = true; A.render();
+  if (!A.UI.setSheet) fail.push('홈 복귀 직후 연 시트가 직접 요청한 history.back() 이벤트에 닫힘');
+  A.onBack();                                      // 이제 진짜 사용자 뒤로가기
+  if (A.UI.setSheet) fail.push('사용자 뒤로가기가 시트를 닫지 않음');
+  note('뒤로가기: 퀴즈→홈(기록 보존) · 시트만 닫기 · 히스토리 정리 · 연속 조작 경합 확인');
+}
+
+/* ---------- 13. 즐겨찾기 · 백업 · 문제 수 · 발음 속도 ---------- */
+console.log('\n[13] 즐겨찾기 · 백업 · 문제 수 · 발음 속도');
+{
+  A.setPick('track', 'elem');
+  // 즐겨찾기
+  const ws = A.WORDS.filter(w => w.track === 'elem').slice(0, 3);
+  ws.forEach(w => A.toggleFav({dataset: {fav: w.id}}));
+  if (!ws.every(w => A.isFav(w.id))) fail.push('즐겨찾기가 담기지 않음');
+  if (Object.keys(JSON.parse(box.localStorage.getItem('bvq_fav') || '{}')).length !== 3) fail.push('즐겨찾기가 저장되지 않음');
+  A.SET.flashDeck = 'fav'; A.SET.flashCount = 20;
+  const deck = A.flashDeck();
+  if (deck.length !== 3 || deck.some(id => !ws.find(w => w.id === id))) fail.push('깜빡이 즐겨찾기 범위가 즐겨찾기 단어만 담지 않음');
+  A.toggleFav({dataset: {fav: ws[0].id}});
+  if (A.isFav(ws[0].id) || A.flashDeck().length !== 2) fail.push('즐겨찾기 해제가 반영되지 않음');
+  A.setPick('cat', 'word'); A.libTab ? A.openLibrary() : 0; A.libTab('words');
+  const libHtml = A.library();
+  if (!libHtml.includes('⭐ 즐겨찾기') || !libHtml.includes('data-fav="')) fail.push('학습 노트 단어 탭에 즐겨찾기 필터/별이 없음');
+  A.libTab('grammar');
+  if (A.library().includes('⭐ 즐겨찾기')) fail.push('문법 탭에 즐겨찾기 필터가 나옴');
+  A.SET.flashDeck = 'least';
+  A.toggleFav({dataset: {fav: ws[1].id}}); A.toggleFav({dataset: {fav: ws[2].id}});
+
+  // 백업 · 복원 (불러오기는 location.reload 가 필요해 형식 검증만)
+  const t = A.backupText();
+  const r = A.parseBackup(t);
+  if (!r.ok || !r.data.bvq_fav || !r.data.bvq) fail.push('백업 내용에 기록/즐겨찾기가 빠짐');
+  if (A.parseBackup('이건 JSON 이 아니에요').ok) fail.push('JSON 이 아닌 백업을 받아들임');
+  if (A.parseBackup(JSON.stringify({app: 'other', v: 1, data: {}})).ok) fail.push('다른 앱의 백업을 받아들임');
+  if (A.parseBackup(JSON.stringify({app: 'english', v: 1, data: {bvq: '{깨진'}})).ok) fail.push('손상된 백업을 받아들임');
+  if (A.parseBackup(JSON.stringify({app: 'english', v: 2, data: {}})).ok) fail.push('알 수 없는 버전의 백업을 받아들임');
+  A.UI.importSheet = true;
+  const ih = A.importSheetHtml();
+  if (!ih.includes('bkText') || !ih.includes('type="file"')) fail.push('가져오기 시트에 입력창/파일 선택이 없음');
+  A.UI.importSheet = false;
+  if (A.importSheetHtml() !== '') fail.push('닫힌 가져오기 시트가 렌더링됨');
+  A.UI.setSheet = true;
+  const sh = A.themeSheetHtml();
+  for (const tx of ['발음 속도', '한 번에 푸는 문제 수', '내 학습 기록', '파일로 저장', '가져오기']) if (!sh.includes(tx)) fail.push('설정에 "' + tx + '" 가 없음');
+  A.UI.setSheet = false;
+
+  // 문제 수
+  for (const n of [5, 20, 10]) {
+    A.setSize(n); A.setPick('cat', 'word'); A.start();
+    let st = A.getS(); const got = st.qs.length;
+    if (got !== n) fail.push('문제 수 ' + n + ' 설정인데 ' + got + '문제가 만들어짐');
+    A.setPick('cat', 'mix'); A.start(); st = A.getS();
+    const gN = st.qs.filter(q => q.kind === 'g').length, wN = st.qs.filter(q => q.kind === 'w').length;
+    if (st.qs.length !== n || gN !== Math.max(1, Math.round(n * 0.3))) fail.push('섞어서 ' + n + '문제: 단어 ' + wN + ' + 문법 ' + gN);
+  }
+  A.setSize(10); A.clearSession();
+  if (!A.home().includes('단어 7 + 문법 3')) fail.push('홈의 시작 버튼 설명이 문제 수를 반영하지 않음');
+
+  // 발음 속도
+  const rates = [];
+  const origSpeak = box.speechSynthesis.speak;
+  box.speechSynthesis.speak = u => { rates.push(u.rate); };
+  A.setTtsSlow(false); A.TTS.say('hello');
+  A.setTtsSlow(true); A.TTS.say('hello');
+  A.TTS.say('hello', null, 0.55);
+  box.speechSynthesis.speak = origSpeak; A.setTtsSlow(false);
+  if (rates.join() !== '0.92,0.65,0.55') fail.push('발음 속도 오류: ' + rates.join());
+  note('즐겨찾기 · 백업 형식 검증 · 문제 수 5/10/20 · 발음 속도 확인');
 }
 
 /* ---------- 결과 ---------- */
