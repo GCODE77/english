@@ -1,6 +1,6 @@
 ﻿# 앱 아이콘 생성 (Windows 내장 System.Drawing 사용, 외부 패키지 없음)
 # 사용:  powershell -ExecutionPolicy Bypass -File tools\make-icons.ps1
-# 디자인: 깊은 남색 그라데이션 바탕 + 금색 그라데이션 세리프 'E' 모노그램 + 작은 반짝임
+# 디자인: 보라 그라데이션 바탕 + 햇살 주황 그라데이션 세리프 'E' 모노그램 + 작은 반짝임
 Add-Type -AssemblyName System.Drawing
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -41,9 +41,9 @@ function New-Icon([int]$size, [string]$name, [bool]$fullBleed, [double]$glyphSca
   $g.Clear([System.Drawing.Color]::Transparent)
   $s = [float]$size
 
-  # 1) 바탕: 남색 대각선 그라데이션 (전체 채움 또는 둥근 사각형)
+  # 1) 바탕: 보라 대각선 그라데이션 (전체 채움 또는 둥근 사각형)
   $bg = if ($fullBleed) { $p = New-Object System.Drawing.Drawing2D.GraphicsPath; $p.AddRectangle((New-Object System.Drawing.RectangleF 0, 0, $s, $s)); $p } else { RoundRect 0 0 $s $s ($s * 0.225) }
-  $lg = New-Object System.Drawing.Drawing2D.LinearGradientBrush (New-Object System.Drawing.PointF 0, 0), (New-Object System.Drawing.PointF $s, $s), (C '#26365E'), (C '#0A1022')
+  $lg = New-Object System.Drawing.Drawing2D.LinearGradientBrush (New-Object System.Drawing.PointF 0, 0), (New-Object System.Drawing.PointF $s, $s), (C '#8B6CFF'), (C '#4A2FC4')
   $g.FillPath($lg, $bg)
   # 왼쪽 위의 은은한 빛
   $glow = New-Object System.Drawing.Drawing2D.GraphicsPath
@@ -52,11 +52,11 @@ function New-Icon([int]$size, [string]$name, [bool]$fullBleed, [double]$glyphSca
   $pg.CenterColor = (C '#FFFFFF' 26); $pg.SurroundColors = @((C '#FFFFFF' 0))
   $g.SetClip($bg); $g.FillPath($pg, $glow); $g.ResetClip()
 
-  # 2) 금색 테두리 (둥근 사각형 아이콘만)
+  # 2) 밝은 테두리 (둥근 사각형 아이콘만)
   if (-not $fullBleed) {
     $inset = $s * 0.055
     $ring = RoundRect $inset $inset ($s - 2 * $inset) ($s - 2 * $inset) ($s * 0.18)
-    $pen = New-Object System.Drawing.Pen (C '#D9B860' 150), ([float]($s * 0.011))
+    $pen = New-Object System.Drawing.Pen (C '#FFD27A' 190), ([float]($s * 0.011))
     $g.DrawPath($pen, $ring)
   }
 
@@ -76,18 +76,18 @@ function New-Icon([int]$size, [string]$name, [bool]$fullBleed, [double]$glyphSca
   # 그림자
   $sh = $tp.Clone(); $sm = New-Object System.Drawing.Drawing2D.Matrix; $sm.Translate(0, [float]($s * 0.012)); $sh.Transform($sm)
   $g.FillPath((New-Object System.Drawing.SolidBrush (C '#000000' 70)), $sh)
-  $gold = New-Object System.Drawing.Drawing2D.LinearGradientBrush (New-Object System.Drawing.PointF 0, $gb.Top), (New-Object System.Drawing.PointF 0, $gb.Bottom), (C '#F7E3A3'), (C '#A87A26')
+  $gold = New-Object System.Drawing.Drawing2D.LinearGradientBrush (New-Object System.Drawing.PointF 0, $gb.Top), (New-Object System.Drawing.PointF 0, $gb.Bottom), (C '#FFF3C9'), (C '#A87A26')
   $blend = New-Object System.Drawing.Drawing2D.ColorBlend 3
-  $blend.Colors = @((C '#FBEBB5'), (C '#D9B154'), (C '#9C6F1E')); $blend.Positions = @([float]0, [float]0.55, [float]1)
+  $blend.Colors = @((C '#FFF6D6'), (C '#FFC24D'), (C '#F08A00')); $blend.Positions = @([float]0, [float]0.55, [float]1)
   $gold.InterpolationColors = $blend
   $g.FillPath($gold, $tp)
 
   # 4) 반짝임 (E 오른쪽 위)
   $r = $s * 0.075 * $glyphScale
   $sp = Sparkle ([float]($gb.Right + $s * 0.055 * $glyphScale)) ([float]($gb.Top + $s * 0.02 * $glyphScale)) $r
-  $g.FillPath((New-Object System.Drawing.SolidBrush (C '#F7E3A3')), $sp)
+  $g.FillPath((New-Object System.Drawing.SolidBrush (C '#FFF3C9')), $sp)
   $sp2 = Sparkle ([float]($gb.Right + $s * 0.13 * $glyphScale)) ([float]($gb.Top + $s * 0.13 * $glyphScale)) ([float]($r * 0.42))
-  $g.FillPath((New-Object System.Drawing.SolidBrush (C '#F7E3A3' 200)), $sp2)
+  $g.FillPath((New-Object System.Drawing.SolidBrush (C '#FFF3C9' 200)), $sp2)
 
   $path = Join-Path $outDir $name
   $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)

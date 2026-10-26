@@ -7,8 +7,8 @@
   "display": "fullscreen",
   "display_override": ["fullscreen", "standalone"],
   "orientation": "any",
-  "background_color": "#F6F3EC",
-  "theme_color": "#1B2A4A",
+  "background_color": "#F7F5FF",
+  "theme_color": "#6B4EE6",
   "lang": "ko",
   "icons": [
     { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

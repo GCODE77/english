@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>English</title>
-<meta name="theme-color" content="#1B2A4A">
+<meta name="theme-color" content="#6B4EE6">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="English">
@@ -313,55 +313,55 @@
   .diag{width:100%; min-height:52px; border-radius:18px; background:var(--chipbg); color:var(--indigo-d);
     font-size:15px; font-weight:800; margin-top:10px}
   /* ================= 프리미엄 디자인 레이어 =================
-     남색(주 색) + 금색(강조) + 아이보리(바탕). 다크·블랙에서는 금색이 주 색이 된다.
+     보라(주 색) + 햇살 주황(강조) + 분홍(포인트) + 연보라 바탕. 다크·블랙에서는 밝은 라벤더가 주 색이 된다.
      정답 초록 / 오답 빨강은 바꾸지 않는다(피드백 신호). 아래 블록이 앞의 같은 선택자를 덮어쓴다. */
   :root{
-    --indigo:#1B2A4A; --indigo-d:#0E1830; --amber:#9A6A12; --gold:#B8913A; --gold-l:#E6CF8E;
+    --indigo:#6B4EE6; --indigo-d:#5238C8; --amber:#B45309; --gold:#FF9F1C; --gold-l:#FFD27A; --pop:#FF6F91;
     --ok:#167A3E; --ok-bg:#E3F4E8; --no:#B42318; --no-bg:#FDE8E6;
-    --ink:#141A26; --muted:#5E6676; --cloud:#F6F3EC; --line:#E2DCCD;
-    --surface:#FFFFFF; --chipbg:#EFEADF; --chipink:#1B2A4A;
-    --shadow:0 6px 22px rgba(27,42,74,.07); --chippress:#E4DCC8; --toastbg:#141A26;
+    --ink:#1E1A33; --muted:#635E7D; --cloud:#F7F5FF; --line:#E1DAF5;
+    --surface:#FFFFFF; --chipbg:#EEE9FF; --chipink:#4B34B8;
+    --shadow:0 6px 22px rgba(107,78,230,.10); --chippress:#DDD4FF; --toastbg:#1E1A33;
     --serif:"Bodoni MT","Didot","Bodoni 72","Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,"Times New Roman",serif;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --indigo:#E3C67F; --indigo-d:#F2DDA6; --amber:#E7B65A; --gold:#D9B565; --gold-l:#F2DFA9;
+      --indigo:#B7A6FF; --indigo-d:#D3C8FF; --amber:#FFB84D; --gold:#FFB84D; --gold-l:#FFD58F; --pop:#FF86A5;
       --ok:#4ADE80; --ok-bg:#0F2A1C; --no:#F87171; --no-bg:#371416;
-      --ink:#F2EFE6; --muted:#A7AEBC; --cloud:#0C111D; --line:#262D3E;
-      --surface:#141A29; --chipbg:#1F2740; --chipink:#EAD9AE;
-      --shadow:0 8px 26px rgba(0,0,0,.35); --chippress:#2C3554; --toastbg:#222A3F;
+      --ink:#F4F1FF; --muted:#AEA8C6; --cloud:#12101C; --line:#2D2842;
+      --surface:#1B1829; --chipbg:#2A2447; --chipink:#DDD3FF;
+      --shadow:0 8px 26px rgba(0,0,0,.35); --chippress:#3A3266; --toastbg:#2B2640;
     }
   }
   :root[data-mode="light"]{
-    --indigo:#1B2A4A; --indigo-d:#0E1830; --amber:#9A6A12; --gold:#B8913A; --gold-l:#E6CF8E;
+    --indigo:#6B4EE6; --indigo-d:#5238C8; --amber:#B45309; --gold:#FF9F1C; --gold-l:#FFD27A; --pop:#FF6F91;
     --ok:#167A3E; --ok-bg:#E3F4E8; --no:#B42318; --no-bg:#FDE8E6;
-    --ink:#141A26; --muted:#5E6676; --cloud:#F6F3EC; --line:#E2DCCD;
-    --surface:#FFFFFF; --chipbg:#EFEADF; --chipink:#1B2A4A;
-    --shadow:0 6px 22px rgba(27,42,74,.07); --chippress:#E4DCC8; --toastbg:#141A26;
+    --ink:#1E1A33; --muted:#635E7D; --cloud:#F7F5FF; --line:#E1DAF5;
+    --surface:#FFFFFF; --chipbg:#EEE9FF; --chipink:#4B34B8;
+    --shadow:0 6px 22px rgba(107,78,230,.10); --chippress:#DDD4FF; --toastbg:#1E1A33;
   }
   :root[data-mode="dark"]{
-    --indigo:#E3C67F; --indigo-d:#F2DDA6; --amber:#E7B65A; --gold:#D9B565; --gold-l:#F2DFA9;
+    --indigo:#B7A6FF; --indigo-d:#D3C8FF; --amber:#FFB84D; --gold:#FFB84D; --gold-l:#FFD58F; --pop:#FF86A5;
     --ok:#4ADE80; --ok-bg:#0F2A1C; --no:#F87171; --no-bg:#371416;
-    --ink:#F2EFE6; --muted:#A7AEBC; --cloud:#0C111D; --line:#262D3E;
-    --surface:#141A29; --chipbg:#1F2740; --chipink:#EAD9AE;
-    --shadow:0 8px 26px rgba(0,0,0,.35); --chippress:#2C3554; --toastbg:#222A3F;
+    --ink:#F4F1FF; --muted:#AEA8C6; --cloud:#12101C; --line:#2D2842;
+    --surface:#1B1829; --chipbg:#2A2447; --chipink:#DDD3FF;
+    --shadow:0 8px 26px rgba(0,0,0,.35); --chippress:#3A3266; --toastbg:#2B2640;
   }
   :root[data-mode="black"]{
-    --indigo:#E3C67F; --indigo-d:#F2DDA6; --amber:#E7B65A; --gold:#D9B565; --gold-l:#F2DFA9;
-    --ink:#F2EFE6; --muted:#A7AEBC; --chipbg:#181D2B; --chipink:#EAD9AE; --chippress:#262E47;
+    --indigo:#B7A6FF; --indigo-d:#D3C8FF; --amber:#FFB84D; --gold:#FFB84D; --gold-l:#FFD58F; --pop:#FF86A5;
+    --ink:#F4F1FF; --muted:#AEA8C6; --chipbg:#1C1733; --chipink:#DDD3FF; --chippress:#2E2650; --line:#25203A;
   }
   :root[data-hc="1"][data-mode="light"]{
-    --indigo:#0B1530; --indigo-d:#050B1C; --gold:#7A5A12; --gold-l:#B8913A; --cloud:#FFFFFF;
-    --chipbg:#E8E3D6; --chipink:#000000; --line:#7E7766;
+    --indigo:#2B1A8C; --indigo-d:#1A0F63; --gold:#9A5400; --gold-l:#D98A00; --cloud:#FFFFFF;
+    --chipbg:#E6E0FF; --chipink:#000000; --line:#7A7396;
   }
   :root[data-hc="1"][data-mode="dark"], :root[data-hc="1"][data-mode="black"]{
-    --indigo:#FFD86B; --indigo-d:#FFFFFF; --gold:#FFD54A; --gold-l:#FFE89A; --chipink:#FFFFFF;
+    --indigo:#D9CFFF; --indigo-d:#FFFFFF; --gold:#FFC857; --gold-l:#FFE0A0; --chipink:#FFFFFF;
   }
 
   /* 글꼴: 영어 단어·숫자·로고는 세리프 */
   body{letter-spacing:-.01em}
   .brand{display:flex; align-items:center; gap:10px; min-width:0}
-  .brand .logo{width:42px; height:42px; flex:none; border-radius:12px; box-shadow:0 4px 14px rgba(10,16,34,.28)}
+  .brand .logo{width:42px; height:42px; flex:none; border-radius:12px; box-shadow:0 4px 14px rgba(107,78,230,.30)}
   .brand h1, .top h1{font-family:var(--serif); font-weight:700; font-size:33px; color:var(--ink); letter-spacing:.3px; margin:0}
   .term, .fword, .item b, .hero .big b, .stat b, .fcount b{font-family:var(--serif); font-weight:700; letter-spacing:.2px}
   .term{color:var(--indigo)}
@@ -384,7 +384,7 @@
   .tip{border-left-color:var(--gold)}
   .starbtn{color:var(--gold)}
   .opt .num{background:var(--chipbg); color:var(--chipink)}
-  .primary{box-shadow:0 10px 24px rgba(14,24,48,.16); letter-spacing:-.01em}
+  .primary{box-shadow:0 10px 24px rgba(107,78,230,.28); letter-spacing:-.01em}
   .primary small{opacity:.78; font-weight:600}
   .ipa, .fipa{background:var(--chipbg); color:var(--ink)}
   .label{letter-spacing:.06em}
@@ -405,6 +405,43 @@
   .fopts button{flex:1 1 0; min-width:0; padding:0 4px; font-size:13px; gap:5px}
   .fopts button .ic{width:17px; height:17px}
   .hero .big .mastered{color:var(--amber)}
+
+  /* ===== 재미 레이어: 마스코트 · 목표 링 · 피드백 애니메이션 ===== */
+  .greet{display:flex; align-items:center; gap:10px; margin:6px 0 4px}
+  .mascot{flex:none; animation:bob 3.2s ease-in-out infinite}
+  .mascot.cheer{animation:hop .9s ease-in-out infinite}
+  .bubble{flex:1; min-width:0; background:var(--chipbg); border-radius:18px 18px 18px 6px; padding:9px 13px; display:flex; flex-direction:column; gap:1px}
+  .bubble b{font-size:15px; color:var(--chipink)}
+  .bubble > span{font-size:13px; color:var(--ink); line-height:1.4; font-weight:600}
+  .lvl{display:flex !important; align-items:center; gap:7px; margin-top:4px}
+  .lvl em{font-style:normal; font-size:12px; font-weight:800; color:var(--indigo); white-space:nowrap}
+  .lvl i{flex:1; height:6px; border-radius:4px; background:var(--line); overflow:hidden; min-width:30px}
+  .lvl u{display:block; height:100%; border-radius:4px; background:linear-gradient(90deg, var(--pop), var(--gold)); text-decoration:none}
+  .lvl small{font-size:11px; color:var(--muted); white-space:nowrap}
+  .gring{position:relative; flex:none; width:46px; height:46px; display:inline-flex; align-items:center; justify-content:center}
+  .gring svg{position:absolute; inset:0}
+  .gring b{position:relative; font-size:13px; font-weight:900; color:var(--ink)}
+  .bar > i, .abar i{background:linear-gradient(90deg, var(--indigo), var(--pop))}
+  .bar.two > i.seen{background:var(--chippress)}
+  .fire.hot{background:var(--pop); color:#fff; padding:0 8px; border-radius:10px; animation:pulse .8s ease-in-out infinite}
+  .opt.correct{animation:pop .42s cubic-bezier(.3,1.6,.5,1)}
+  .opt.wrong{animation:shake .4s}
+  .fb{animation:rise .35s ease-out}
+  .plus{display:inline-block; animation:floatup .9s ease-out}
+  .reward{margin-top:12px; padding-top:12px; border-top:1px solid var(--line); text-align:center; font-weight:800; color:var(--indigo); font-size:15px}
+  .resulthead{display:flex; align-items:center; gap:12px; margin-top:6px}
+  .resulthead h1{margin:0}
+  .confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:30}
+  .confetti i{position:absolute; top:-14px; width:9px; height:14px; border-radius:2px; animation:fall linear forwards}
+  @keyframes bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)}}
+  @keyframes hop{0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px) rotate(-4deg)}}
+  @keyframes pop{0%{transform:scale(.94)} 100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(3px)}}
+  @keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  @keyframes floatup{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+  @keyframes pulse{50%{transform:scale(1.08)}}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg); opacity:.9}}
+  @media (prefers-reduced-motion: reduce){ .mascot,.opt.correct,.opt.wrong,.fb,.plus,.fire.hot{animation:none} .confetti{display:none} }
 </style>
 </head>
 <body>
@@ -668,6 +705,91 @@ function record(k, ok, chosen){
   saveP(P);
 }
 
+
+/* ---------- 재미 요소: 칭찬 문구 · 레벨 · 오늘 목표 · 효과음 · 마스코트 ----------
+   압박(목숨·연속 접속 벌점)은 일부러 없다. 보상과 격려만 둔다. */
+const OK_MSG = ['좋아요!', '깔끔해요', '맞아요!', '정확해요', '오, 아는데요?', '굿!'];
+const NO_MSG = ['아깝다! 이 둘은 정말 헷갈려요', '괜찮아요, 틀려야 기억에 남아요', '한 끗 차이였어요', '다음엔 맞힐 수 있어요'];
+const STREAK_MSG = {3:'3연속! 감 잡았네요', 5:'5연속, 불붙었어요', 7:'7연속! 대단해요', 10:'10연속, 거의 원어민?'};
+const pickOf = a => a[Math.floor(Math.random() * a.length)];
+const feedbackMsg = (ok, streak) => ok ? (STREAK_MSG[streak] || pickOf(OK_MSG)) : pickOf(NO_MSG);
+
+const LEVELS = [[0,'새싹'],[100,'견습생'],[300,'탐험가'],[700,'실력자'],[1500,'달인'],[3000,'전문가'],[6000,'마스터'],[10000,'레전드']];
+function levelOf(pts){
+  let i = 0; while(i + 1 < LEVELS.length && pts >= LEVELS[i + 1][0]) i++;
+  const nx = LEVELS[i + 1];
+  return {n:i + 1, name:LEVELS[i][1], cur:LEVELS[i][0], next:nx ? nx[0] : null,
+          pct: nx ? Math.round((pts - LEVELS[i][0]) / (nx[0] - LEVELS[i][0]) * 100) : 100};
+}
+const ptsNow = () => (P.total || 0) + ((S && S.score) || 0) - ((S && S.bankedScore) || 0);
+
+// 오늘 푼 문제 수 (날짜가 바뀌면 0부터)
+const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+function dayCount(){
+  try{ const o = JSON.parse(store.get('bvq_day') || '{}'); return o.d === todayStr() ? (o.n || 0) : 0; }catch(e){ return 0; }
+}
+function dayAdd(){ store.set('bvq_day', JSON.stringify({d:todayStr(), n:dayCount() + 1})); }
+const goalN = () => SET.goal || 20;
+function setGoal(n){ SET.goal = n; saveSet(); render(); }
+
+// 효과음 (기본 꺼짐). 파일 없이 WebAudio로 짧게 낸다.
+let _ac = null;
+function sfx(kind){
+  if(!SET.sfx) return;
+  try{
+    _ac = _ac || new (window.AudioContext || window.webkitAudioContext)();
+    if(_ac.state === 'suspended') _ac.resume();
+    const seq = kind === 'ok' ? [[660,0],[880,.09]] : kind === 'no' ? [[220,0],[165,.11]] : [[523,0],[659,.1],[784,.2],[1047,.3]];
+    const t0 = _ac.currentTime;
+    seq.forEach(([f, d]) => {
+      const o = _ac.createOscillator(), g = _ac.createGain();
+      o.type = kind === 'no' ? 'triangle' : 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + d);
+      g.gain.exponentialRampToValueAtTime(0.16, t0 + d + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + 0.18);
+      o.connect(g); g.connect(_ac.destination); o.start(t0 + d); o.stop(t0 + d + 0.2);
+    });
+  }catch(e){}
+}
+function toggleSfx(){ SET.sfx = !SET.sfx; saveSet(); if(SET.sfx) sfx('ok'); render(); }
+
+// 마스코트 '에이': 졸업모자 쓴 올빼미. 색은 고정(그림이라 테마를 따르지 않는다)
+function mascot(mood, size){
+  const eyes = mood === 'cheer'
+    ? '<path d="M18 43q6-8 12 0M34 43q6-8 12 0" stroke="#3B2A8F" stroke-width="3.2" fill="none" stroke-linecap="round"/>'
+    : '<circle cx="24" cy="42" r="7" fill="#fff"/><circle cx="40" cy="42" r="7" fill="#fff"/><circle cx="25" cy="43" r="3.4" fill="#3B2A8F"/><circle cx="41" cy="43" r="3.4" fill="#3B2A8F"/>';
+  return `<svg class="mascot ${mood || ''}" width="${size || 56}" height="${size || 56}" viewBox="0 0 64 64" aria-hidden="true">
+    <ellipse cx="32" cy="40" rx="22" ry="20" fill="#FFE08A" stroke="#FF9F1C" stroke-width="2"/>
+    <path d="M10 24 32 14l22 10-22 10z" fill="#3B2A8F"/><path d="M19 30v6c0 4 26 4 26 0v-6" fill="#3B2A8F"/>
+    <path d="M54 24v11" stroke="#FFB84D" stroke-width="2.4" stroke-linecap="round"/><circle cx="54" cy="37" r="2.4" fill="#FFB84D"/>
+    ${eyes}
+    <path d="M28 49h8l-4 6z" fill="#E8A33A"/>
+    <circle cx="14.5" cy="49" r="3.2" fill="#FF6F91" opacity=".55"/><circle cx="49.5" cy="49" r="3.2" fill="#FF6F91" opacity=".55"/>
+  </svg>`;
+}
+function greetMsg(pr){
+  const h = new Date().getHours(), g = dayCount(), goal = goalN();
+  const hi = h < 5 ? '늦은 시간이네요' : h < 11 ? '좋은 아침이에요' : h < 17 ? '안녕하세요' : h < 22 ? '좋은 저녁이에요' : '오늘 하루 수고했어요';
+  const line = pr.seen === 0 ? '같이 시작해 볼까요?'
+    : g >= goal ? '오늘 목표 달성! 더 해도 좋아요'
+    : pr.due ? `복습할 단어 ${pr.due}개가 기다려요`
+    : g > 0 ? `오늘 ${g}문제 풀었어요. ${goal - g}문제만 더!`
+    : `오늘은 ${goal}문제만 풀어 볼까요?`;
+  return [hi, line];
+}
+function goalRing(){
+  const g = dayCount(), goal = goalN(), f = Math.min(1, g / goal), C = 94.25;
+  return `<span class="gring" title="오늘 목표"><svg viewBox="0 0 36 36" width="46" height="46" aria-hidden="true">
+    <circle cx="18" cy="18" r="15" fill="none" stroke="var(--line)" stroke-width="4"/>
+    <circle cx="18" cy="18" r="15" fill="none" stroke="var(--pop)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(C * f).toFixed(1)} ${C}" transform="rotate(-90 18 18)"/></svg>
+    <b>${f >= 1 ? '✓' : g}</b></span>`;
+}
+function confettiHtml(){
+  const cols = ['#E6CF8E','#FF8A75','#4FD1C5','#8FA8FF','#FFD86B'];
+  return '<div class="confetti" aria-hidden="true">' + Array.from({length:22}, (_, i) =>
+    `<i style="left:${Math.round(Math.random() * 100)}%;background:${cols[i % cols.length]};animation-delay:${(Math.random() * .5).toFixed(2)}s;animation-duration:${(1.6 + Math.random() * 1.2).toFixed(2)}s;transform:rotate(${Math.round(Math.random() * 360)}deg)"></i>`).join('') + '</div>';
+}
+
 /* ---------- 상태 ---------- */
 let S = {screen:'home'};
 let LIB = {tab:'weak', level:0, q:''};
@@ -701,16 +823,26 @@ function answer(id){
   const correct = q.kind === 'g' ? q.g.answer : q.w.id;
   const ok = id === correct;
 
+  const lv0 = levelOf(ptsNow()).n;
+  const box0 = (P.items[key(q)] || {}).box || 0;
   S.streak = ok ? S.streak + 1 : 0;
   S.best = Math.max(S.best, S.streak);
   const gain = (ok && !q.retry) ? scoreFor(S.streak) : 0;   // 재도전은 무득점
   S.score += gain;
   if(ok) S.right++; else S.wrong.push(q);
 
-  S.fb = {ok, chosen:id, gain,
+  S.fb = {ok, chosen:id, gain, msg:feedbackMsg(ok, S.streak),
           why: ok ? '' : (q.kind === 'g' ? explainG(q.g, id) : explain(q.w, id))};
   record(key(q), ok, id);
+  dayAdd();
+  const lv1 = levelOf(ptsNow());
+  const mastered = ok && box0 < 5 && (P.items[key(q)] || {}).box >= 5;
+  if(mastered) S.mastered = (S.mastered || 0) + 1;
+  sfx(lv1.n > lv0 ? 'lv' : ok ? 'ok' : 'no');
   render();
+  if(lv1.n > lv0) toast('레벨 업! Lv.' + lv1.n + ' ' + lv1.name, 3200);
+  else if(mastered) toast('완전 습득! ' + (q.kind === 'g' ? '이 문법' : q.w.term) + ' 졸업이에요', 2600);
+  else if(dayCount() === goalN()) toast('오늘 목표 달성! 🎉', 2800);
   autoSay(q.kind === 'g' ? q.g.full : q.w.term);
 }
 
@@ -876,7 +1008,7 @@ const agoKo = t => { const m = Math.floor((Date.now() - t) / 60000);
 
 /* ---------- 설정 (자동 넘김 · 깜빡이 암기) ---------- */
 const SET = Object.assign(
-  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:true, flashBlack:false, size:10, ttsSlow:false},
+  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:true, flashBlack:false, size:10, ttsSlow:false, goal:20, sfx:false},
   (() => { try{ return JSON.parse(store.get('bvq_set') || '{}') || {}; }catch(e){ return {}; } })());
 const saveSet = () => { try{ store.set('bvq_set', JSON.stringify(SET)); }catch(e){} };
 // 이전 버전(v20)은 깜빡이의 ◐ 버튼이 앱 전체 테마를 'black'으로 바꿔 저장했다 → 원래 테마로 되돌리고 '깜빡이 블랙'으로 옮긴다
@@ -1087,7 +1219,7 @@ function applyTheme(){
   root.setAttribute('data-mode', mode);
   // 브라우저 상단바 색도 테마에 맞춘다 (블랙이면 상단바까지 검정)
   const meta = document.querySelector && document.querySelector('meta[name="theme-color"]');
-  if(meta) meta.setAttribute('content', mode === 'black' ? '#000000' : mode === 'dark' ? '#0C111D' : '#1B2A4A');
+  if(meta) meta.setAttribute('content', mode === 'black' ? '#000000' : mode === 'dark' ? '#12101C' : '#6B4EE6');
   if(SET.hc) root.setAttribute('data-hc', '1'); else root.removeAttribute('data-hc');
 }
 try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(SET.theme === 'auto') applyTheme(); }); }catch(e){}
@@ -1127,7 +1259,10 @@ function themeSheetHtml(){
       <div class="chips">
         <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? ic('vol') + '자동 발음 켜짐' : ic('mute') + '자동 발음 꺼짐'}</button>
         <button class="chip" onclick="TTS.diagnose()">${ic('vol')}소리 테스트</button>
+        <button class="chip ${SET.sfx ? 'on' : ''}" onclick="toggleSfx()">${SET.sfx ? '효과음 켜짐' : '효과음 꺼짐'}</button>
       </div>
+      <div class="label">하루 목표</div>
+      <div class="chips">${[10, 20, 40].map(n => `<button class="chip ${goalN() === n ? 'on' : ''}" onclick="setGoal(${n})">${n}문제</button>`).join('')}</div>
       <div class="label">발음 속도</div>
       <div class="chips">
         <button class="chip ${SET.ttsSlow ? '' : 'on'}" onclick="setTtsSlow(false)">보통</button>
@@ -1290,7 +1425,7 @@ function setTtsSlow(v){ SET.ttsSlow = v; saveSet(); render(); }
 
 /* ---------- 학습 기록 백업 · 복원 ----------
    기록은 이 기기의 브라우저(localStorage)에만 있다. 폰을 바꾸거나 브라우저 데이터를 지우면 사라지므로 내보내기/가져오기를 둔다. */
-const BK_KEYS = ['bvq', 'bvq_set', 'bvq_flash', 'bvq_sessions', 'bvq_pick', 'bvq_snd', 'bvq_fav'];
+const BK_KEYS = ['bvq', 'bvq_set', 'bvq_flash', 'bvq_sessions', 'bvq_pick', 'bvq_snd', 'bvq_fav', 'bvq_day'];
 function backupText(){
   const data = {};
   BK_KEYS.forEach(k => { const v = store.get(k); if(v) data[k] = v; });
@@ -1451,7 +1586,11 @@ function home(){
     <div class="brand"><img class="logo" src="./icons/icon-192.png" alt="" width="42" height="42"><h1>English</h1></div>
     <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} ${ic('down')}</button>
   </div>
-  <div class="sub" style="margin-bottom:0">${T.sub}</div>
+  ${(() => { const [hi, line] = greetMsg(pr), lv = levelOf(P.total);
+    return `<div class="greet">${mascot(dayCount() >= goalN() ? 'cheer' : '', 54)}
+      <div class="bubble"><b>${hi}!</b><span>${line}</span>
+        <span class="lvl"><em>Lv.${lv.n} ${lv.name}</em><i><u style="width:${lv.pct}%"></u></i>${lv.next ? '<small>' + (lv.next - P.total) + '점 남음</small>' : '<small>최고 레벨</small>'}</span></div>
+      ${goalRing()}</div>`; })()}
   ${fsBannerHtml()}
 
   <div class="card hero">
@@ -1574,7 +1713,7 @@ function quiz(){
   const fbHtml = !fb ? '' : `
     <div class="fb ${fb.ok?'ok':'no'}">
       <div class="row" style="justify-content:flex-start">
-        <h3 class="${fb.ok?'ok':'no'}">${fb.ok?'정답':'오답'}</h3>
+        <h3 class="${fb.ok?'ok':'no'}">${esc(fb.msg || (fb.ok ? '정답' : '오답'))}</h3>
         ${fb.gain ? `<span class="plus">+${fb.gain}점</span>` : ''}
       </div>${fbBody}
     </div>
@@ -1591,7 +1730,7 @@ function quiz(){
       <span class="meta">문제 ${S.i+1} / ${S.qs.length}</span>
       <span class="sc">
         <span><em>점수</em><b style="color:var(--indigo)">${S.score}</b></span>
-        <span><em>연속</em><b class="fire">${S.streak}${S.streak?'🔥':''}</b></span>
+        <span><em>연속</em><b class="fire ${S.streak >= 3 ? 'hot' : ''}">${S.streak}${S.streak?'🔥':''}</b></span>
       </span>
     </div>
     <div class="bar"><i style="width:${(S.i / S.qs.length * 100).toFixed(1)}%"></i></div>
@@ -1625,15 +1764,20 @@ function result(){
          <button class="speak" onclick="TTS.say(BY['${q.w.id}'].term, this)">${ic('vol')}발음</button>
        </div>`;
 
+  const lv = levelOf(P.total), newM = S.mastered || 0;
+  const sub = acc >= 90 ? '오늘 컨디션 최고인데요?' : acc >= 70 ? '이대로만 가면 금방 늘어요' : '틀린 문제가 오늘의 보물이에요';
   return `
+  ${acc >= 70 ? confettiHtml() : ''}
   <div class="nav"><button onclick="goHome()" aria-label="홈으로">${ic('home')}홈</button></div>
-  <h1 style="color:${acc>=70?'var(--ok)':'var(--amber)'}">${title}</h1>
+  <div class="resulthead">${mascot(acc >= 70 ? 'cheer' : '', 72)}
+    <div><h1 style="color:${acc>=70?'var(--ok)':'var(--amber)'}">${title}</h1><div class="meta" style="font-weight:600">${sub}</div></div></div>
   <div class="card" style="margin-top:16px">
     <div class="stats">
       <div class="stat"><b style="color:var(--indigo)">${S.score}</b><span>획득 점수</span></div>
       <div class="stat"><b style="color:var(--ok)">${acc}%</b><span>정답률</span></div>
       <div class="stat"><b style="color:var(--amber)">${S.best}</b><span>최고 연속</span></div>
     </div>
+    <div class="reward">Lv.${lv.n} ${lv.name}${newM ? ` · 새로 완전 습득 <b>${newM}</b>개` : ''}</div>
   </div>
   ${uniq.length
     ? `<button class="primary" onclick="retryWrong()">틀린 ${uniq.length}문제 바로 다시 풀기<small>기억이 남아 있을 때 한 번 더</small></button>
