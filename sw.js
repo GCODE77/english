@@ -1,6 +1,6 @@
 // 오프라인 지원. 앱 전체가 파일 몇 개뿐이라 설치 시점에 통째로 캐시한다.
 // 앱을 수정하면 CACHE 이름의 숫자를 반드시 올려야 새 버전이 반영된다.
-const CACHE = 'bvq-v27';
+const CACHE = 'bvq-v28';
 const ASSETS = [
   './',
   './index.html',
@@ -50,7 +50,9 @@ self.addEventListener('fetch', e => {
         }).catch(() => {});
         return hit;
       }
-      return fetch(e.request).catch(() => caches.open(CACHE).then(c => c.match('./index.html')));
+      return fetch(e.request).catch(() => e.request.mode === 'navigate'   // 화면 이동일 때만 앱 본체로 대체(스크립트 요청에 HTML을 주면 오류가 난다)
+        ? caches.open(CACHE).then(c => c.match('./index.html'))
+        : Response.error());
     })
   );
 });

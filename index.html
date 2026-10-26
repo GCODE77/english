@@ -512,7 +512,9 @@ const TTS = {
       if(ss.speaking || ss.pending) ss.cancel();
 
       // 안드로이드 Chrome: cancel() 직후 speak()를 부르면 조용히 무시된다. 한 틱 쉬어 준다.
+      const my = this.seq = (this.seq || 0) + 1;   // 연타하면 마지막 요청만 재생한다(겹쳐 읽기 방지)
       setTimeout(() => {
+        if(my !== this.seq) return;
         try{
           const u = new SpeechSynthesisUtterance(text);
           u.lang = 'en-US';                 // 한국어 엔진이 영어를 읽지 않도록 명시
