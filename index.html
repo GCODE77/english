@@ -405,6 +405,12 @@
   .fopts button{flex:1 1 0; min-width:0; padding:0 4px; font-size:13px; gap:5px}
   .fopts button .ic{width:17px; height:17px}
   .hero .big .mastered{color:var(--amber)}
+  /* 깜빡이 암기 버튼: 주황 채움(주 버튼의 보라와 구분되는 보조 강조색). 글자는 진한 갈색이라 밝은·어두운 테마 모두 잘 보인다 */
+  .split{border:0; background:linear-gradient(135deg,#FFC857,#FF9F1C); box-shadow:0 8px 20px rgba(255,159,28,.30)}
+  .split .main, .split .main small{color:#2B1700}
+  .split .main small{opacity:.8}
+  .split .gear{border-left:1.5px solid rgba(43,23,0,.22); background:rgba(255,255,255,.28); color:#2B1700}
+  .split .main:active, .split .gear:active{background:rgba(43,23,0,.10)}
 
   /* ===== 재미 레이어: 마스코트 · 목표 링 · 피드백 애니메이션 ===== */
   .greet{display:flex; align-items:center; gap:10px; margin:6px 0 4px}
