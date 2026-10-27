@@ -405,6 +405,28 @@
   .fopts button{flex:1 1 0; min-width:0; padding:0 4px; font-size:13px; gap:5px}
   .fopts button .ic{width:17px; height:17px}
   .hero .big .mastered{color:var(--amber)}
+
+  /* ===== 홈을 폰 한 화면에 (360×700 안팎) ===== */
+  .ctarow{display:flex; gap:8px; margin-top:12px}
+  .ctarow .primary{flex:1; min-width:0; margin-top:0; min-height:58px}
+  .ctarow .newbtn{flex:none; width:76px; margin-top:0; min-height:58px; font-size:14px; line-height:1.25; font-weight:800; padding:0 6px; border-color:var(--indigo); color:var(--indigo)}
+  .hero{margin-top:8px; padding:14px 16px}
+  .hero .big b{font-size:26px}
+  .hero .bar{margin-top:6px}
+  .hero .stats{margin-top:10px; padding-top:8px}
+  .stat b{font-size:20px}
+  .segs{margin-top:10px}
+  .seg{min-height:46px}
+  .primary{min-height:58px}
+  .greet{margin:2px 0 0}
+  .bubble{padding:7px 12px}
+  .fsbanner{margin-top:8px}
+  .fsbanner .fsgo{min-height:38px; font-size:14px}
+  .split{margin-top:10px}
+  .split .main{min-height:56px}
+  .split .gear{width:56px}
+  .tert{margin-top:10px}
+  .tert button{min-height:46px}
   /* 깜빡이 암기 버튼: 주황 채움(주 버튼의 보라와 구분되는 보조 강조색). 글자는 진한 갈색이라 밝은·어두운 테마 모두 잘 보인다 */
   .split{border:0; background:linear-gradient(135deg,#FFC857,#FF9F1C); box-shadow:0 8px 20px rgba(255,159,28,.30)}
   .split .main, .split .main small{color:#2B1700}
@@ -1581,8 +1603,8 @@ function home(){
     const where = ses.screen === 'study'
       ? `새 단어 카드 ${ses.si + 1} / ${ses.deck.length}`
       : `${Math.min(ses.i + (ses.fb ? 1 : 0), ses.qs.length)} / ${ses.qs.length}문제 푼 상태`;
-    cta = `<button class="primary" onclick="resumeSession()">${ic('play')}이어서 하기<small>${where} · ${agoKo(ses.t)}</small></button>
-      <button class="ghost" onclick="start()">새로 시작하기 · ${ctaSub}</button>`;
+    cta = `<div class="ctarow"><button class="primary" onclick="resumeSession()">${ic('play')}이어서 하기<small>${where} · ${agoKo(ses.t)}</small></button>
+      <button class="ghost newbtn" onclick="start()" aria-label="새로 시작하기 ${ctaSub}">새로<br>시작</button></div>`;
   } else {
     cta = `<button class="primary" onclick="start()">${ctaMain}<small>${ctaSub}${pr.due ? ' · 복습 ' + pr.due + '개 대기 중' : ''}</small></button>`;
   }
@@ -1593,7 +1615,7 @@ function home(){
     <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} ${ic('down')}</button>
   </div>
   ${(() => { const [hi, line] = greetMsg(pr), lv = levelOf(P.total);
-    return `<div class="greet">${mascot(dayCount() >= goalN() ? 'cheer' : '', 54)}
+    return `<div class="greet">${mascot(dayCount() >= goalN() ? 'cheer' : '', 46)}
       <div class="bubble"><b>${hi}!</b><span>${line}</span>
         <span class="lvl"><em>Lv.${lv.n} ${lv.name}</em><i><u style="width:${lv.pct}%"></u></i>${lv.next ? '<small>' + (lv.next - P.total) + '점 남음</small>' : '<small>최고 레벨</small>'}</span></div>
       ${goalRing()}</div>`; })()}
@@ -1610,8 +1632,7 @@ function home(){
   </div>
 
   ${levels()}
-  <div class="label">문제 유형</div>
-  <div class="segs">${seg('mix','섞어서')}${seg('word','단어')}${seg('grammar','문법')}</div>
+  <div class="segs" role="group" aria-label="문제 유형">${seg('mix','섞어서')}${seg('word','단어')}${seg('grammar','문법')}</div>
 
   ${cta}
 
