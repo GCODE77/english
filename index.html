@@ -427,6 +427,15 @@
   .split .gear{width:56px}
   .tert{margin-top:10px}
   .tert button{min-height:46px}
+  .topright{display:flex; align-items:center; gap:8px; flex:none}
+  .fsmini{width:38px; height:38px; border-radius:50%; background:var(--surface); border:1.5px solid var(--line); color:var(--ink); display:inline-flex; align-items:center; justify-content:center; padding:0}
+  .fsmini .ic{width:18px; height:18px}
+  .top .brand{flex:1 1 auto; min-width:0}
+  .top .brand h1{font-size:clamp(22px,7vw,33px); white-space:nowrap}
+  .top .brand .logo{width:36px; height:36px}
+  .top .pill{padding:0 12px; gap:6px; min-height:42px; font-size:15px}
+  .topright{gap:6px}
+  .fsmini:active{background:var(--chipbg)}
   /* 깜빡이 암기 버튼: 주황 채움(주 버튼의 보라와 구분되는 보조 강조색). 글자는 진한 갈색이라 밝은·어두운 테마 모두 잘 보인다 */
   .split{border:0; background:linear-gradient(135deg,#FFC857,#FF9F1C); box-shadow:0 8px 20px rgba(255,159,28,.30)}
   .split .main, .split .main small{color:#2B1700}
@@ -509,6 +518,7 @@ const IC = {
   sliders:'<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>',
   max:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  min:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
   half:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/>',
   prev:'<path d="M6 5v14"/><path d="M19 5 9 12l10 7z" fill="currentColor"/>',
   next:'<path d="M18 5v14"/><path d="M5 5l10 7-10 7z" fill="currentColor"/>',
@@ -1036,7 +1046,7 @@ const agoKo = t => { const m = Math.floor((Date.now() - t) / 60000);
 
 /* ---------- 설정 (자동 넘김 · 깜빡이 암기) ---------- */
 const SET = Object.assign(
-  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:true, flashBlack:false, size:10, ttsSlow:false, goal:20, sfx:false},
+  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:false, flashBlack:false, size:10, ttsSlow:false, goal:20, sfx:false},
   (() => { try{ return JSON.parse(store.get('bvq_set') || '{}') || {}; }catch(e){ return {}; } })());
 const saveSet = () => { try{ store.set('bvq_set', JSON.stringify(SET)); }catch(e){} };
 // 이전 버전(v20)은 깜빡이의 ◐ 버튼이 앱 전체 테마를 'black'으로 바꿔 저장했다 → 원래 테마로 되돌리고 '깜빡이 블랙'으로 옮긴다
@@ -1612,14 +1622,16 @@ function home(){
   return `
   <div class="top">
     <div class="brand"><img class="logo" src="./icons/icon-192.png" alt="" width="42" height="42"><h1>English</h1></div>
-    <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} ${ic('down')}</button>
+    <div class="topright">
+      ${fsOK() ? `<button class="fsmini" onclick="toggleFullscreen()" aria-label="${document.fullscreenElement ? '전체화면 끄기' : '전체화면 켜기'}" title="${document.fullscreenElement ? '전체화면 끄기' : '전체화면 켜기'}">${ic(document.fullscreenElement ? 'min' : 'max')}</button>` : ''}
+      <button class="pill" onclick="toggleSheet(true)" aria-label="학습 대상 바꾸기">${T.emoji} ${T.name} ${ic('down')}</button>
+    </div>
   </div>
   ${(() => { const [hi, line] = greetMsg(pr), lv = levelOf(P.total);
     return `<div class="greet">${mascot(dayCount() >= goalN() ? 'cheer' : '', 46)}
       <div class="bubble"><b>${hi}!</b><span>${line}</span>
         <span class="lvl"><em>Lv.${lv.n} ${lv.name}</em><i><u style="width:${lv.pct}%"></u></i>${lv.next ? '<small>' + (lv.next - P.total) + '점 남음</small>' : '<small>최고 레벨</small>'}</span></div>
       ${goalRing()}</div>`; })()}
-  ${fsBannerHtml()}
 
   <div class="card hero">
     <div class="big"><b>${pr.seen}</b>/ ${pr.total} 학습 시작<span class="mastered"> · 완전 습득 ${pr.mastered}</span></div>

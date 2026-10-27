@@ -472,15 +472,15 @@ console.log('\n[9] 화면 설정 (테마 · 음영 대비)');
   ];
   for (const [e, want, label] of cases)
     if (A.autoFsWanted(e) !== want) fail.push('자동 전체화면 조건 오류: ' + label + ' → 기대 ' + want);
-  if (A.SET.autoFs !== true) fail.push('자동 전체화면 기본값이 켜짐이 아님');
+  if (A.SET.autoFs !== false) fail.push('자동 전체화면 기본값이 꺼짐이 아님(전체화면은 홈 위쪽 버튼으로 켠다)');
   A.UI.setSheet = true;
   if (!A.themeSheetHtml().includes('모바일 자동 전체화면')) fail.push('화면 설정에 자동 전체화면 옵션이 없음');
   A.UI.setSheet = false;
+  A.setAutoFs(true); if (!A.SET.autoFs) fail.push('setAutoFs(true) 동작 오류');
   A.setAutoFs(false); if (A.SET.autoFs) fail.push('setAutoFs(false) 동작 오류');
-  A.setAutoFs(true);
   if (A.iosHintHtml() !== '') fail.push('아이폰이 아닌데 아이폰 안내가 보임');
   const mfx = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest.webmanifest'), 'utf8'));
-  if (mfx.display !== 'fullscreen' || (mfx.display_override || [])[0] !== 'fullscreen') fail.push('manifest 가 전체화면으로 열리도록 설정돼 있지 않음');
+  if (mfx.display !== 'standalone') fail.push('manifest 기본 표시가 standalone 이 아님(전체화면은 앱 안 버튼으로 켠다)');
   // 전체화면 배너(직접 누르는 방식): 폰 브라우저에서만, 전체화면이 아닐 때만
   const bb = {mobile: true, supported: true, standalone: false, active: false, dismissed: false, exited: false};
   for (const [e, want, label] of [[bb, true, '폰 브라우저'], [{...bb, mobile: false}, false, 'PC'], [{...bb, supported: false}, false, '미지원'],
@@ -488,7 +488,7 @@ console.log('\n[9] 화면 설정 (테마 · 음영 대비)');
       [{...bb, dismissed: true}, false, '사용자가 닫음'], [{...bb, exited: true}, false, '사용자가 직접 나간 뒤']])
     if (A.fsBannerWanted(e) !== want) fail.push('전체화면 배너 조건 오류: ' + label);
   if (A.fsBannerHtml() !== '') fail.push('PC(비모바일)에서 전체화면 배너가 보임');
-  note('자동 전체화면 조건 7가지 · 배너 조건 7가지 · 설정 토글 · manifest fullscreen 확인');
+  note('자동 전체화면 조건 7가지 · 배너 조건 7가지 · 설정 토글 · manifest standalone 확인');
 }
 
 /* ---------- 10. 학습 노트 ---------- */
