@@ -426,7 +426,7 @@
   .split .main{min-height:56px}
   .split .gear{width:56px}
   .tert{margin-top:10px}
-  .tert button{min-height:46px}
+  .tert button{min-height:46px; font-size:15px; padding:0 4px}
 
   .instchip{display:flex; align-items:center; gap:6px; margin-top:8px}
   .instgo{flex:1; min-height:38px; border-radius:14px; background:var(--chipbg); color:var(--chipink); font-size:14px; font-weight:800;
@@ -438,6 +438,25 @@
   .insthelp ol{margin:8px 0 6px; padding-left:20px}
   .insthelp small{display:block; color:var(--muted); font-size:12px}
   .insthelp.ok{background:var(--ok-bg); color:var(--ok); font-weight:700}
+
+  /* ===== 회화 ===== */
+  .tchat{display:flex; flex-direction:column; gap:10px; margin-top:14px}
+  .tmsg{max-width:88%; padding:10px 14px 8px; border-radius:18px; border:1px solid var(--line); background:var(--surface); position:relative}
+  .tmsg.a{align-self:flex-start; border-bottom-left-radius:6px}
+  .tmsg.b{align-self:flex-end; background:var(--chipbg); border-color:transparent; border-bottom-right-radius:6px}
+  .tmsg.ask{border:2px dashed var(--indigo); background:transparent}
+  .tmsg .who{font-size:11px; font-weight:800; color:var(--muted); letter-spacing:.04em}
+  .tmsg .en{font-weight:700; font-size:16px; line-height:1.5}
+  .tmsg .kk{font-size:13px; color:var(--muted); margin-top:2px; line-height:1.5}
+  .tmsg .miniSpeak{margin-top:6px; min-height:34px; padding:0 12px}
+  .tcard{margin-top:12px; padding:14px 16px}
+  .tcard .ttl{font-size:17px}
+  .tbtns{display:flex; gap:8px; margin-top:10px}
+  .tbtns .ghost{margin-top:0; min-height:46px; font-size:15px}
+  .tbtns .tgo{border-color:var(--indigo); color:var(--indigo)}
+  .lvrow{flex-wrap:nowrap; gap:6px; margin-top:8px}
+  .lvrow .chip{min-width:0; min-height:44px; padding:0 4px; font-size:14px}
+  .lvrow .chip small{font-size:10px; white-space:nowrap}
   .topright{display:flex; align-items:center; gap:8px; flex:none}
   .fsmini{width:38px; height:38px; border-radius:50%; background:var(--surface); border:1.5px solid var(--line); color:var(--ink); display:inline-flex; align-items:center; justify-content:center; padding:0}
   .fsmini .ic{width:18px; height:18px}
@@ -529,6 +548,7 @@ const IC = {
   sliders:'<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>',
   max:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  chat:'<path d="M4 5h16v11H9.5L4 20z"/><path d="M8 9.5h8M8 12.5h5"/>',
   min:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
   half:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/>',
   prev:'<path d="M6 5v14"/><path d="M19 5 9 12l10 7z" fill="currentColor"/>',
@@ -582,6 +602,28 @@ const TTS = {
     return this.voices.find(v => v.lang === 'en-US')
         || this.voices.find(v => /^en[-_]GB/i.test(v.lang))
         || this.voices[0] || null;
+  },
+
+  // 대화를 차례로 읽는다. 상대(A)는 가능하면 다른 목소리로.
+  queue(items){
+    if(!items.length) return;
+    if(!this.available()){ this.say(items[0][1]); return; }
+    try{ speechSynthesis.cancel(); }catch(e){}
+    const my = this.seq = (this.seq || 0) + 1;
+    setTimeout(() => {
+      if(my !== this.seq) return;
+      try{
+        if(!this.voices.length) this.refresh();
+        const main = this.pick(), alt = this.voices.find(v => v !== main && /^en[-_]US/i.test(v.lang)) || main;
+        items.forEach(([who, text]) => {
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = 'en-US'; u.rate = SET.ttsSlow ? 0.65 : 0.92;
+          const v = who === 'A' ? alt : main; if(v) u.voice = v;
+          speechSynthesis.speak(u);
+        });
+        speechSynthesis.resume();
+      }catch(e){ toast('음성 오류: ' + e.message, 3200); }
+    }, 60);
   },
 
   say(text, btn, rate){
@@ -969,6 +1011,11 @@ window.addEventListener('keydown', e => {
     else if(e.key === 'ArrowRight') flashStep(1);
     else if(e.key === 'ArrowLeft') flashStep(-1);
     else if(e.key === 'Escape') exitFlash();
+    return;
+  }
+  if(S.screen === 'talkq'){
+    if(!S.fb && /^[1-3]$/.test(e.key)) talkAns(+e.key - 1);
+    else if(S.fb && go){ e.preventDefault(); talkNext(); }
     return;
   }
   if(S.screen === 'quiz'){
@@ -1475,7 +1522,7 @@ function setTtsSlow(v){ SET.ttsSlow = v; saveSet(); render(); }
 
 /* ---------- 학습 기록 백업 · 복원 ----------
    기록은 이 기기의 브라우저(localStorage)에만 있다. 폰을 바꾸거나 브라우저 데이터를 지우면 사라지므로 내보내기/가져오기를 둔다. */
-const BK_KEYS = ['bvq', 'bvq_set', 'bvq_flash', 'bvq_sessions', 'bvq_pick', 'bvq_snd', 'bvq_fav', 'bvq_day'];
+const BK_KEYS = ['bvq', 'bvq_set', 'bvq_flash', 'bvq_sessions', 'bvq_pick', 'bvq_snd', 'bvq_fav', 'bvq_day', 'bvq_talk'];
 function backupText(){
   const data = {};
   BK_KEYS.forEach(k => { const v = store.get(k); if(v) data[k] = v; });
@@ -1561,8 +1608,8 @@ function render(){
     });
     return;
   }
-  app.innerHTML = ({home:home, study:study, quiz:quiz, result:result, library:library, flash:flash, flashdone:flashdone})[S.screen]();
-  const fbEl = (S.screen === 'quiz' && S.fb && document.querySelector) ? document.querySelector('.fb') : null;
+  app.innerHTML = ({home:home, study:study, quiz:quiz, result:result, library:library, flash:flash, flashdone:flashdone, talklist:talklist, talk:talk, talkq:talkq, talkres:talkres})[S.screen]();
+  const fbEl = ((S.screen === 'quiz' || S.screen === 'talkq') && S.fb && document.querySelector) ? document.querySelector('.fb') : null;
   if(fbEl && fbEl.scrollIntoView) fbEl.scrollIntoView({block:'start', behavior:'smooth'});
   else window.scrollTo(0,0);
   if(S.screen === 'library') libFilter();
@@ -1595,9 +1642,7 @@ function home(){
       ${name}<small>단어 ${lvCount(l)} · 문법 ${gCount(l)}</small></button>`;
   const seg = (c, name) => `<button class="seg ${PICK.cat===c?'on':''}" onclick="setPick('cat','${c}')">${name}</button>`;
   const levels = () => T.id === 'work' ? `
-    <div class="label">분야</div>
-    <div class="chips">${lvChip(0,'전체')}${lvChip(1,'기초 업무')}</div>
-    <div class="chips">${lvChip(2,'회의·프로젝트')}${lvChip(3,'재무·법무')}</div>` : '';
+    <div class="chips lvrow" role="group" aria-label="분야">${lvChip(0,'전체')}${lvChip(1,'기초')}${lvChip(2,'회의')}${lvChip(3,'재무·법무')}</div>` : '';
 
   const trRow = t => {
     const p = prog(t), on = t.id === T.id && !UI.firstRun;
@@ -1666,6 +1711,7 @@ function home(){
   </div>
   <div class="tert">
     <button onclick="openLibrary()">${ic('book')}학습 노트</button>
+    <button onclick="openTalk()">${ic('chat')}회화</button>
     <button onclick="toggleSetSheet(true)">${ic('sliders')}설정</button>
   </div>
   ${installChipHtml()}
@@ -1838,6 +1884,182 @@ function result(){
   ${uniq.length ? `<h3 style="margin:24px 0 2px;font-size:19px">다시 볼 문제 ${uniq.length}개</h3>
     <div class="meta" style="font-weight:400">며칠 뒤 복습 문제로 다시 나옵니다.</div>` : ''}
   ${uniq.map(item).join('')}`;
+}
+
+
+/* ---------- 회화: 대화 보기 · 응답 고르기 퀴즈 · 역할극 ----------
+   데이터는 data/talk.js (트랙별 대화). 각 줄 = [화자 'A'(상대)|'B'(나), 영어, 한국어, (B만) [[틀린 보기, 왜 틀렸는지] x2]].
+   오답 보기는 한국어 화자가 실제로 하는 실수·말투 실수로 직접 썼다. 런타임 생성 금지. */
+let TALK = null, SAY = [];
+function __bvqTalk(d){ TALK = d; }
+function loadTalk(){
+  if(TALK) return Promise.resolve();
+  return new Promise((ok, no) => {
+    const el = document.createElement('script');
+    el.src = 'data/talk.js';
+    el.onload = () => TALK ? ok() : no(new Error('talk'));
+    el.onerror = () => { el.remove(); no(new Error('talk')); };
+    document.head.appendChild(el);
+  });
+}
+const talkDialogs = () => (TALK && TALK[PICK.track]) || [];
+const talkProg = () => { try{ return JSON.parse(store.get('bvq_talk') || '{}') || {}; }catch(e){ return {}; } };
+function talkSave(id, right, total){
+  const m = talkProg(), c = m[id] || {};
+  m[id] = {best: Math.max(c.best || 0, right), total, runs: (c.runs || 0) + 1};
+  try{ store.set('bvq_talk', JSON.stringify(m)); }catch(e){}
+}
+function openTalk(){
+  loadTalk().then(() => { S = {screen:'talklist'}; render(); })
+    .catch(() => toast('회화 데이터를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.', 2800));
+}
+const talkBack = () => { S = {screen:'talklist'}; render(); };
+const sayTxt = text => { SAY.push(text); return SAY.length - 1; };
+const sayBtn = text => `<button class="miniSpeak" onclick="TTS.say(SAY[${sayTxt(text)}], this)" aria-label="듣기">${ic('vol')}</button>`;
+const talkNav = () => `<div class="nav"><button onclick="${S.screen === 'talklist' ? 'goHome()' : 'talkBack()'}" aria-label="${S.screen === 'talklist' ? '홈으로' : '목록으로'}">${ic(S.screen === 'talklist' ? 'home' : 'x')}${S.screen === 'talklist' ? '홈' : '목록'}</button><span class="sp"></span>${soundBtn(true)}</div>`;
+
+function msgHtml(l, o){
+  o = o || {};
+  const me = l[0] === 'B';
+  return `<div class="tmsg ${me ? 'b' : 'a'}"><div class="who">${me ? '나' : '상대'}</div>
+    <div class="en">${esc(l[1])}</div>${o.ko === false ? '' : `<div class="kk">${esc(l[2])}</div>`}${o.nospeak ? '' : sayBtn(l[1])}</div>`;
+}
+
+function talklist(){
+  SAY = [];
+  const T = TRACK(PICK.track), ds = talkDialogs(), pg = talkProg();
+  const card = d => {
+    const nb = d.l.filter(l => l[0] === 'B').length, c = pg[d.id];
+    return `<div class="card tcard"><div class="row"><b class="ttl">${esc(d.t)}</b>
+      <span class="meta">${c ? '역할극 최고 ' + c.best + '/' + nb : '아직 안 해봤어요'}</span></div>
+      <div class="tbtns"><button class="ghost" onclick="talkView('${d.id}')">${ic('book')}대화 보기</button>
+      <button class="ghost tgo" onclick="talkRole('${d.id}')">${ic('chat')}역할극</button></div></div>`;
+  };
+  return `${talkNav()}
+  <h1 style="margin-top:6px">회화 · ${esc(T.name)}</h1>
+  <div class="sub">대화를 보고, 상황에 맞는 말을 골라 직접 말해 봐요.</div>
+  ${ds.length ? `<button class="primary" onclick="talkQuiz()">${ic('chat')}응답 고르기 퀴즈<small>상대 말에 어울리는 응답 · 최대 10문제</small></button>
+    ${ds.map(card).join('')}` : '<div class="empty" style="padding-top:60px">이 대상의 회화는 준비 중이에요.</div>'}`;
+}
+
+function talkView(id){
+  const d = talkDialogs().find(x => x.id === id); if(!d) return;
+  S = {screen:'talk', d, ko:true}; render();
+}
+function talkKo(){ S.ko = !S.ko; render(); }
+function talkAll(){ TTS.queue(S.d.l.map(l => [l[0], l[1]])); }
+function talk(){
+  SAY = [];
+  const d = S.d;
+  return `${talkNav()}
+  <h1 style="margin-top:6px;font-size:26px">${esc(d.t)}</h1>
+  <div class="autorow"><button onclick="talkAll()">${ic('vol')}전체 듣기</button>
+    <button onclick="talkKo()">${S.ko ? '한국어 숨기기' : '한국어 보기'}</button></div>
+  <div class="tchat">${d.l.map(l => msgHtml(l, {ko:S.ko})).join('')}</div>
+  <div class="stick"><button class="primary" onclick="talkRole('${d.id}')">${ic('chat')}이 대화로 역할극 하기</button></div>`;
+}
+
+// 한 줄(B)을 문제로 만든다. ctxLen이 null이면 지금까지의 대화를 전부, 숫자면 직전 몇 줄만 보여 준다
+function talkQ(d, idx, ctxLen){
+  const l = d.l[idx];
+  const opts = shuffle([{t:l[1], ok:true}, ...l[3].map(([t, n]) => ({t, ok:false, n}))]);
+  return {d:d.id, title:d.t, idx, ans:l[1], ko:l[2],
+          ctx: d.l.slice(ctxLen == null ? 0 : Math.max(0, idx - ctxLen), idx), opts};
+}
+function talkRole(id){
+  const d = talkDialogs().find(x => x.id === id); if(!d) return;
+  const qs = d.l.map((l, i) => l[0] === 'B' ? talkQ(d, i, null) : null).filter(Boolean);
+  S = {screen:'talkq', mode:'role', d, qs, i:0, right:0, streak:0, fb:null, missed:[]}; render();
+}
+function talkQuiz(){
+  const pool = [];
+  talkDialogs().forEach(d => d.l.forEach((l, i) => { if(l[0] === 'B') pool.push(talkQ(d, i, 2)); }));
+  const qs = shuffle(pool).slice(0, 10);
+  if(!qs.length){ toast('이 대상의 회화는 준비 중이에요.', 2000); return; }
+  S = {screen:'talkq', mode:'quiz', d:null, qs, i:0, right:0, streak:0, fb:null, missed:[]}; render();
+}
+
+function talkAns(k){
+  if(S.screen !== 'talkq' || S.fb) return;
+  const q = S.qs[S.i], o = q.opts[k]; if(!o) return;
+  const ok = o.ok, lv0 = levelOf(ptsNow()).n;
+  S.streak = ok ? S.streak + 1 : 0;
+  if(ok) S.right++; else S.missed.push(q);
+  const gain = ok ? 10 : 0;
+  if(gain){ P.total += gain; saveP(P); }
+  dayAdd();
+  S.fb = {ok, chosen:k, gain, msg:feedbackMsg(ok, S.streak), note:o.n || ''};
+  const lv1 = levelOf(ptsNow());
+  sfx(lv1.n > lv0 ? 'lv' : ok ? 'ok' : 'no');
+  render();
+  if(lv1.n > lv0) toast('레벨 업! Lv.' + lv1.n + ' ' + lv1.name, 3200);
+  else if(ok && dayCount() === goalN()) toast('오늘 목표 달성!', 2800);
+  autoSay(q.ans);
+}
+function talkNext(){
+  if(S.screen !== 'talkq' || !S.fb) return;
+  S.fb = null;
+  if(S.i + 1 >= S.qs.length){
+    if(S.mode === 'role') talkSave(S.d.id, S.right, S.qs.length);
+    S.screen = 'talkres';
+  } else S.i++;
+  render();
+}
+
+function talkq(){
+  SAY = [];
+  const q = S.qs[S.i], fb = S.fb, mine = [ 'B', q.ans, q.ko ];
+  const last = q.ctx[q.ctx.length - 1];
+  if(!fb && last) autoSay(last[1], 80);
+  const opts = q.opts.map((o, k) => {
+    let cls = '', mark = '';
+    if(fb){
+      if(o.ok){ cls = 'correct'; mark = '✓'; }
+      else if(k === fb.chosen){ cls = 'wrong'; mark = '✕'; }
+      else cls = 'dim';
+    }
+    return `<button class="opt ${cls}" onclick="talkAns(${k})"><span class="optl"><b class="num">${k + 1}</b><span>${esc(o.t)}</span></span><span class="mark" style="color:${cls === 'correct' ? 'var(--ok)' : 'var(--no)'}">${mark}</span></button>`;
+  }).join('');
+  const fbHtml = !fb ? '' : `
+    <div class="fb ${fb.ok ? 'ok' : 'no'}">
+      <div class="row" style="justify-content:flex-start"><h3 class="${fb.ok ? 'ok' : 'no'}">${esc(fb.msg)}</h3>${fb.gain ? `<span class="plus">+${fb.gain}점</span>` : ''}</div>
+      ${fb.ok ? '' : `<p>${esc(fb.note)}</p>`}
+      <p style="margin-top:14px;font-weight:700">${esc(q.ans)}</p>
+      <p class="ko" style="margin-top:2px">${esc(q.ko)}</p>
+      <div style="margin-top:10px">${sayBtn(q.ans)}</div>
+    </div>
+    <div class="stick"><button class="primary" onclick="talkNext()">${S.i + 1 >= S.qs.length ? '결과 보기' : '다음'}</button></div>`;
+  return `${talkNav()}
+  <div class="row" style="margin-top:8px"><span class="meta">${S.mode === 'role' ? '역할극 · ' + esc(q.title) : '응답 고르기 · ' + esc(q.title)}</span>
+    <span class="meta">${S.i + 1} / ${S.qs.length}</span></div>
+  <div class="bar"><i style="width:${(S.i / S.qs.length * 100).toFixed(1)}%"></i></div>
+  <div class="tchat">${q.ctx.map(l => msgHtml(l)).join('')}
+    ${fb ? msgHtml(mine) : '<div class="tmsg b ask"><div class="who">나</div><div class="en">내 차례! 알맞은 응답은?</div></div>'}</div>
+  <div style="margin-top:14px">${opts}</div>${fbHtml}`;
+}
+
+function talkres(){
+  SAY = [];
+  const n = S.qs.length, acc = n ? Math.round(S.right / n * 100) : 0, lv = levelOf(P.total);
+  const title = acc >= 90 ? '말 잘하네요!' : acc >= 60 ? '잘하고 있어요' : '한 번 더 해 볼까요?';
+  const missed = S.missed.map(q => `<div class="wrongitem"><span class="topic">${esc(q.title)}</span>
+      ${q.ctx.length ? `<div style="margin-top:8px;color:var(--muted);font-size:14px">${esc(q.ctx[q.ctx.length - 1][1])}</div>` : ''}
+      <div style="margin-top:6px;font-size:16px;font-weight:700">${esc(q.ans)}</div>
+      <div style="margin-top:2px;font-size:14px;color:var(--muted)">${esc(q.ko)}</div>${sayBtn(q.ans)}</div>`).join('');
+  return `${acc >= 60 ? confettiHtml() : ''}${talkNav()}
+  <div class="resulthead">${mascot(acc >= 60 ? 'cheer' : '', 72)}<div><h1>${title}</h1>
+    <div class="meta" style="font-weight:600">${S.mode === 'role' ? esc(S.d.t) + ' 역할극' : '응답 고르기 퀴즈'}</div></div></div>
+  <div class="card" style="margin-top:16px"><div class="stats">
+    <div class="stat"><b style="color:var(--ok)">${S.right}/${n}</b><span>맞힌 문제</span></div>
+    <div class="stat"><b style="color:var(--indigo)">${acc}%</b><span>정답률</span></div>
+    <div class="stat"><b style="color:var(--amber)">${S.right * 10}</b><span>획득 점수</span></div></div>
+    <div class="reward">Lv.${lv.n} ${lv.name}</div></div>
+  ${S.mode === 'role'
+    ? `<button class="primary" onclick="talkRole('${S.d.id}')">${ic('chat')}다시 역할극 하기</button>
+       <button class="ghost" onclick="talkView('${S.d.id}')">${ic('book')}완성된 대화 보기</button>`
+    : `<button class="primary" onclick="talkQuiz()">${ic('chat')}새 문제 풀기</button>`}
+  <button class="ghost" onclick="talkBack()">회화 목록으로</button>
+  ${missed ? `<h3 style="margin:22px 0 2px;font-size:19px">다시 볼 표현 ${S.missed.length}개</h3>${missed}` : ''}`;
 }
 
 /* ---------- 약점 노트 / 전체 목록 ---------- */

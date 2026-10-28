@@ -46,11 +46,12 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,onBack,syncHistory,navBase,backupText,parseBackup,toggleFav,isFav,setSize,sizeN,importSheetHtml,setTtsSlow,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,flashWrong,setLibStatus,getP:()=>P,getS:()=>S};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,onBack,syncHistory,navBase,backupText,parseBackup,toggleFav,isFav,setSize,sizeN,importSheetHtml,setTtsSlow,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,flashWrong,setLibStatus,getP:()=>P,getS:()=>S,__bvqTalk,loadTalk,talkDialogs,talkRole,talkQuiz,talkView,talkAns,talkNext,talklist,talk,talkq,talkres,getTalk:()=>TALK};',
     box
   );
   for (const t of TRACK_IDS)
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'data', t + '.js'), 'utf8'), box);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'data', 'talk.js'), 'utf8'), box);
   return box;
 }
 
@@ -656,6 +657,68 @@ console.log('\n[14] 디자인 일관성');
   for (const f of ['icons/favicon-32.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'])
     if (!fs.existsSync(path.join(__dirname, '..', f))) fail.push('아이콘 파일 없음: ' + f);
   note('화면 버튼 선 아이콘 통일 · 프리미엄 색 변수 · 아이콘 파일 확인');
+}
+
+/* ---------- [15] 회화 ---------- */
+{
+  console.log('\n[15] 회화 (대화 보기 · 응답 고르기 · 역할극)');
+  const T = A.getTalk();
+  if (!T) fail.push('data/talk.js 를 불러오지 못함');
+  else {
+    const ids = new Set(); let nd = 0, nb = 0;
+    for (const t of TRACK_IDS) {
+      if (!T[t] || !T[t].length) { fail.push('회화 데이터 없음: ' + t); continue; }
+      for (const d of T[t]) {
+        nd++;
+        if (ids.has(d.id)) fail.push('회화 id 중복: ' + d.id);
+        ids.add(d.id);
+        if (!d.t) fail.push('회화 제목 없음: ' + d.id);
+        if (d.l.length < 4 || d.l.length % 2) fail.push('회화 줄 수 이상(짝수·4줄 이상): ' + d.id);
+        d.l.forEach((l, i) => {
+          if (l[0] !== (i % 2 ? 'B' : 'A')) fail.push('A/B 순서 오류: ' + d.id + '#' + i);
+          if (!l[1] || !l[2]) fail.push('영어/한국어 누락: ' + d.id + '#' + i);
+          if (l[0] === 'B') {
+            nb++;
+            const w = l[3] || [];
+            if (w.length !== 2) fail.push('오답 보기가 2개가 아님: ' + d.id + '#' + i);
+            const all = [l[1], ...w.map(x => x[0])];
+            if (new Set(all).size !== 3) fail.push('보기 중복: ' + d.id + '#' + i);
+            w.forEach(([t2, n]) => { if (!n || n.length < 10) fail.push('오답 해설 없음/너무 짧음: ' + d.id + '#' + i + ' ' + t2); });
+          }
+        });
+      }
+    }
+    // 화면·진행: 모든 트랙에서 역할극과 퀴즈를 끝까지 돌려 본다
+    for (const t of TRACK_IDS) {
+      A.setPick('track', t);
+      if (!A.talklist().includes('역할극')) fail.push('회화 목록이 그려지지 않음: ' + t);
+      const d0 = A.talkDialogs()[0];
+      A.talkView(d0.id);
+      if (!A.talk().includes(d0.t)) fail.push('대화 보기 화면 오류: ' + t);
+      A.talkRole(d0.id);
+      let S1 = A.getS(), guard = 0;
+      while (S1.screen === 'talkq' && guard++ < 20) {
+        const q = S1.qs[S1.i];
+        if ((A.talkq().match(/class="opt /g) || []).length !== 3) fail.push('보기 3개가 아님: ' + t);
+        A.talkAns(q.opts.findIndex(o => o.ok));
+        if (!A.talkq().includes('talkNext')) fail.push('정답 후 다음 버튼 없음: ' + t);
+        A.talkNext(); S1 = A.getS();
+      }
+      if (S1.screen !== 'talkres' || S1.right !== S1.qs.length) fail.push('역할극 완주/채점 오류: ' + t);
+      if (!A.talkres().includes('다시 역할극')) fail.push('역할극 결과 화면 오류: ' + t);
+      A.talkQuiz();
+      S1 = A.getS(); guard = 0;
+      while (S1.screen === 'talkq' && guard++ < 20) {
+        A.talkAns(S1.qs[S1.i].opts.findIndex(o => !o.ok));       // 일부러 틀린 보기
+        if (!A.talkq().includes('class="fb no"')) fail.push('오답 해설이 안 보임: ' + t);
+        A.talkNext(); S1 = A.getS();
+      }
+      if (S1.screen !== 'talkres' || S1.right !== 0 || !A.talkres().includes('다시 볼 표현')) fail.push('퀴즈 오답 결과 오류: ' + t);
+    }
+    A.setPick('track', 'work');
+    if (!A.home().includes('openTalk()')) fail.push('홈에 회화 버튼이 없음');
+    note('회화 ' + nd + '개 대화 · 내 차례 ' + nb + '줄 · 7개 트랙 역할극·퀴즈 완주 확인');
+  }
 }
 
 /* ---------- 결과 ---------- */
