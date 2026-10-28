@@ -427,6 +427,17 @@
   .split .gear{width:56px}
   .tert{margin-top:10px}
   .tert button{min-height:46px}
+
+  .instchip{display:flex; align-items:center; gap:6px; margin-top:8px}
+  .instgo{flex:1; min-height:38px; border-radius:14px; background:var(--chipbg); color:var(--chipink); font-size:14px; font-weight:800;
+    display:inline-flex; align-items:center; justify-content:center; gap:7px; border:1.5px dashed var(--indigo)}
+  .instgo .ic{width:18px; height:18px}
+  .insthelp{margin-top:12px; padding:14px; border-radius:16px; background:var(--chipbg); color:var(--ink); font-size:14px; line-height:1.6}
+  .insthelp b{color:var(--chipink)}
+  .insthelp .instsub{color:var(--muted); margin-top:2px}
+  .insthelp ol{margin:8px 0 6px; padding-left:20px}
+  .insthelp small{display:block; color:var(--muted); font-size:12px}
+  .insthelp.ok{background:var(--ok-bg); color:var(--ok); font-weight:700}
   .topright{display:flex; align-items:center; gap:8px; flex:none}
   .fsmini{width:38px; height:38px; border-radius:50%; background:var(--surface); border:1.5px solid var(--line); color:var(--ink); display:inline-flex; align-items:center; justify-content:center; padding:0}
   .fsmini .ic{width:18px; height:18px}
@@ -1292,6 +1303,7 @@ function themeSheetHtml(){
   return `<div class="sheetbg" onclick="toggleSetSheet(false)">
     <div class="sheet" role="dialog" aria-label="설정" onclick="event.stopPropagation()">
       <div class="row"><h2>설정</h2><button class="link" onclick="toggleSetSheet(false)">닫기</button></div>
+      ${installSectionHtml()}
 
       <div class="label">소리</div>
       <div class="chips">
@@ -1656,9 +1668,8 @@ function home(){
     <button onclick="openLibrary()">${ic('book')}학습 노트</button>
     <button onclick="toggleSetSheet(true)">${ic('sliders')}설정</button>
   </div>
-  <button class="install" id="installBtn" style="display:${deferredPrompt ? 'block' : 'none'}" onclick="installApp()">📲 홈 화면에 추가하면 앱처럼 써요</button>
+  ${installChipHtml()}
   ${ttsNotice()}
-  ${iosHintHtml()}
   ${sheet}
   ${flashSheetHtml()}${themeSheetHtml()}${importSheetHtml()}`;
 }
@@ -1979,8 +1990,7 @@ if(typeof navigator !== 'undefined' && 'serviceWorker' in navigator
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  const b = document.getElementById('installBtn');
-  if(b) b.style.display = 'block';
+  if(S.screen === 'home' && !UI.setSheet) render();   // 설치 창을 띄울 수 있게 되면 안내를 갱신
 });
 
 window.addEventListener('appinstalled', () => {
@@ -1988,9 +1998,27 @@ window.addEventListener('appinstalled', () => {
   toast('홈 화면에 추가됐습니다. 이제 아이콘으로 바로 열 수 있습니다.', 3600);
 });
 
+/* ---------- 앱 설치 안내 (홈의 얇은 칩 + 설정의 단계별 안내) ---------- */
+const installWanted = () => !isStandalone() && store.get('bvq_instno') !== '1' && typeof location !== 'undefined' && location.protocol.indexOf('http') === 0;
+function installChipHtml(){
+  if(!installWanted()) return '';
+  return `<div class="instchip"><button class="instgo" onclick="installFlow()">${ic('get')}앱으로 설치 · 홈 화면에 추가</button>
+    <button class="link" onclick="store.set('bvq_instno','1');render()" aria-label="설치 안내 닫기">닫기</button></div>`;
+}
+// 설치 창을 띄울 수 있으면(안드로이드 크롬 등) 바로 띄우고, 아니면 설정의 단계별 안내를 연다
+function installFlow(){ if(deferredPrompt) installApp(); else toggleSetSheet(true); }
+function installSectionHtml(){
+  if(isStandalone()) return `<div class="insthelp ok">${ic('check') || ''}앱으로 실행 중이에요. 홈 화면 아이콘으로 바로 열 수 있어요.</div>`;
+  const steps = isIOS()
+    ? `<ol><li>사파리 아래쪽 <b>공유 버튼(□↑)</b>을 누르세요</li><li><b>홈 화면에 추가</b>를 고르세요</li><li>오른쪽 위 <b>추가</b>를 누르면 끝이에요</li></ol><small>아이폰은 크롬이 아니라 <b>사파리</b>에서만 설치돼요.</small>`
+    : `<ol><li>크롬·삼성 인터넷 오른쪽 위 <b>메뉴(⋮ 또는 ≡)</b>를 누르세요</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 고르세요</li><li><b>설치</b>를 누르면 아이콘이 생겨요</li></ol><small>PC 크롬은 주소창 오른쪽의 설치 아이콘(⊕)을 누르면 돼요.</small>`;
+  return `<div class="insthelp"><b>앱으로 설치하기</b>
+    <div class="instsub">주소창 없이 앱처럼 열리고, 인터넷이 없어도 쓸 수 있어요.</div>
+    ${deferredPrompt ? `<button class="primary" style="margin-top:10px" onclick="installApp()">${ic('get')}지금 설치하기</button>` : steps}</div>`;
+}
 async function installApp(){
   if(!deferredPrompt){
-    toast('브라우저 메뉴(⋮)에서 "홈 화면에 추가"를 눌러 주세요.', 4200);
+    toggleSetSheet(true);
     return;
   }
   deferredPrompt.prompt();
