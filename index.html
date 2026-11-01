@@ -142,6 +142,20 @@
     background:var(--surface); border:1.5px solid var(--line); color:var(--ink); font-size:16px; font-weight:800;
     box-shadow:var(--shadow)}
   .pill i{font-style:normal; color:var(--muted); font-size:12px}
+  .prog{margin-top:12px}
+  .prog .big{font-size:14px; color:var(--muted); font-weight:700}
+  .prog .big b{font-size:22px; color:var(--ink); font-weight:900}
+  .scopebtn{display:flex; align-items:center; gap:8px; width:100%; min-height:46px; margin-top:8px; padding:0 14px; border-radius:14px;
+    border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; cursor:pointer}
+  .scopebtn span{color:var(--muted); font-weight:600}
+  .scopebtn b{font-weight:800; flex:1; text-align:left}
+  .scopebtn .chg{color:var(--indigo); font-weight:800; display:flex; align-items:center; gap:2px}
+  .mgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px}
+  .mgrid button{display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-height:84px; padding:12px 14px; border-radius:16px;
+    border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; text-align:left; cursor:pointer}
+  .mgrid button .ic{width:24px; height:24px; color:var(--indigo); margin-bottom:4px}
+  .mgrid button b{font-size:17px; font-weight:900}
+  .mgrid button small{font-size:12.5px; color:var(--muted); font-weight:600}
   .hero{margin-top:16px}
   .hero .big{font-size:15px; color:var(--muted); font-weight:700}
   .hero .big b{font-size:30px; color:var(--ink); font-weight:900; margin-right:4px}
@@ -737,7 +751,7 @@ const TRACK = id => TRACKS.find(t => t.id === id) || TRACKS[TRACKS.length-1];
 const TR_PREFIX = {td:'toddler', ch:'child', el:'elem', md:'mid', hs:'high', un:'univ'};
 const trackOfKey = k => { const m = /^(?:g:)?(td|ch|el|md|hs|un)_/.exec(k); return m ? TR_PREFIX[m[1]] : 'work'; };
 // 마지막으로 고른 트랙·유형을 기억한다. 처음 접속이면 트랙 선택창을 먼저 연다.
-let UI = { sheet: true, firstRun: true, flashSheet: false, setSheet: false, importSheet: false };
+let UI = { sheet: true, firstRun: true, flashSheet: false, setSheet: false, importSheet: false, scopeSheet: false };
 try{
   const sv = JSON.parse(store.get('bvq_pick') || 'null');
   if(sv && TRACKS.some(t => t.id === sv.track)){
@@ -1023,7 +1037,7 @@ function retryWrong(){
 
 window.addEventListener('keydown', e => {
   const t = e.target && e.target.tagName;
-  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet || UI.flashSheet || UI.setSheet) return;
+  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet || UI.flashSheet || UI.setSheet || UI.scopeSheet) return;
   const go = e.key === 'Enter' || e.key === ' ';
   if(go && t === 'BUTTON') return;     // 버튼이 이미 자기 클릭을 처리한다
   if(S.screen === 'flash'){
@@ -1494,7 +1508,7 @@ function iosHintHtml(){
    앱이 한 화면짜리라서 가만두면 뒤로가기가 앱을 종료해 버린다. 홈이 아닌 화면이나 시트가 열려 있으면
    히스토리에 항목 하나를 쌓아 두고, 뒤로가기를 그 항목으로 받아 '한 단계 위'로만 올라가게 한다. */
 let NAVD = 0, NAVSKIP = 0;       // NAVSKIP: 우리가 직접 부른 history.back()이 일으킬 popstate 이벤트 수(사용자의 뒤로가기가 아니다)
-const navBase = () => S.screen === 'home' && !UI.sheet && !UI.flashSheet && !UI.setSheet && !UI.importSheet;
+const navBase = () => S.screen === 'home' && !UI.sheet && !UI.flashSheet && !UI.setSheet && !UI.importSheet && !UI.scopeSheet;
 function syncHistory(){
   if(typeof history === 'undefined' || !history.pushState) return;
   try{
@@ -1507,8 +1521,8 @@ function onBack(){
   if(NAVSKIP > 0){ NAVSKIP--; return; }                      // 위의 history.back()이 일으킨 이벤트는 무시 (그 직후 새로 쌓은 항목을 잘못 닫지 않게)
   if(!NAVD) return;
   NAVD = 0;
-  const layer = UI.sheet || UI.flashSheet || UI.setSheet || UI.importSheet;
-  UI.sheet = UI.flashSheet = UI.setSheet = UI.importSheet = false; UI.firstRun = false;
+  const layer = UI.sheet || UI.flashSheet || UI.setSheet || UI.importSheet || UI.scopeSheet;
+  UI.sheet = UI.flashSheet = UI.setSheet = UI.importSheet = UI.scopeSheet = false; UI.firstRun = false;
   if(!layer){                                                // 화면에서 뒤로 → 진행 상황을 지키고 홈으로
     if(S.screen === 'quiz' || S.screen === 'study'){ bank(); saveSession(); toast('홈으로 나왔어요. 이어서 하기로 계속할 수 있어요.', 2400); }
     else if(S.screen === 'flash'){ flcSave(); wakeOff(); }
@@ -1662,7 +1676,19 @@ function home(){
       ${name}<small>단어 ${lvCount(l)} · 문법 ${gCount(l)}</small></button>`;
   const seg = (c, name) => `<button class="seg ${PICK.cat===c?'on':''}" onclick="setPick('cat','${c}')">${name}</button>`;
   const levels = () => T.id === 'work' ? `
+    <div class="label">분야</div>
     <div class="chips lvrow" role="group" aria-label="분야">${lvChip(0,'전체')}${lvChip(1,'기초')}${lvChip(2,'회의')}${lvChip(3,'재무·법무')}</div>` : '';
+  const CAT_KO = {mix:'섞어서', word:'단어만', grammar:'문법만'};
+  const LV_KO = ['전체 분야', '기초', '회의', '재무·법무'];
+  const scopeText = CAT_KO[PICK.cat] + (T.id === 'work' ? ' · ' + LV_KO[PICK.level] : '');
+  const scopeSheet = UI.scopeSheet ? `<div class="sheetbg" onclick="toggleScope(false)">
+    <div class="sheet" role="dialog" aria-label="문제 범위" onclick="event.stopPropagation()">
+      <div class="row"><h2>어떤 문제를 풀까요?</h2><button class="link" onclick="toggleScope(false)">닫기</button></div>
+      <div class="label">유형</div>
+      <div class="segs" role="group" aria-label="문제 유형">${seg('mix','섞어서')}${seg('word','단어')}${seg('grammar','문법')}</div>
+      ${levels()}
+      <button class="primary" onclick="toggleScope(false)">선택 완료</button>
+    </div></div>` : '';
 
   const trRow = t => {
     const p = prog(t), on = t.id === T.id && !UI.firstRun;
@@ -1710,35 +1736,24 @@ function home(){
         <span class="lvl"><em>Lv.${lv.n} ${lv.name}</em><i><u style="width:${lv.pct}%"></u></i>${lv.next ? '<small>' + (lv.next - P.total) + '점 남음</small>' : '<small>최고 레벨</small>'}</span></div>
       ${goalRing()}</div>`; })()}
 
-  <div class="card hero">
-    <div class="big"><b>${pr.seen}</b>/ ${pr.total} 학습 시작<span class="mastered"> · 완전 습득 ${pr.mastered}</span></div>
-    <div class="bar two"><i class="seen" style="width:${seenPct}%"></i><i style="width:${pct}%"></i></div>
-    <div class="stats">
-      <div class="stat"><b style="color:var(--indigo)">${P.total}</b><span>누적 점수</span></div>
-      <div class="stat"><b style="color:${pr.due ? 'var(--no)' : 'var(--muted)'}">${pr.due}</b><span>복습 대기</span></div>
-      <div class="stat"><b style="color:var(--amber)">${P.best}</b><span>최고 연속</span></div>
-    </div>
-  </div>
-
-  ${levels()}
-  <div class="segs" role="group" aria-label="문제 유형">${seg('mix','섞어서')}${seg('word','단어')}${seg('grammar','문법')}</div>
+  <div class="prog"><div class="big"><b>${pr.seen}</b> / ${pr.total} 학습 시작<span class="mastered"> · 습득 ${pr.mastered}</span></div>
+    <div class="bar two"><i class="seen" style="width:${seenPct}%"></i><i style="width:${pct}%"></i></div></div>
 
   ${cta}
+  <button class="scopebtn" onclick="toggleScope(true)" aria-label="문제 범위 바꾸기"><span>문제 범위</span><b>${scopeText}</b><span class="chg">바꾸기 ${ic('down')}</span></button>
 
-  <div class="split">
-    <button class="main" onclick="startFlash()">${ic('bolt')}깜빡이 암기<small>${FDECK_KO[SET.flashDeck]} ${SET.flashCount}개 · ${FSPEED_KO[SET.flashSpeed]} · 소리 ${SND.on ? '켬' : '끔'}</small></button>
-    <button class="gear" onclick="toggleFlashSheet(true)" aria-label="깜빡이 설정">${ic('sliders')}</button>
-  </div>
-  <div class="tert">
-    <button onclick="openLibrary()">${ic('book')}학습 노트</button>
-    <button onclick="openTalk()">${ic('chat')}회화</button>
-    <button onclick="toggleSetSheet(true)">${ic('sliders')}설정</button>
+  <div class="mgrid">
+    <button onclick="toggleFlashSheet(true)">${ic('bolt')}<b>깜빡이 암기</b><small>눈으로 쭉 외우기</small></button>
+    <button onclick="openTalk()">${ic('chat')}<b>회화 연습</b><small>상황별 말하기</small></button>
+    <button onclick="openLibrary()">${ic('book')}<b>학습 노트</b><small>약점·즐겨찾기</small></button>
+    <button onclick="toggleSetSheet(true)">${ic('sliders')}<b>설정</b><small>화면·소리·기록</small></button>
   </div>
   ${installChipHtml()}
   ${ttsNotice()}
   ${sheet}
-  ${flashSheetHtml()}${themeSheetHtml()}${importSheetHtml()}`;
+  ${flashSheetHtml()}${themeSheetHtml()}${importSheetHtml()}${scopeSheet}`;
 }
+function toggleScope(v){ UI.scopeSheet = v; render(); }
 
 function study(){
   const w = S.deck[S.si];
