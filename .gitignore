@@ -3,6 +3,10 @@ app/
 gradle/
 gradle.properties
 *.gradle.kts
-.github/
+.github/*
+!.github/workflows/
+.github/workflows/*
+!.github/workflows/apk.yml
+signing/
 setup.sh
 .claude/
