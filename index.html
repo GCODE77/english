@@ -156,6 +156,13 @@
   .mgrid button .ic{width:24px; height:24px; color:var(--indigo); margin-bottom:4px}
   .mgrid button b{font-size:17px; font-weight:900}
   .mgrid button small{font-size:12.5px; color:var(--muted); font-weight:600}
+  .sgrp{border:1px solid var(--line); border-radius:16px; background:var(--surface); margin-top:10px; overflow:hidden}
+  .sghead{display:flex; align-items:center; justify-content:space-between; width:100%; min-height:62px; padding:8px 16px; background:transparent; border:0; color:var(--ink); font:inherit; text-align:left; cursor:pointer}
+  .sghead b{display:block; font-size:17px; font-weight:900}
+  .sghead small{display:block; font-size:13px; color:var(--muted); font-weight:600; margin-top:1px}
+  .sghead .ic{width:20px; height:20px; color:var(--indigo); transition:transform .2s}
+  .sgrp.open .sghead .ic{transform:rotate(180deg)}
+  .sgbody{padding:0 16px 16px; border-top:1px solid var(--line)}
   .hero{margin-top:16px}
   .hero .big{font-size:15px; color:var(--muted); font-weight:700}
   .hero .big b{font-size:30px; color:var(--ink); font-weight:900; margin-right:4px}
@@ -1376,6 +1383,11 @@ function toggleBlack(){
 }
 const blackBtn = () => `<button class="${SET.flashBlack ? 'tgl' : ''}" id="blackbtn" onclick="toggleBlack()" aria-label="블랙 화면 ${SET.flashBlack ? '끄기' : '켜기'}" aria-pressed="${!!SET.flashBlack}">${ic('half')}블랙 ${SET.flashBlack ? '켬' : '끔'}</button>`;
 function toggleSetSheet(v){ UI.setSheet = v; render(); }
+function toggleSetGrp(id){ UI.setGrp = UI.setGrp === id ? '' : id; render(); }
+const grpOpen = id => UI.setGrp === id || UI.setGrp === 'all';   // 'all'은 verify.js 전용(모두 펼침)
+const setGrp = (id, title, sub, body) => `<div class="sgrp${grpOpen(id) ? ' open' : ''}">
+  <button class="sghead" aria-expanded="${grpOpen(id)}" onclick="toggleSetGrp('${id}')"><span><b>${title}</b><small>${sub}</small></span>${ic('down')}</button>
+  ${grpOpen(id) ? `<div class="sgbody">${body}</div>` : ''}</div>`;
 function themeSheetHtml(){
   if(!UI.setSheet) return '';
   const th = v => `<button class="chip ${SET.theme === v ? 'on' : ''}" onclick="setTheme('${v}')">${THEME_KO[v]}</button>`;
@@ -1384,22 +1396,23 @@ function themeSheetHtml(){
   return `<div class="sheetbg" onclick="toggleSetSheet(false)">
     <div class="sheet" role="dialog" aria-label="설정" onclick="event.stopPropagation()">
       <div class="row"><h2>설정</h2><button class="link" onclick="toggleSetSheet(false)">닫기</button></div>
-      ${installSectionHtml()}
-
+      ${setGrp('sound', '소리·발음', (SND.on ? '자동 발음 켬' : '자동 발음 끔') + ' · ' + (SET.ttsSlow ? '느리게' : '보통'), `
       <div class="label">소리</div>
       <div class="chips">
         <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? ic('vol') + '자동 발음 켜짐' : ic('mute') + '자동 발음 꺼짐'}</button>
         <button class="chip" onclick="TTS.diagnose()">${ic('vol')}소리 테스트</button>
         <button class="chip ${SET.sfx ? 'on' : ''}" onclick="toggleSfx()">${SET.sfx ? '효과음 켜짐' : '효과음 꺼짐'}</button>
       </div>
-      <div class="label">하루 목표</div>
-      <div class="chips">${[10, 20, 40].map(n => `<button class="chip ${goalN() === n ? 'on' : ''}" onclick="setGoal(${n})">${n}문제</button>`).join('')}</div>
       <div class="label">발음 속도</div>
       <div class="chips">
         <button class="chip ${SET.ttsSlow ? '' : 'on'}" onclick="setTtsSlow(false)">보통</button>
         <button class="chip ${SET.ttsSlow ? 'on' : ''}" onclick="setTtsSlow(true)">${ic('slow')}느리게</button>
       </div>
 
+      `)}
+      ${setGrp('learn', '학습', '하루 ' + goalN() + '문제 · 한 번에 ' + sizeN() + '문제', `
+      <div class="label">하루 목표</div>
+      <div class="chips">${[10, 20, 40].map(n => `<button class="chip ${goalN() === n ? 'on' : ''}" onclick="setGoal(${n})">${n}문제</button>`).join('')}</div>
       <div class="label">한 번에 푸는 문제 수</div>
       <div class="chips">
         <button class="chip ${sizeN() === 5 ? 'on' : ''}" onclick="setSize(5)">5문제</button>
@@ -1410,6 +1423,8 @@ function themeSheetHtml(){
       <div class="label">새 단어 카드 자동 넘김</div>
       <div class="chips">${au(0, '끄기')}${au(4, '4초')}${au(6, '6초')}${au(9, '9초')}</div>
 
+      `)}
+      ${setGrp('screen', '화면', '테마 ' + THEME_KO[SET.theme] + (SET.hc ? ' · 고대비' : ''), `
       <div class="label">테마</div>
       <div class="chips">${th('auto')}${th('light')}${th('dark')}${th('black')}</div>
       <p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">자동은 폰의 다크 모드 설정을 따라가요. 블랙은 배경이 완전한 검정이라 OLED 화면에서 배터리를 아끼고 눈이 편해요.</p>
@@ -1432,7 +1447,9 @@ function themeSheetHtml(){
         <div style="font-size:18px;font-weight:700;margin-top:10px">찾아보다</div>
         <div class="meta" style="margin-top:4px">미리보기</div>
       </div>
-
+      `)}
+      ${setGrp('data', '앱 설치·기록', '백업 · 설치 안내 · 초기화', `
+      ${installSectionHtml()}
       <div class="label">내 학습 기록 (백업)</div>
       <div class="chips opts2">
         <button class="chip" onclick="exportBackup()">${ic('up')}파일로 저장</button>
@@ -1447,6 +1464,7 @@ function themeSheetHtml(){
         깜빡이 암기는 눈으로 보기만 하는 반복이라 학습 기록에는 반영되지 않아요.
       </details>
       <button class="ghost" style="color:var(--no)" onclick="if(confirm('모든 트랙의 학습 기록을 지웁니다.')){P={items:{},total:0,best:0};saveP(P);UI.setSheet=false;render();}">학습 기록 초기화</button>
+      `)}
     </div></div>`;
 }
 function setAuto(v){ SET.auto = v > 0; if(v > 0) SET.autoSec = v; saveSet(); render(); }

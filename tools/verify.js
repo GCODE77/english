@@ -415,6 +415,7 @@ console.log('\n[9] 화면 설정 (테마 · 음영 대비)');
 {
   if (A.SET.theme !== 'auto' || A.SET.hc) fail.push('테마 기본값이 자동/보통이 아님');
   A.UI.setSheet = true;
+  A.UI.setGrp = 'all';
   let h = A.themeSheetHtml();
   for (const t of ['자동', '밝게', '어둡게', '블랙', '음영 대비', '고대비', '미리보기'])
     if (!h.includes(t)) fail.push('화면 설정 시트에 "' + t + '" 가 없음');
@@ -619,6 +620,7 @@ console.log('\n[13] 즐겨찾기 · 백업 · 문제 수 · 발음 속도');
   A.UI.importSheet = false;
   if (A.importSheetHtml() !== '') fail.push('닫힌 가져오기 시트가 렌더링됨');
   A.UI.setSheet = true;
+  A.UI.setGrp = 'all';   // 설정 그룹을 모두 펼쳐 검사
   const sh = A.themeSheetHtml();
   for (const tx of ['발음 속도', '한 번에 푸는 문제 수', '내 학습 기록', '파일로 저장', '가져오기']) if (!sh.includes(tx)) fail.push('설정에 "' + tx + '" 가 없음');
   A.UI.setSheet = false;
