@@ -38,6 +38,7 @@ jobs:
 
       - name: 앱 아이콘 적용
         run: |
+          sudo apt-get install -y -qq imagemagick
           RES=android/app/src/main/res
           icon() { convert icons/icon-maskable-512.png -resize "$2x$2" "$RES/mipmap-$1/ic_launcher.png"; cp "$RES/mipmap-$1/ic_launcher.png" "$RES/mipmap-$1/ic_launcher_round.png"; }
           icon mdpi 48; icon hdpi 72; icon xhdpi 96; icon xxhdpi 144; icon xxxhdpi 192
