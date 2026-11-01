@@ -673,6 +673,7 @@ console.log('\n[14] 디자인 일관성');
         if (ids.has(d.id)) fail.push('회화 id 중복: ' + d.id);
         ids.add(d.id);
         if (!d.t) fail.push('회화 제목 없음: ' + d.id);
+        if (!['hi','home','school','shop','go','med','fun','work'].includes(d.c)) fail.push('회화 분류(c) 없음/오류: ' + d.id);
         if (d.l.length < 4 || d.l.length % 2) fail.push('회화 줄 수 이상(짝수·4줄 이상): ' + d.id);
         d.l.forEach((l, i) => {
           if (l[0] !== (i % 2 ? 'B' : 'A')) fail.push('A/B 순서 오류: ' + d.id + '#' + i);
@@ -692,6 +693,7 @@ console.log('\n[14] 디자인 일관성');
     for (const t of TRACK_IDS) {
       A.setPick('track', t);
       if (!A.talklist().includes('역할극')) fail.push('회화 목록이 그려지지 않음: ' + t);
+      if (!A.talklist().includes('ctile')) fail.push('회화 분류 타일이 없음: ' + t);
       const d0 = A.talkDialogs()[0];
       A.talkView(d0.id);
       if (!A.talk().includes(d0.t)) fail.push('대화 보기 화면 오류: ' + t);

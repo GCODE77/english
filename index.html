@@ -460,6 +460,15 @@
   .tmsg .en{font-weight:700; font-size:16px; line-height:1.5}
   .tmsg .kk{font-size:13px; color:var(--muted); margin-top:2px; line-height:1.5}
   .tmsg .miniSpeak{margin-top:6px; min-height:34px; padding:0 12px}
+  .cgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:12px 0 4px}
+  .ctile{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; min-height:68px; padding:6px 2px;
+    border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; cursor:pointer}
+  .ctile .ce{font-size:22px; line-height:1.1}
+  .ctile b{font-size:14px; word-break:keep-all}
+  .ctile small{font-size:11px; color:var(--muted); font-weight:600}
+  .ctile.on{background:var(--indigo); border-color:var(--indigo); color:var(--cloud)}
+  .ctile.on small{color:var(--cloud); opacity:.9}
+  .ctag{display:inline-block; margin-top:6px; padding:2px 10px; border-radius:99px; background:var(--chipbg); font-size:12px; font-weight:700; color:var(--muted)}
   .tcard{margin-top:12px; padding:14px 16px}
   .tcard .ttl{font-size:17px}
   .tbtns{display:flex; gap:8px; margin-top:10px}
@@ -1936,20 +1945,42 @@ function msgHtml(l, o){
     <div class="en">${esc(l[1])}</div>${o.ko === false ? '' : `<div class="kk">${esc(l[2])}</div>`}${o.nospeak ? '' : sayBtn(l[1])}</div>`;
 }
 
+// 회화 분류: 장소(집·학교·가게·길·병원·직장) + 상황(인사·친구). 대화마다 data/talk.js 의 c 필드로 붙는다
+const TCATS = [
+  {id:'hi',     n:'인사·소개',  e:'🙋', d:'처음 만나 인사하고 나를 소개해요'},
+  {id:'home',   n:'집·가족',    e:'🛋️', d:'집에서 가족과 나누는 말'},
+  {id:'school', n:'학교·학업',  e:'🏫', d:'수업·시험·교수님과 하는 말'},
+  {id:'shop',   n:'가게·식당',  e:'🛒', d:'사고, 주문하고, 같이 먹을 때'},
+  {id:'go',     n:'길·여행',    e:'🧭', d:'길 묻기, 교통, 공항, 택시'},
+  {id:'med',    n:'병원·건강',  e:'🩺', d:'아플 때 증상을 말해요'},
+  {id:'fun',    n:'친구·모임',  e:'🎉', d:'놀자고 하기, 초대, 동아리'},
+  {id:'work',   n:'직장·업무',  e:'💼', d:'회의·전화·부탁·반대 의견'}
+];
+const tcatOf = id => TCATS.find(c => c.id === id);
+UI.tcat = 'all';
+function talkCat(id){ UI.tcat = id; render(); }
+const talkShown = () => talkDialogs().filter(d => UI.tcat === 'all' || d.c === UI.tcat);
+
 function talklist(){
   SAY = [];
-  const T = TRACK(PICK.track), ds = talkDialogs(), pg = talkProg();
+  const T = TRACK(PICK.track), all = talkDialogs(), pg = talkProg();
+  const cats = TCATS.filter(c => all.some(d => d.c === c.id));
+  if(UI.tcat !== 'all' && !cats.some(c => c.id === UI.tcat)) UI.tcat = 'all';
+  const cur = tcatOf(UI.tcat), ds = talkShown();
+  const tile = (id, e, n, cnt) => `<button class="ctile${UI.tcat === id ? ' on' : ''}" aria-pressed="${UI.tcat === id}" onclick="talkCat('${id}')"><span class="ce">${e}</span><b>${n}</b><small>${cnt}개</small></button>`;
   const card = d => {
-    const nb = d.l.filter(l => l[0] === 'B').length, c = pg[d.id];
+    const nb = d.l.filter(l => l[0] === 'B').length, c = pg[d.id], k = tcatOf(d.c);
     return `<div class="card tcard"><div class="row"><b class="ttl">${esc(d.t)}</b>
       <span class="meta">${c ? '역할극 최고 ' + c.best + '/' + nb : '아직 안 해봤어요'}</span></div>
+      ${UI.tcat === 'all' && k ? `<span class="ctag">${k.e} ${k.n}</span>` : ''}
       <div class="tbtns"><button class="ghost" onclick="talkView('${d.id}')">${ic('book')}대화 보기</button>
       <button class="ghost tgo" onclick="talkRole('${d.id}')">${ic('chat')}역할극</button></div></div>`;
   };
   return `${talkNav()}
   <h1 style="margin-top:6px">회화 · ${esc(T.name)}</h1>
-  <div class="sub">대화를 보고, 상황에 맞는 말을 골라 직접 말해 봐요.</div>
-  ${ds.length ? `<button class="primary" onclick="talkQuiz()">${ic('chat')}응답 고르기 퀴즈<small>상대 말에 어울리는 응답 · 최대 10문제</small></button>
+  <div class="sub">어디서, 어떤 상황의 말을 연습할까요?</div>
+  ${all.length ? `<div class="cgrid" role="group" aria-label="회화 분류">${tile('all', '📚', '전체', all.length)}${cats.map(c => tile(c.id, c.e, c.n, all.filter(d => d.c === c.id).length)).join('')}</div>
+    <button class="primary" onclick="talkQuiz()">${ic('chat')}${cur ? esc(cur.n) + ' ' : ''}응답 고르기 퀴즈<small>${cur ? esc(cur.d) : '상대 말에 어울리는 응답'} · 최대 10문제</small></button>
     ${ds.map(card).join('')}` : '<div class="empty" style="padding-top:60px">이 대상의 회화는 준비 중이에요.</div>'}`;
 }
 
@@ -1984,7 +2015,7 @@ function talkRole(id){
 }
 function talkQuiz(){
   const pool = [];
-  talkDialogs().forEach(d => d.l.forEach((l, i) => { if(l[0] === 'B') pool.push(talkQ(d, i, 2)); }));
+  talkShown().forEach(d => d.l.forEach((l, i) => { if(l[0] === 'B') pool.push(talkQ(d, i, 2)); }));
   const qs = shuffle(pool).slice(0, 10);
   if(!qs.length){ toast('이 대상의 회화는 준비 중이에요.', 2000); return; }
   S = {screen:'talkq', mode:'quiz', d:null, qs, i:0, right:0, streak:0, fb:null, missed:[]}; render();
@@ -2059,7 +2090,7 @@ function talkres(){
       <div style="margin-top:2px;font-size:14px;color:var(--muted)">${esc(q.ko)}</div>${sayBtn(q.ans)}</div>`).join('');
   return `${acc >= 60 ? confettiHtml() : ''}${talkNav()}
   <div class="resulthead">${mascot(acc >= 60 ? 'cheer' : '', 72)}<div><h1>${title}</h1>
-    <div class="meta" style="font-weight:600">${S.mode === 'role' ? esc(S.d.t) + ' 역할극' : '응답 고르기 퀴즈'}</div></div></div>
+    <div class="meta" style="font-weight:600">${S.mode === 'role' ? esc(S.d.t) + ' 역할극' : (tcatOf(UI.tcat) ? tcatOf(UI.tcat).n + ' ' : '') + '응답 고르기 퀴즈'}</div></div></div>
   <div class="card" style="margin-top:16px"><div class="stats">
     <div class="stat"><b style="color:var(--ok)">${S.right}/${n}</b><span>맞힌 문제</span></div>
     <div class="stat"><b style="color:var(--indigo)">${acc}%</b><span>정답률</span></div>
