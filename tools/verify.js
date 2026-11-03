@@ -46,7 +46,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,onBack,syncHistory,navBase,backupText,parseBackup,toggleFav,isFav,setSize,sizeN,importSheetHtml,setTtsSlow,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,flashWrong,setLibStatus,getP:()=>P,getS:()=>S,__bvqTalk,loadTalk,talkDialogs,talkRole,talkQuiz,talkView,talkAns,talkNext,talklist,talk,talkq,talkres,getTalk:()=>TALK};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,onBack,syncHistory,navBase,backupText,parseBackup,toggleFav,isFav,setSize,sizeN,importSheetHtml,setTtsSlow,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,flashWrong,setLibStatus,getP:()=>P,getS:()=>S,__bvqTalk,loadTalk,talkDialogs,talkRole,talkQuiz,talkView,talkAns,talkNext,talklist,talk,talkq,talkres,getTalk:()=>TALK,koPron,spDiff,micBtn};',
     box
   );
   for (const t of TRACK_IDS)
@@ -723,6 +723,35 @@ console.log('\n[14] 디자인 일관성');
     if (!A.home().includes('openTalk()')) fail.push('홈에 회화 버튼이 없음');
     note('회화 ' + nd + '개 대화 · 내 차례 ' + nb + '줄 · 7개 트랙 역할극·퀴즈 완주 확인');
   }
+}
+
+/* ---------- [16] 깜빡이 뜻 읽기 · 따라 말하기 ---------- */
+{
+  console.log('\n[16] 깜빡이 뜻 읽기 · 한글 표기(옵션) · 따라 말하기');
+  // 깜빡이: 뜻 단계에서 한국어 뜻을 먼저, 이어서 영어 예문을 읽는다
+  const spoken = [], o16 = box.speechSynthesis.speak;
+  box.speechSynthesis.speak = u => spoken.push([u.lang, u.text]);
+  A.TTS.sayList([['ko-KR', '사과'], ['en-US', 'I eat an apple.']]);
+  box.speechSynthesis.speak = o16;
+  if (spoken.length !== 2 || spoken[0][0] !== 'ko-KR' || spoken[0][1] !== '사과' || spoken[1][0] !== 'en-US') fail.push('뜻/예문 읽기 순서·언어 오류: ' + JSON.stringify(spoken));
+  if (!A.flash.toString().includes('flashKo')) fail.push('깜빡이가 뜻 읽기 설정(flashKo)을 쓰지 않음');
+  // 한글 표기(옵션): 대표 단어가 맞고, 전체 발음기호가 한글로만 변환되며, 기본은 꺼짐
+  const kcases = {'/ˈlevərɪdʒ/':'레버리지', '/ˈtiːtʃər/':'티처', '/bʊk/':'북', '/kwɛstʃən/':'퀘스천', '/wɜːrld/':'월드', '/ˈklæsˌruːm/':'클래스룸', '/ˈsteɪkˌhoʊldər/':'스테이크홀더', '/ˈmiːtɪŋ/':'미팅'};
+  for (const [ip, ko] of Object.entries(kcases)) if (A.koPron(ip) !== ko) fail.push('한글 표기 변환 오류: ' + ip + ' → ' + A.koPron(ip) + ' (기대 ' + ko + ')');
+  let kn = 0, kbad = 0;
+  for (const t of TRACK_IDS) {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'data', t + '.js'), 'utf8');
+    for (const m of src.matchAll(/"ipa":"([^"]+)"/g)) { kn++; if (!/^[가-힣]+$/.test(A.koPron(m[1]))) kbad++; }
+  }
+  if (kbad) fail.push('한글 표기가 한글로만 나오지 않는 항목 ' + kbad + '개');
+  if (A.SET.koPron === true) fail.push('한글 표기는 기본 꺼짐이어야 함');
+  note('한글 표기(옵션) ' + kn + '개 모두 한글 · 대표 8단어 일치 · 기본 꺼짐');
+  const d1 = A.spDiff('Nice to meet you, Mina!', 'nice to meet you mina');
+  if (d1.pct !== 100) fail.push('따라 말하기 비교 오류(완전 일치): ' + d1.pct);
+  const d2 = A.spDiff("I'm good, thank you.", 'i am good thank you');
+  if (d2.pct >= 100 || d2.words.filter(x => !x.ok).length !== 1) fail.push('따라 말하기 비교 오류(한 단어 틀림)');
+  if (A.spDiff('How are you today?', '').pct !== 0) fail.push('따라 말하기 비교 오류(무음)');
+  note('뜻(한국어)→예문(영어) 순서 읽기 · 음성 인식 비교(일치·부분·무음) 확인');
 }
 
 /* ---------- 결과 ---------- */

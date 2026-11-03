@@ -163,6 +163,20 @@
   .sghead .ic{width:20px; height:20px; color:var(--indigo); transition:transform .2s}
   .sgrp.open .sghead .ic{transform:rotate(180deg)}
   .sgbody{padding:0 16px 16px; border-top:1px solid var(--line)}
+  .mic{margin-left:6px}
+  .mic.rec{background:var(--no); color:#fff; animation:pulse 1s infinite}
+  .spk{margin-top:8px}
+  .spkmsg{padding:10px 12px; border-radius:12px; background:var(--chipbg); color:var(--chipink); font-size:14px; font-weight:700; line-height:1.5}
+  .spkmsg.no{background:var(--no-bg); color:var(--no)}
+  .spkres{padding:12px; border-radius:14px; border:1px solid var(--line); background:var(--surface)}
+  .spkv{font-size:16px; font-weight:800} .spkv b{font-size:22px; margin-right:6px}
+  .spkv.ok{color:var(--ok)} .spkv.mid{color:var(--amber)} .spkv.no{color:var(--no)}
+  .spkw{margin-top:8px; font-size:17px; font-weight:700; line-height:1.9}
+  .spkw .ok{color:var(--ok)} .spkw .bad{color:var(--no); text-decoration:underline wavy}
+  .spkh, .spkn{margin-top:6px; font-size:12.5px; color:var(--muted); font-weight:600}
+  .spkb{margin-top:8px; font-size:13px; font-weight:800; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+  .kopr{display:inline-block; margin-left:6px; padding:2px 10px; border-radius:99px; background:var(--chipbg); color:var(--chipink); font-size:14px; font-weight:800}
+  .fkopr{margin-top:10px; font-size:26px; font-weight:800; color:var(--indigo); letter-spacing:.02em}
   .hero{margin-top:16px}
   .hero .big{font-size:15px; color:var(--muted); font-weight:700}
   .hero .big b{font-size:30px; color:var(--ink); font-weight:900; margin-right:4px}
@@ -582,6 +596,7 @@ function loadTrack(id){
 const IC = {
   home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>',
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>',
   vol:'<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
   mute:'<path d="M4 9v6h4l5 4V5L8 9z"/><path d="m17 9.5 5 5M22 9.5l-5 5"/>',
   slow:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
@@ -660,6 +675,32 @@ const TTS = {
           const u = new SpeechSynthesisUtterance(text);
           u.lang = 'en-US'; u.rate = SET.ttsSlow ? 0.65 : 0.92;
           const v = who === 'A' ? alt : main; if(v) u.voice = v;
+          speechSynthesis.speak(u);
+        });
+        speechSynthesis.resume();
+      }catch(e){ toast('음성 오류: ' + e.message, 3200); }
+    }, 60);
+  },
+
+  // 한국어 뜻과 영어 예문을 차례로 읽는다. items = [[언어, 문장], ...]
+  sayList(items){
+    if(!items.length) return;
+    if(!this.available()){ toast('이 화면에서는 음성이 차단됩니다. 파일을 내려받아 Chrome이나 삼성 인터넷에서 열어 주세요.', 4200); return; }
+    try{ speechSynthesis.cancel(); }catch(e){}
+    const my = this.seq = (this.seq || 0) + 1;
+    setTimeout(() => {
+      if(my !== this.seq) return;
+      try{
+        const all = speechSynthesis.getVoices();
+        const ko = all.find(v => /^ko/i.test(v.lang));
+        if(items.some(x => x[0] === 'ko-KR') && !ko && !this.koWarned){
+          this.koWarned = true;
+          toast('한국어 음성이 설치돼 있지 않아요. 설정 > 텍스트 음성 변환에서 한국어를 추가해 주세요.', 4800);
+        }
+        items.forEach(([lang, text]) => {
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = lang; u.rate = lang === 'ko-KR' ? 0.95 : (SET.ttsSlow ? 0.65 : 0.92);
+          const v = lang === 'ko-KR' ? ko : this.pick(); if(v) u.voice = v;
           speechSynthesis.speak(u);
         });
         speechSynthesis.resume();
@@ -768,6 +809,111 @@ try{
 }catch(e){}
 const savePick = () => { try{ store.set('bvq_pick', JSON.stringify({track:PICK.track, cat:PICK.cat})); }catch(e){} };
 const ipaOf = (w, style) => w.ipa ? `<span class="ipa"${style ? ` style="${style}"` : ''}>${esc(w.ipa)}</span>` : '';
+
+/* 한글 표기(옵션, 기본 꺼짐): 발음기호(ipa)를 읽지 못하는 사람을 위해 규칙으로 옮긴 '참고용' 표기다. 단어마다 지어낸 값이 아니고 외래어 표기법을 단순화한 규칙이다. 정확한 소리는 🔊로 확인할 것 */
+/* IPA(미국식) -> 한글 발음 (외래어 표기법을 단순화한 규칙 변환, 참고용) */
+const KO_CONS = {p:[17,18],b:[7,18],t:[16,18],d:[3,18],k:[15,18],g:[0,18],f:[17,18],v:[7,18],'θ':[9,18],'ð':[3,18],s:[9,18],z:[12,18],'ʃ':[9,20],'ʒ':[12,20],'tʃ':[14,20],'dʒ':[12,20],h:[18,18],m:[6,18],n:[2,18],l:[5,18],r:[5,18],'ŋ':[11,18]};
+const KO_CODA = {n:4, m:16, 'ŋ':21, l:8};
+const KO_STOPCODA = {k:1, t:19, p:17};
+const KO_VOW = {i:20,'ɪ':20,e:5,'ɛ':5,'æ':1,'ɑ':0,a:0,'ʌ':4,'ə':4,'ɜ':4,'ɔ':8,u:13,'ʊ':13};
+const KO_SHORT = new Set(['ɪ','e','ɛ','æ','ɑ','a','ʌ','ə','ɔ','ʊ']);
+const KO_PAL = {0:2, 4:6, 8:12, 13:17, 5:7, 1:3};
+const KO_WV = {0:9, 5:15, 1:10, 4:14, 8:14, 20:16, 13:13};
+function koPron(ipa){
+  if(!ipa) return '';
+  const src = String(ipa).replace(/[\/\[\]()]/g, '').replace(/ɡ/g, 'g').replace(/ɝ|ɚ/g, 'ɜr');
+  const tk = [];
+  for(let i = 0; i < src.length; i++){
+    const c = src[i], n = src[i + 1];
+    if(c === 'ˈ' || c === 'ˌ' || c === ' ' || c === '.') continue;
+    if(c === 'ː'){ if(tk.length && tk[tk.length - 1].t === 'V') tk[tk.length - 1].long = true; continue; }
+    if(c === 't' && n === 'ʃ'){ tk.push({t:'C', c:'tʃ'}); i++; continue; }
+    if(c === 'd' && n === 'ʒ'){ tk.push({t:'C', c:'dʒ'}); i++; continue; }
+    if(KO_VOW[c] !== undefined || c === 'o'){
+      let v = c === 'o' ? 8 : KO_VOW[c], d = null;
+      if(c === 'o' && n === 'ʊ'){ i++; }   // oʊ는 '오'로 적는다(홀더·노트·쇼)
+      else if(c === 'e' && n === 'ɪ'){ d = 20; i++; }
+      else if((c === 'a' || c === 'ɑ') && n === 'ɪ'){ d = 20; i++; }
+      else if(c === 'a' && n === 'ʊ'){ d = 13; i++; }
+      else if(c === 'ɔ' && n === 'ɪ'){ d = 20; i++; }
+      tk.push({t:'V', v, ch:c, d, long:!!d});
+      continue;
+    }
+    if(c === 'j' || c === 'w'){ tk.push({t:'G', g:c}); continue; }
+    if(KO_CONS[c]) tk.push({t:'C', c});
+  }
+  // r: 모음 앞이 아니면 없앤다(모음 뒤 r은 어말이면 '어'를 붙인다)
+  const T = [];
+  for(let i = 0; i < tk.length; i++){
+    const x = tk[i];
+    if(x.t === 'C' && x.c === 'r'){
+      const nx = tk[i + 1], pv = T[T.length - 1];
+      if(nx && nx.t === 'V') { T.push(x); continue; }
+      if(!nx && pv && pv.t === 'V' && !pv.d && 'ɪieɛʊuɔ'.includes(pv.ch)) T.push({t:'V', v:4, ch:'ə', d:null, long:true});
+      continue;
+    }
+    T.push(x);
+  }
+  const syl = [];
+  const mk = (on, v) => { const s = {on, v, co:0}; syl.push(s); return s; };
+  const eum = c => mk(KO_CONS[c][0], KO_CONS[c][1]);
+  let i = 0, pendingOn = null;     // 다음 모음이 받을 첫소리
+  const vowel = (x, on, glide) => {
+    let v = x.v;
+    if(glide === 'j') v = v === 20 ? 20 : (KO_PAL[v] !== undefined ? KO_PAL[v] : v);
+    else if(glide === 'w') v = KO_WV[v] !== undefined ? KO_WV[v] : v;
+    mk(on === null ? 11 : on, v);
+    if(x.d !== null) mk(11, x.d);
+  };
+  while(i < T.length){
+    // 모음 앞 자음 덩어리 모으기
+    const cl = [];
+    while(i < T.length && T[i].t === 'C') cl.push(T[i++]);
+    let glide = null;
+    if(i < T.length && T[i].t === 'G'){ glide = T[i].g; i++; }
+    if(i >= T.length || T[i].t !== 'V'){
+      if(glide && !cl.length){ continue; }
+      // 어말 자음 덩어리
+      const prev = syl[syl.length - 1];
+      cl.forEach((x, k) => {
+        const last = syl[syl.length - 1];
+        if(KO_CODA[x.c] && last && !last.co) last.co = KO_CODA[x.c];
+        else if(KO_STOPCODA[x.c] && last && !last.co && k === cl.length - 1 && last.short && cl.length === 1) last.co = KO_STOPCODA[x.c];
+        else eum(x.c);
+      });
+      continue;
+    }
+    const vx = T[i++];
+    const first = syl.length === 0;
+    let onsetC = null;
+    if(cl.length){
+      let start = 0;
+      if(!first){
+        const last = syl[syl.length - 1], a = cl[0].c;
+        if(KO_CODA[a] && !last.co && (cl.length > 1 || a === 'ŋ' || glide)){ last.co = KO_CODA[a]; start = 1; }
+        else if(KO_STOPCODA[a] && !last.co && last.short && cl.length > 1){ last.co = KO_STOPCODA[a]; start = 1; }
+      }
+      const rest = cl.slice(start);
+      const keep = rest.length ? rest[rest.length - 1] : null;
+      rest.slice(0, -1).forEach((x, k) => {
+        const s2 = eum(x.c);
+        if(k === rest.length - 2 && keep.c === 'l' && !KO_CODA[x.c]) s2.co = 8;   // 클래스·블라스트: ㄹ을 두 번
+      });
+      onsetC = keep;
+    }
+    if(glide === 'w' && onsetC && !'kgh'.includes(onsetC.c)){ eum(onsetC.c); onsetC = null; }
+    const on = onsetC ? KO_CONS[onsetC.c][0] : null;
+    let v = vx.v;
+    if(onsetC && onsetC.c === 'ʃ' && !glide) v = KO_PAL[v] !== undefined ? KO_PAL[v] : v;
+    const before = syl.length;
+    vowel(Object.assign({}, vx, {v}), on, glide);
+    syl[before].short = KO_SHORT.has(vx.ch) && !vx.long && !vx.d && !glide;
+    if(vx.d !== null) syl[syl.length - 1].short = false;
+  }
+  return syl.map(s => String.fromCharCode(0xAC00 + (s.on * 21 + s.v) * 28 + s.co)).join('');
+}
+const koOf = (w, cls) => (SET.koPron === true && w.ipa) ? `<span class="${cls || 'kopr'}">${esc(koPron(w.ipa))}</span>` : '';
+
 const emojiOf = w => w.emoji ? `<div style="font-size:60px;line-height:1.2;margin-bottom:6px">${w.emoji}</div>` : '';
 
 const inLevel = x => x.track === PICK.track && (PICK.level === 0 || x.level === PICK.level);
@@ -1145,7 +1291,7 @@ const agoKo = t => { const m = Math.floor((Date.now() - t) / 60000);
 
 /* ---------- 설정 (자동 넘김 · 깜빡이 암기) ---------- */
 const SET = Object.assign(
-  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, theme:'auto', hc:false, autoFs:false, flashBlack:false, size:10, ttsSlow:false, goal:20, sfx:false},
+  {auto:true, autoSec:6, flashSpeed:'normal', flashCount:20, flashDeck:'least', flashLoop:true, flashEx:false, flashKo:true, theme:'auto', hc:false, autoFs:false, flashBlack:false, size:10, ttsSlow:false, goal:20, sfx:false},
   (() => { try{ return JSON.parse(store.get('bvq_set') || '{}') || {}; }catch(e){ return {}; } })());
 const saveSet = () => { try{ store.set('bvq_set', JSON.stringify(SET)); }catch(e){} };
 // 이전 버전(v20)은 깜빡이의 ◐ 버튼이 앱 전체 테마를 'black'으로 바꿔 저장했다 → 원래 테마로 되돌리고 '깜빡이 블랙'으로 옮긴다
@@ -1271,7 +1417,12 @@ function flash(){
   const f = S.fl, w = BY[f.deck[f.i]];
   wakeOn();
   if(f.phase === 0){ countFlash(w.id); autoSay(w.term, 120); }
-  else if(SET.flashEx) autoSay(w.example, 150);
+  else if(SND.on && (SET.flashKo || SET.flashEx)){
+    const items = [];
+    if(SET.flashKo) items.push(['ko-KR', w.meaningKo.replace(/[()\/·~]/g, ' ').replace(/\s+/g, ' ').trim()]);
+    if(SET.flashEx) items.push(['en-US', w.example]);
+    setTimeout(() => TTS.sayList(items), 150);
+  }
   const ms = FDUR[SET.flashSpeed][f.phase];
   if(!f.paused) autoStart(ms, flashAdvance);
   return `<div class="flash" onclick="flashTap()">
@@ -1284,7 +1435,7 @@ function flash(){
     <div class="fcard">
       ${w.emoji ? `<div style="font-size:72px;line-height:1.1">${w.emoji}</div>` : ''}
       <div class="fword ${f.phase === 1 ? 'sm' : ''}">${esc(w.term)}</div>
-      ${w.ipa ? `<div class="fipa">${esc(w.ipa)}</div>` : ''}
+      ${w.ipa ? `<div class="fipa">${esc(w.ipa)}</div>` : ''}${koOf(w, 'fkopr')}
       ${f.phase === 1 ? `<div class="fko">${esc(w.meaningKo)}</div><div class="meta">${esc(w.pos)}</div>
         <div class="fex">${esc(w.example)}</div><div class="fexko">${esc(w.exampleKo)}</div>` : ''}
     </div>
@@ -1334,6 +1485,7 @@ function flashSheetHtml(){
       <div class="label">옵션</div>
       <div class="chips opts2">
         <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? ic('vol') : ic('mute')}단어 읽어 주기<small>${SND.on ? '켜짐' : '꺼짐'}</small></button>
+        ${tg('flashKo', '뜻도 읽기 (한국어)', SET.flashKo)}
         ${tg('flashEx', '예문도 읽기', SET.flashEx)}
         ${tg('flashLoop', '끝나면 반복', SET.flashLoop)}
         <button class="chip ${SET.flashBlack ? 'on' : ''}" onclick="toggleBlack()">${ic('half')}블랙 화면<small>${SET.flashBlack ? '켜짐' : '꺼짐'}</small></button>
@@ -1383,6 +1535,7 @@ function toggleBlack(){
 }
 const blackBtn = () => `<button class="${SET.flashBlack ? 'tgl' : ''}" id="blackbtn" onclick="toggleBlack()" aria-label="블랙 화면 ${SET.flashBlack ? '끄기' : '켜기'}" aria-pressed="${!!SET.flashBlack}">${ic('half')}블랙 ${SET.flashBlack ? '켬' : '끔'}</button>`;
 function toggleSetSheet(v){ UI.setSheet = v; render(); }
+function toggleKoPron(){ SET.koPron = SET.koPron !== true; saveSet(); render(); }
 function toggleSetGrp(id){ UI.setGrp = UI.setGrp === id ? '' : id; render(); }
 const grpOpen = id => UI.setGrp === id || UI.setGrp === 'all';   // 'all'은 verify.js 전용(모두 펼침)
 const setGrp = (id, title, sub, body) => `<div class="sgrp${grpOpen(id) ? ' open' : ''}">
@@ -1400,6 +1553,7 @@ function themeSheetHtml(){
       <div class="label">소리</div>
       <div class="chips">
         <button class="chip ${SND.on ? 'on' : ''}" onclick="toggleSound();render()">${SND.on ? ic('vol') + '자동 발음 켜짐' : ic('mute') + '자동 발음 꺼짐'}</button>
+        <button class="chip ${SET.koPron === true ? 'on' : ''}" onclick="toggleKoPron()">발음기호 한글 표기<small>${SET.koPron === true ? '켜짐' : '꺼짐'}</small></button>
         <button class="chip" onclick="TTS.diagnose()">${ic('vol')}소리 테스트</button>
         <button class="chip ${SET.sfx ? 'on' : ''}" onclick="toggleSfx()">${SET.sfx ? '효과음 켜짐' : '효과음 꺼짐'}</button>
       </div>
@@ -1792,7 +1946,7 @@ function study(){
   <div class="card" style="margin-top:14px" onclick="TTS.say(BY['${w.id}'].term)">
     <div class="cardstar">${starBtn(w.id)}</div>
     ${emojiOf(w)}<div class="term">${esc(w.term)}</div>
-    ${ipaOf(w) ? `<div style="margin-top:10px">${ipaOf(w)}</div>` : ''}
+    ${ipaOf(w) ? `<div style="margin-top:10px">${ipaOf(w)} ${koOf(w)}</div>` : ''}
     <div style="font-size:22px;font-weight:800;margin-top:14px">${esc(w.meaningKo)}</div>
     <div class="meta" style="margin-top:4px">${w.pos}</div>
     <div style="font-size:17px;font-weight:700;margin-top:20px;line-height:1.6">${esc(w.example)}</div>
@@ -1851,7 +2005,7 @@ function quiz(){
          <button class="speak" onclick="TTS.say(GB['${g.id}'].full, this)">${ic('vol')}완성 문장</button></div>`
     : `${fb.ok ? '' : `<p>${esc(fb.why)}</p>`}
        <p style="margin-top:14px"><b style="font-size:20px;color:var(--indigo)">${esc(w.term)}</b>
-         ${ipaOf(w,"margin-left:8px")}${starBtn(w.id)}</p>
+         ${ipaOf(w,"margin-left:8px")} ${koOf(w)}${starBtn(w.id)}</p>
        <p style="margin-top:4px">${esc(w.meaningKo)}</p>
        <p style="font-weight:600">${esc(w.example)}</p>
        <p class="ko" style="margin-top:2px">${esc(w.exampleKo)}</p>
@@ -1975,7 +2129,64 @@ function msgHtml(l, o){
   o = o || {};
   const me = l[0] === 'B';
   return `<div class="tmsg ${me ? 'b' : 'a'}"><div class="who">${me ? '나' : '상대'}</div>
-    <div class="en">${esc(l[1])}</div>${o.ko === false ? '' : `<div class="kk">${esc(l[2])}</div>`}${o.nospeak ? '' : sayBtn(l[1])}</div>`;
+    <div class="en">${esc(l[1])}</div>${o.ko === false ? '' : `<div class="kk">${esc(l[2])}</div>`}${o.nospeak ? '' : sayBtn(l[1])}${o.mic ? micBtn(l[1]) : ''}</div>`;
+}
+
+/* ---------- 따라 말하기: 브라우저 음성 인식(SpeechRecognition)으로 내가 한 말을 받아 적고 문장과 단어별로 비교한다.
+   발음 점수가 아니라 '알아들었는지'를 보여 준다. 지원 안 하는 브라우저·권한 거부·무음·네트워크 오류는 모두 화면에 이유를 띄운다. ---------- */
+const SRCLS = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
+const spNorm = w => String(w).toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9]/g, '');
+function spDiff(target, heard){
+  const a = String(target).split(/\s+/).filter(w => spNorm(w)), b = String(heard).split(/\s+/).map(spNorm).filter(Boolean);
+  const dp = Array.from({length:a.length + 1}, () => new Array(b.length + 1).fill(0));
+  for(let i = 1; i <= a.length; i++) for(let j = 1; j <= b.length; j++)
+    dp[i][j] = spNorm(a[i - 1]) === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+  const ok = new Array(a.length).fill(false);
+  for(let i = a.length, j = b.length; i > 0 && j > 0;){
+    if(spNorm(a[i - 1]) === b[j - 1]){ ok[i - 1] = true; i--; j--; }
+    else if(dp[i - 1][j] >= dp[i][j - 1]) i--; else j--;
+  }
+  const hit = ok.filter(Boolean).length;
+  return {words: a.map((w, i) => ({w, ok: ok[i]})), pct: a.length ? Math.round(hit / a.length * 100) : 0};
+}
+const SPK = {rec:null};
+const micBtn = text => { const k = sayTxt(text);
+  return `<button class="miniSpeak mic" onclick="spkStart(${k}, this)" aria-label="따라 말하기">${ic('mic')}따라 말하기</button><div class="spk" id="spk${k}" aria-live="polite"></div>`; };
+function spkHtml(target, heard){
+  const d = spDiff(target, heard), bad = d.words.filter(x => !x.ok);
+  const verdict = d.pct >= 90 ? ['정확해요!', 'ok'] : d.pct >= 60 ? ['거의 맞아요. 빨간 단어만 다시 말해 보세요.', 'mid'] : ['다시 한 번, 천천히 말해 볼까요?', 'no'];
+  return `<div class="spkres"><div class="spkv ${verdict[1]}"><b>${d.pct}%</b> ${verdict[0]}</div>
+    <div class="spkw">${d.words.map(x => `<span class="${x.ok ? 'ok' : 'bad'}">${esc(x.w)}</span>`).join(' ')}</div>
+    <div class="spkh">들린 말: ${esc(heard) || '(없음)'}</div>
+    ${bad.length ? `<div class="spkb">다시 연습할 단어 ${bad.slice(0, 5).map(x => { const k = sayTxt(x.w.replace(/[^A-Za-z']/g, '')); return `<button class="miniSpeak" onclick="TTS.say(SAY[${k}], this)">${ic('vol')}${esc(x.w.replace(/[^A-Za-z']/g, ''))}</button>`; }).join('')}</div>` : ''}
+    <div class="spkn">음성 인식 결과 기준이에요. 발음 점수가 아니라 '알아들었는지'를 보여 줘요.</div></div>`;
+}
+function spkStart(k, btn){
+  const box = document.getElementById('spk' + k); if(!box) return;
+  const show = (t, cls) => { box.innerHTML = `<div class="spkmsg ${cls || ''}">${t}</div>`; };
+  if(!SRCLS){ show('이 브라우저는 음성 인식을 지원하지 않아요. 안드로이드 크롬이나 PC 크롬에서 열어 주세요. (아이폰 사파리·앱 안 화면에서는 안 될 수 있어요)', 'no'); return; }
+  if(SPK.rec){ try{ SPK.rec.abort(); }catch(e){} SPK.rec = null; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  const r = new SRCLS(); r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 3; r.continuous = false;
+  SPK.rec = r; let done = false;
+  btn.classList.add('rec'); show('듣고 있어요… 위 문장을 소리 내어 읽어 보세요');
+  r.onresult = e => {
+    done = true;
+    const alts = [...e.results[0]].map(x => x.transcript);
+    const best = alts.map(t => [spDiff(SAY[k], t).pct, t]).sort((x, y) => y[0] - x[0])[0][1];
+    box.innerHTML = spkHtml(SAY[k], best);
+  };
+  r.onerror = e => {
+    if(e.error === 'aborted'){ done = true; return; }
+    done = true;
+    show(({'not-allowed':'마이크 권한이 꺼져 있어요. 주소창 옆 자물쇠에서 마이크를 허용해 주세요.',
+           'service-not-allowed':'이 환경에서는 음성 인식을 쓸 수 없어요. 크롬 브라우저에서 열어 주세요.',
+           'no-speech':'소리가 들리지 않았어요. 마이크에 가까이 대고 다시 눌러 주세요.',
+           'audio-capture':'마이크를 찾을 수 없어요. 마이크 연결을 확인해 주세요.',
+           'network':'음성 인식은 인터넷 연결이 필요해요. 연결을 확인해 주세요.'})[e.error] || ('음성 인식에 실패했어요 (' + e.error + ')'), 'no');
+  };
+  r.onend = () => { btn.classList.remove('rec'); if(SPK.rec === r) SPK.rec = null; if(!done) show('소리가 들리지 않았어요. 마이크에 가까이 대고 다시 눌러 주세요.', 'no'); };
+  try{ r.start(); }catch(e){ show('음성 인식을 시작하지 못했어요 (' + e.message + ')', 'no'); btn.classList.remove('rec'); }
 }
 
 // 회화 분류: 장소(집·학교·가게·길·병원·직장) + 상황(인사·친구). 대화마다 data/talk.js 의 c 필드로 붙는다
@@ -2030,7 +2241,8 @@ function talk(){
   <h1 style="margin-top:6px;font-size:26px">${esc(d.t)}</h1>
   <div class="autorow"><button onclick="talkAll()">${ic('vol')}전체 듣기</button>
     <button onclick="talkKo()">${S.ko ? '한국어 숨기기' : '한국어 보기'}</button></div>
-  <div class="tchat">${d.l.map(l => msgHtml(l, {ko:S.ko})).join('')}</div>
+  <div class="sub" style="margin-top:8px">내 말(오른쪽)은 <b>따라 말하기</b>로 연습할 수 있어요.</div>
+  <div class="tchat">${d.l.map(l => msgHtml(l, {ko:S.ko, mic:l[0] === 'B'})).join('')}</div>
   <div class="stick"><button class="primary" onclick="talkRole('${d.id}')">${ic('chat')}이 대화로 역할극 하기</button></div>`;
 }
 
@@ -2101,7 +2313,7 @@ function talkq(){
       ${fb.ok ? '' : `<p>${esc(fb.note)}</p>`}
       <p style="margin-top:14px;font-weight:700">${esc(q.ans)}</p>
       <p class="ko" style="margin-top:2px">${esc(q.ko)}</p>
-      <div style="margin-top:10px">${sayBtn(q.ans)}</div>
+      <div style="margin-top:10px">${sayBtn(q.ans)} ${micBtn(q.ans)}</div>
     </div>
     <div class="stick"><button class="primary" onclick="talkNext()">${S.i + 1 >= S.qs.length ? '결과 보기' : '다음'}</button></div>`;
   return `${talkNav()}
@@ -2150,7 +2362,7 @@ function wordItem(w){
   const conf = st && st.lw ? (w.confusions.find(c => c.id === st.lw) || {}).note : null;
   return `<div class="item" data-wid="${esc(w.id)}" data-st="${sv[0]}" data-lv="${w.level}" data-s="${esc((w.term + ' ' + w.meaningKo).toLowerCase())}">
     <div class="top"><b>${esc(w.term)}</b><span class="toprt"><span class="badge ${sv[0]}">${sv[1]}${rate}</span>${starBtn(w.id)}</span></div>
-    ${ipaOf(w) ? `<div style="margin-top:6px">${ipaOf(w)}</div>` : ''}
+    ${ipaOf(w) ? `<div style="margin-top:6px">${ipaOf(w)} ${koOf(w)}</div>` : ''}
     <div class="ko">${esc(w.meaningKo)}</div>
     <div class="ex">${esc(w.example)}</div>
     ${conf ? `<div class="tip">자주 헷갈린 짝 — ${esc(conf)}</div>` : ''}
