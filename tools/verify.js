@@ -746,6 +746,11 @@ console.log('\n[14] 디자인 일관성');
   if (kbad) fail.push('한글 표기가 한글로만 나오지 않는 항목 ' + kbad + '개');
   if (A.SET.koPron === true) fail.push('한글 표기는 기본 꺼짐이어야 함');
   note('한글 표기(옵션) ' + kn + '개 모두 한글 · 대표 8단어 일치 · 기본 꺼짐');
+  // 말하기 연습: 대화 화면 하단 고정 버튼과 내 말풍선 버튼이 있어야 한다
+  A.setPick('track', 'work'); A.talkView(A.talkDialogs()[0].id);
+  const th = A.talk();
+  if (!th.includes('micgo') || !th.includes('spkOpen(0)')) fail.push('대화 화면에 말하기 연습 버튼이 없음');
+  if ((th.match(/aria-label="말하기 연습"/g) || []).length < 2) fail.push('내 말풍선에 말하기 연습 버튼이 없음');
   const d1 = A.spDiff('Nice to meet you, Mina!', 'nice to meet you mina');
   if (d1.pct !== 100) fail.push('따라 말하기 비교 오류(완전 일치): ' + d1.pct);
   const d2 = A.spDiff("I'm good, thank you.", 'i am good thank you');

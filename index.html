@@ -177,6 +177,17 @@
   .spkb{margin-top:8px; font-size:13px; font-weight:800; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
   .kopr{display:inline-block; margin-left:6px; padding:2px 10px; border-radius:99px; background:var(--chipbg); color:var(--chipink); font-size:14px; font-weight:800}
   .fkopr{margin-top:10px; font-size:26px; font-weight:800; color:var(--indigo); letter-spacing:.02em}
+  .spksheet .spken{font-size:22px; font-weight:900; line-height:1.4; margin-top:10px}
+  .spksheet .spkko{font-size:14px; color:var(--muted); font-weight:600; margin-top:2px}
+  .spkrow{display:flex; gap:8px; margin-top:10px}
+  .spkrow .ghost{margin-top:0; min-height:46px; font-size:15px}
+  .spkrow .ghost:disabled{opacity:.4}
+  .spkgo{margin-top:10px; min-height:62px}
+  .spkgo.rec{background:var(--no); animation:pulse 1s infinite}
+  .spksheet .spk{min-height:112px}
+  .stick.two{display:flex; gap:8px}
+  .stick.two .micgo{flex:1; margin-top:0; border-color:var(--indigo); color:var(--indigo)}
+  .stick.two .primary{flex:1.3; margin-top:0}
   .hero{margin-top:16px}
   .hero .big{font-size:15px; color:var(--muted); font-weight:700}
   .hero .big b{font-size:30px; color:var(--ink); font-weight:900; margin-right:4px}
@@ -1190,7 +1201,7 @@ function retryWrong(){
 
 window.addEventListener('keydown', e => {
   const t = e.target && e.target.tagName;
-  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet || UI.flashSheet || UI.setSheet || UI.scopeSheet) return;
+  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet || UI.flashSheet || UI.setSheet || UI.scopeSheet || UI.spkSheet) return;
   const go = e.key === 'Enter' || e.key === ' ';
   if(go && t === 'BUTTON') return;     // 버튼이 이미 자기 클릭을 처리한다
   if(S.screen === 'flash'){
@@ -1693,8 +1704,8 @@ function onBack(){
   if(NAVSKIP > 0){ NAVSKIP--; return; }                      // 위의 history.back()이 일으킨 이벤트는 무시 (그 직후 새로 쌓은 항목을 잘못 닫지 않게)
   if(!NAVD) return;
   NAVD = 0;
-  const layer = UI.sheet || UI.flashSheet || UI.setSheet || UI.importSheet || UI.scopeSheet;
-  UI.sheet = UI.flashSheet = UI.setSheet = UI.importSheet = UI.scopeSheet = false; UI.firstRun = false;
+  const layer = UI.sheet || UI.flashSheet || UI.setSheet || UI.importSheet || UI.scopeSheet || UI.spkSheet;
+  UI.sheet = UI.flashSheet = UI.setSheet = UI.importSheet = UI.scopeSheet = false; stopSpk(); UI.spkSheet = null; UI.firstRun = false;
   if(!layer){                                                // 화면에서 뒤로 → 진행 상황을 지키고 홈으로
     if(S.screen === 'quiz' || S.screen === 'study'){ bank(); saveSession(); toast('홈으로 나왔어요. 이어서 하기로 계속할 수 있어요.', 2400); }
     else if(S.screen === 'flash'){ flcSave(); wakeOff(); }
@@ -2129,7 +2140,7 @@ function msgHtml(l, o){
   o = o || {};
   const me = l[0] === 'B';
   return `<div class="tmsg ${me ? 'b' : 'a'}"><div class="who">${me ? '나' : '상대'}</div>
-    <div class="en">${esc(l[1])}</div>${o.ko === false ? '' : `<div class="kk">${esc(l[2])}</div>`}${o.nospeak ? '' : sayBtn(l[1])}${o.mic ? micBtn(l[1]) : ''}</div>`;
+    <div class="en">${esc(l[1])}</div>${o.ko === false ? '' : `<div class="kk">${esc(l[2])}</div>`}${o.nospeak ? '' : sayBtn(l[1])}${typeof o.mic === 'number' ? micBtn(o.mic, '말하기 연습') : ''}</div>`;
 }
 
 /* ---------- 따라 말하기: 브라우저 음성 인식(SpeechRecognition)으로 내가 한 말을 받아 적고 문장과 단어별로 비교한다.
@@ -2150,22 +2161,55 @@ function spDiff(target, heard){
   return {words: a.map((w, i) => ({w, ok: ok[i]})), pct: a.length ? Math.round(hit / a.length * 100) : 0};
 }
 const SPK = {rec:null};
-const micBtn = text => { const k = sayTxt(text);
-  return `<button class="miniSpeak mic" onclick="spkStart(${k}, this)" aria-label="따라 말하기">${ic('mic')}따라 말하기</button><div class="spk" id="spk${k}" aria-live="polite"></div>`; };
+/* 따라 말하기 팝업: 문장 · 듣기 · 말하기 · 결과 · 이전/다음이 한 화면에 들어온다 */
+const micBtn = (arg, label) => typeof arg === 'number'
+  ? `<button class="miniSpeak mic" onclick="spkOpen(${arg})" aria-label="말하기 연습">${ic('mic')}${label || '말하기 연습'}</button>`
+  : `<button class="miniSpeak mic" onclick="spkOpenText(${sayTxt(arg)})" aria-label="말하기 연습">${ic('mic')}${label || '말하기 연습'}</button>`;
+function spkOpen(i){
+  const d = S.d; if(!d) return;
+  UI.spkSheet = {title:d.t, lines:d.l.filter(l => l[0] === 'B').map(l => [l[1], l[2]]), i:i || 0};
+  render();
+}
+function spkOpenText(k){
+  const q = S.qs && S.qs[S.i];
+  UI.spkSheet = {title:q ? q.title : '', lines:[[SAY[k], q ? q.ko : '']], i:0};
+  render();
+}
+function spkClose(){ stopSpk(); UI.spkSheet = null; render(); }
+function spkGo(n){
+  const h = UI.spkSheet; if(!h) return;
+  stopSpk(); h.i = Math.max(0, Math.min(h.lines.length - 1, h.i + n)); render();
+}
+function stopSpk(){ if(SPK.rec){ try{ SPK.rec.abort(); }catch(e){} SPK.rec = null; } }
+function spkSheetHtml(){
+  const h = UI.spkSheet; if(!h) return '';
+  const [en, ko] = h.lines[h.i], k = sayTxt(en), n = h.lines.length;
+  return `<div class="sheetbg" onclick="spkClose()">
+    <div class="sheet spksheet" role="dialog" aria-label="말하기 연습" onclick="event.stopPropagation()">
+      <div class="row"><h2>말하기 연습</h2><button class="link" onclick="spkClose()">닫기</button></div>
+      <div class="meta">${esc(h.title)}${n > 1 ? ' · ' + (h.i + 1) + ' / ' + n : ''}</div>
+      <div class="spken">${esc(en)}</div>
+      <div class="spkko">${esc(ko)}</div>
+      <div class="spkrow"><button class="ghost" onclick="TTS.say(SAY[${k}], this)">${ic('vol')}듣기</button>
+        <button class="ghost" onclick="TTS.say(SAY[${k}], this, 0.55)">${ic('slow')}천천히</button></div>
+      <button class="primary spkgo" id="spkgo" onclick="spkStart(${k}, this)">${ic('mic')}따라 말하기<small>누르고 문장을 읽어 보세요</small></button>
+      <div class="spk" id="spkbox" aria-live="polite"></div>
+      ${n > 1 ? `<div class="spkrow"><button class="ghost" onclick="spkGo(-1)" ${h.i ? '' : 'disabled'}>이전 문장</button>
+        <button class="ghost" onclick="spkGo(1)" ${h.i < n - 1 ? '' : 'disabled'}>다음 문장</button></div>` : ''}
+    </div></div>`;
+}
 function spkHtml(target, heard){
-  const d = spDiff(target, heard), bad = d.words.filter(x => !x.ok);
-  const verdict = d.pct >= 90 ? ['정확해요!', 'ok'] : d.pct >= 60 ? ['거의 맞아요. 빨간 단어만 다시 말해 보세요.', 'mid'] : ['다시 한 번, 천천히 말해 볼까요?', 'no'];
+  const d = spDiff(target, heard);
+  const verdict = d.pct >= 90 ? ['정확해요!', 'ok'] : d.pct >= 60 ? ['거의 맞아요. 빨간 단어만 다시!', 'mid'] : ['천천히 한 번 더 해 볼까요?', 'no'];
   return `<div class="spkres"><div class="spkv ${verdict[1]}"><b>${d.pct}%</b> ${verdict[0]}</div>
     <div class="spkw">${d.words.map(x => `<span class="${x.ok ? 'ok' : 'bad'}">${esc(x.w)}</span>`).join(' ')}</div>
-    <div class="spkh">들린 말: ${esc(heard) || '(없음)'}</div>
-    ${bad.length ? `<div class="spkb">다시 연습할 단어 ${bad.slice(0, 5).map(x => { const k = sayTxt(x.w.replace(/[^A-Za-z']/g, '')); return `<button class="miniSpeak" onclick="TTS.say(SAY[${k}], this)">${ic('vol')}${esc(x.w.replace(/[^A-Za-z']/g, ''))}</button>`; }).join('')}</div>` : ''}
-    <div class="spkn">음성 인식 결과 기준이에요. 발음 점수가 아니라 '알아들었는지'를 보여 줘요.</div></div>`;
+    <div class="spkn">들린 말: ${esc(heard) || '(없음)'} · 알아들었는지 기준이며 발음 점수는 아니에요</div></div>`;
 }
 function spkStart(k, btn){
-  const box = document.getElementById('spk' + k); if(!box) return;
+  const box = document.getElementById('spkbox'); if(!box) return;
   const show = (t, cls) => { box.innerHTML = `<div class="spkmsg ${cls || ''}">${t}</div>`; };
   if(!SRCLS){ show('이 브라우저는 음성 인식을 지원하지 않아요. 안드로이드 크롬이나 PC 크롬에서 열어 주세요. (아이폰 사파리·앱 안 화면에서는 안 될 수 있어요)', 'no'); return; }
-  if(SPK.rec){ try{ SPK.rec.abort(); }catch(e){} SPK.rec = null; }
+  stopSpk();
   try{ speechSynthesis.cancel(); }catch(e){}
   const r = new SRCLS(); r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 3; r.continuous = false;
   SPK.rec = r; let done = false;
@@ -2236,14 +2280,13 @@ function talkKo(){ S.ko = !S.ko; render(); }
 function talkAll(){ TTS.queue(S.d.l.map(l => [l[0], l[1]])); }
 function talk(){
   SAY = [];
-  const d = S.d;
+  const d = S.d; let bi = 0;
   return `${talkNav()}
   <h1 style="margin-top:6px;font-size:26px">${esc(d.t)}</h1>
   <div class="autorow"><button onclick="talkAll()">${ic('vol')}전체 듣기</button>
     <button onclick="talkKo()">${S.ko ? '한국어 숨기기' : '한국어 보기'}</button></div>
-  <div class="sub" style="margin-top:8px">내 말(오른쪽)은 <b>따라 말하기</b>로 연습할 수 있어요.</div>
-  <div class="tchat">${d.l.map(l => msgHtml(l, {ko:S.ko, mic:l[0] === 'B'})).join('')}</div>
-  <div class="stick"><button class="primary" onclick="talkRole('${d.id}')">${ic('chat')}이 대화로 역할극 하기</button></div>`;
+  <div class="tchat">${d.l.map(l => msgHtml(l, {ko:S.ko, mic:l[0] === 'B' ? bi++ : null})).join('')}</div>
+  <div class="stick two"><button class="ghost micgo" onclick="spkOpen(0)">${ic('mic')}말하기 연습</button><button class="primary" onclick="talkRole('${d.id}')">${ic('chat')}역할극 하기</button></div>${spkSheetHtml()}`;
 }
 
 // 한 줄(B)을 문제로 만든다. ctxLen이 null이면 지금까지의 대화를 전부, 숫자면 직전 몇 줄만 보여 준다
@@ -2322,7 +2365,7 @@ function talkq(){
   <div class="bar"><i style="width:${(S.i / S.qs.length * 100).toFixed(1)}%"></i></div>
   <div class="tchat">${q.ctx.map(l => msgHtml(l)).join('')}
     ${fb ? msgHtml(mine) : '<div class="tmsg b ask"><div class="who">나</div><div class="en">내 차례! 알맞은 응답은?</div></div>'}</div>
-  <div style="margin-top:14px">${opts}</div>${fbHtml}`;
+  <div style="margin-top:14px">${opts}</div>${fbHtml}${spkSheetHtml()}`;
 }
 
 function talkres(){
