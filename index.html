@@ -2536,6 +2536,13 @@ let deferredPrompt = null;
 
 if(typeof navigator !== 'undefined' && 'serviceWorker' in navigator
    && typeof location !== 'undefined' && location.protocol.indexOf('http') === 0){
+  // 새 버전 서비스워커가 넘겨받으면(첫 설치 제외) 홈에서는 바로 새로고침하고, 풀이 중이면 안내만 한다(진행은 자동 저장됨)
+  const hadCtl = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(!hadCtl) return;
+    if(S && S.screen === 'home') location.reload();
+    else toast('새 버전이 준비됐어요. 앱을 닫았다 다시 열면 적용돼요.', 4000);
+  });
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW 등록 실패', e));
   });
