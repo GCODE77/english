@@ -1310,6 +1310,8 @@ if(SET.prevTheme !== undefined){
   if(SET.theme === 'black'){ SET.theme = (SET.prevTheme && SET.prevTheme !== 'black') ? SET.prevTheme : 'auto'; SET.flashBlack = true; }
   delete SET.prevTheme; saveSet();
 }
+// 예전 버전은 자동 전체화면이 기본 켜짐이었고 그 값이 폰에 저장돼 있다 → 한 번만 꺼짐으로 되돌린다(이후 사용자가 켠 값은 존중)
+if(!SET.fsReset){ SET.autoFs = false; SET.fsReset = 1; saveSet(); }
 
 /* ---------- 자동 넘김 타이머 (화면이 바뀔 때마다 render() 가 멈춘다) ---------- */
 const AUTO = {id:null, t0:0, left:0, fn:null, paused:false};
