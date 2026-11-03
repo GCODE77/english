@@ -46,7 +46,7 @@ function makeBox() {
   vm.runInContext(
     src.replace(/^render\(\);$/m, '') +
     ';globalThis.A={WORDS,GRAMMAR,home,study,quiz,result,library,start,answer,next,' +
-    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,onBack,syncHistory,navBase,backupText,parseBackup,toggleFav,isFav,setSize,sizeN,importSheetHtml,setTtsSlow,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,flashWrong,setLibStatus,getP:()=>P,getS:()=>S,__bvqTalk,loadTalk,talkDialogs,talkRole,talkQuiz,talkView,talkAns,talkNext,talklist,talk,talkq,talkres,getTalk:()=>TALK,koPron,spDiff,micBtn};',
+    'setPick,openLibrary,libTab,blankOut,build,buildG,explain,explainG,scoreFor,TRACK_COUNTS,LOADED,SND,TTS,render,goHome,closeSession,saveSession,readSession,resumeSession,clearSession,toggleSound,SET,AUTO,flash,flashdone,startFlash,flashStep,flashDeck,flashQuiz,exitFlash,flashTap,studyNext,UI,setTheme,toggleHC,themeSheetHtml,toggleSetSheet,hcBtn,autoFsWanted,setAutoFs,iosHintHtml,fsBannerWanted,fsBannerHtml,onBack,syncHistory,navBase,backupText,parseBackup,toggleFav,isFav,setSize,sizeN,importSheetHtml,setTtsSlow,toggleBlack,blackBtn,themeMode,weakQuiz,flashWeak,flashWrong,setLibStatus,getP:()=>P,getS:()=>S,__bvqTalk,loadTalk,talkDialogs,talkRole,talkQuiz,talkView,talkAns,talkNext,talklist,talk,talkq,talkres,getTalk:()=>TALK,koPron,spDiff,micBtn,dayAdd,statsHtml,library,dueQuiz,shareBackup};',
     box
   );
   for (const t of TRACK_IDS)
@@ -751,6 +751,27 @@ console.log('\n[14] 디자인 일관성');
   const th = A.talk();
   if (!th.includes('micgo') || !th.includes('spkOpen(0)')) fail.push('대화 화면에 말하기 연습 버튼이 없음');
   if ((th.match(/aria-label="말하기 연습"/g) || []).length < 2) fail.push('내 말풍선에 말하기 연습 버튼이 없음');
+  // 학습 기록 탭 · 집중 복습 · 듣고 고르기 · 다른 기기로 보내기
+  const todayN = h => +(h.match(/<b[^>]*>(\d+)<\/b><span>오늘/) || [0, -1])[1];
+  const n0 = todayN(A.statsHtml([], []));
+  A.dayAdd(); A.dayAdd();
+  const sh2 = A.statsHtml([], []);
+  if (!sh2.includes('최근 7일') || !sh2.includes('sbar')) fail.push('학습 기록(통계) 화면이 그려지지 않음');
+  if (n0 < 0 || todayN(sh2) !== n0 + 2) fail.push('오늘 푼 문제 수가 기록에 반영되지 않음: ' + n0 + ' → ' + todayN(sh2));
+  if (!A.backupText().includes('bvq_hist')) fail.push('일별 기록(bvq_hist)이 백업에 없음');
+  A.setPick('track', 'work'); A.UI.scopeSheet = true;
+  if (!A.home().includes('집중 복습')) fail.push('문제 범위 시트에 집중 복습이 없음');
+  A.UI.scopeSheet = false;
+  A.dueQuiz();                                   // 복습 대기가 없어도 오류 없이 안내만
+  if (typeof A.shareBackup !== 'function') fail.push('다른 기기로 보내기 함수 없음');
+  for (const t of TRACK_IDS) {
+    A.setPick('track', t); A.talkQuiz(true);
+    const q0 = A.getS().qs[0], enLine = q0.ctx[q0.ctx.length - 1][1];
+    if (!A.getS().listen) fail.push('듣고 고르기 모드가 켜지지 않음: ' + t);
+    if (A.talkq().includes(enLine.replace(/&/g, '&amp;').replace(/'/g, '&#39;')) || !A.talkq().includes('소리를 듣고')) fail.push('듣고 고르기에서 상대 영어가 미리 보임: ' + t);
+    A.talkAns(q0.opts.findIndex(o => o.ok));
+    if (!A.talkq().includes('class="fb ok"')) fail.push('듣고 고르기 정답 처리 오류: ' + t);
+  }
   const d1 = A.spDiff('Nice to meet you, Mina!', 'nice to meet you mina');
   if (d1.pct !== 100) fail.push('따라 말하기 비교 오류(완전 일치): ' + d1.pct);
   const d2 = A.spDiff("I'm good, thank you.", 'i am good thank you');

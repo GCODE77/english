@@ -188,6 +188,12 @@
   .stick.two{display:flex; gap:8px}
   .stick.two .micgo{flex:1; margin-top:0; border-color:var(--indigo); color:var(--indigo)}
   .stick.two .primary{flex:1.3; margin-top:0}
+  .sbars{display:flex; gap:8px; align-items:flex-end; height:150px; margin-top:10px}
+  .sbar{flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:4px}
+  .sbar em{font-style:normal; font-size:12px; font-weight:800; color:var(--muted); min-height:16px}
+  .sbar i{display:block; width:100%; border-radius:8px 8px 4px 4px; background:var(--indigo); opacity:.4}
+  .sbar.today i{opacity:1}
+  .sbar span{font-size:12px; font-weight:700; color:var(--muted)}
   .hero{margin-top:16px}
   .hero .big{font-size:15px; color:var(--muted); font-weight:700}
   .hero .big b{font-size:30px; color:var(--ink); font-weight:900; margin-right:4px}
@@ -340,7 +346,8 @@
   .fopts button.tgl{border-color:var(--indigo); box-shadow:0 0 0 2px var(--indigo)}
   /* 학습 노트 */
   .libbar{position:sticky; top:0; z-index:20; background:var(--cloud); margin:0 -18px; padding:10px 18px 8px}
-  .libbar .tabs{margin:0 0 8px}
+  .libbar .tabs{margin:0 0 8px; gap:6px}
+  .libbar .tab{padding:0 4px; font-size:14px; white-space:nowrap}
   .libbar .search{margin-bottom:0}
   .item{border:1px solid var(--line); padding:16px; margin-top:12px}
   .item b{font-size:20px}
@@ -1017,7 +1024,16 @@ const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + (d
 function dayCount(){
   try{ const o = JSON.parse(store.get('bvq_day') || '{}'); return o.d === todayStr() ? (o.n || 0) : 0; }catch(e){ return 0; }
 }
-function dayAdd(){ store.set('bvq_day', JSON.stringify({d:todayStr(), n:dayCount() + 1})); }
+function histGet(){ try{ return JSON.parse(store.get('bvq_hist') || '{}') || {}; }catch(e){ return {}; } }
+function dayAdd(){
+  store.set('bvq_day', JSON.stringify({d:todayStr(), n:dayCount() + 1}));
+  try{                                  // 일별 푼 문제 수(최근 120일만 보관) — 학습 노트의 '기록' 탭이 쓴다
+    const h = histGet(), t = todayStr(), lim = Date.now() - 120 * 864e5;
+    h[t] = (h[t] || 0) + 1;
+    Object.keys(h).forEach(k => { const [y, m, d] = k.split('-').map(Number); if(new Date(y, m - 1, d).getTime() < lim) delete h[k]; });
+    store.set('bvq_hist', JSON.stringify(h));
+  }catch(e){}
+}
 const goalN = () => SET.goal || 20;
 function setGoal(n){ SET.goal = n; saveSet(); render(); }
 
@@ -1619,11 +1635,12 @@ function themeSheetHtml(){
       ${installSectionHtml()}
       <div class="label">내 학습 기록 (백업)</div>
       <div class="chips opts2">
+        <button class="chip" style="grid-column:1/-1" onclick="shareBackup()">${ic('up')}다른 기기로 보내기<small>카카오톡·드라이브·메일 등으로</small></button>
         <button class="chip" onclick="exportBackup()">${ic('up')}파일로 저장</button>
         <button class="chip" onclick="copyBackup()">${ic('copy')}복사하기</button>
         <button class="chip" style="grid-column:1/-1" onclick="toggleImportSheet(true)">${ic('get')}백업 가져오기</button>
       </div>
-      <p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">기록과 즐겨찾기는 이 기기의 브라우저에만 저장돼요. 폰을 바꾸거나 브라우저 데이터를 지우기 전에 저장해 두세요.</p>
+      <p class="meta" style="font-weight:400;margin:8px 0 0;line-height:1.6">기록과 즐겨찾기는 이 기기의 브라우저에만 저장돼요. 폰을 바꾸거나 브라우저 데이터를 지우기 전에 저장해 두세요. 다른 기기로 옮기려면 '다른 기기로 보내기'로 파일을 보내고, 새 기기의 '백업 가져오기'에서 그 파일을 고르세요.</p>
 
       <details class="how"><summary>학습 방법</summary>
         새 단어는 카드로 먼저 보고, 익숙해질수록 문제가 어려워집니다(뜻 → 영어 인출 → 문장 빈칸).
@@ -1741,7 +1758,7 @@ function setTtsSlow(v){ SET.ttsSlow = v; saveSet(); render(); }
 
 /* ---------- 학습 기록 백업 · 복원 ----------
    기록은 이 기기의 브라우저(localStorage)에만 있다. 폰을 바꾸거나 브라우저 데이터를 지우면 사라지므로 내보내기/가져오기를 둔다. */
-const BK_KEYS = ['bvq', 'bvq_set', 'bvq_flash', 'bvq_sessions', 'bvq_pick', 'bvq_snd', 'bvq_fav', 'bvq_day', 'bvq_talk'];
+const BK_KEYS = ['bvq', 'bvq_set', 'bvq_flash', 'bvq_sessions', 'bvq_pick', 'bvq_snd', 'bvq_fav', 'bvq_day', 'bvq_talk', 'bvq_hist'];
 function backupText(){
   const data = {};
   BK_KEYS.forEach(k => { const v = store.get(k); if(v) data[k] = v; });
@@ -1779,6 +1796,17 @@ function exportBackup(){
     setTimeout(() => { try{ URL.revokeObjectURL(a.href); }catch(e){} }, 3000);
     toast('백업 파일을 저장했어요 (' + name + ')', 3000);
   }catch(e){ copyBackup(); }
+}
+function shareBackup(){
+  const text = backupText(), name = 'english-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  const fail = e => { if(!e || e.name !== 'AbortError') toast('공유하지 못했어요. 파일로 저장해 주세요.', 3000); };
+  try{
+    const f = new File([text], name, {type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[f]})){ navigator.share({files:[f], title:'English 학습 기록'}).catch(fail); return; }
+    if(navigator.share){ navigator.share({title:'English 학습 기록', text}).catch(fail); return; }
+  }catch(e){}
+  toast('이 브라우저는 공유를 지원하지 않아 파일로 저장해요.', 2600);
+  exportBackup();
 }
 function copyBackup(){
   const t = backupText();
@@ -1866,12 +1894,16 @@ function home(){
   const CAT_KO = {mix:'섞어서', word:'단어만', grammar:'문법만'};
   const LV_KO = ['전체 분야', '기초', '회의', '재무·법무'];
   const scopeText = CAT_KO[PICK.cat] + (T.id === 'work' ? ' · ' + LV_KO[PICK.level] : '');
+  const weakN = tw.filter(w => ((stat(w.id) || {}).w || 0) > 0).length + tg.filter(g => ((stat('g:' + g.id) || {}).w || 0) > 0).length;
   const scopeSheet = UI.scopeSheet ? `<div class="sheetbg" onclick="toggleScope(false)">
     <div class="sheet" role="dialog" aria-label="문제 범위" onclick="event.stopPropagation()">
       <div class="row"><h2>어떤 문제를 풀까요?</h2><button class="link" onclick="toggleScope(false)">닫기</button></div>
       <div class="label">유형</div>
       <div class="segs" role="group" aria-label="문제 유형">${seg('mix','섞어서')}${seg('word','단어')}${seg('grammar','문법')}</div>
       ${levels()}
+      <div class="label">집중 복습 <small style="font-weight:400">(이 대상의 항목만)</small></div>
+      <div class="spkrow"><button class="ghost" onclick="toggleScope(false);weakQuiz()" ${weakN ? '' : 'disabled'}>약점 ${weakN}개</button>
+        <button class="ghost" onclick="toggleScope(false);dueQuiz()" ${pr.due ? '' : 'disabled'}>복습 대기 ${pr.due}개</button></div>
       <button class="primary" onclick="toggleScope(false)">선택 완료</button>
     </div></div>` : '';
 
@@ -2138,6 +2170,8 @@ const sayTxt = text => { SAY.push(text); return SAY.length - 1; };
 const sayBtn = text => `<button class="miniSpeak" onclick="TTS.say(SAY[${sayTxt(text)}], this)" aria-label="듣기">${ic('vol')}</button>`;
 const talkNav = () => `<div class="nav"><button onclick="${S.screen === 'talklist' ? 'goHome()' : 'talkBack()'}" aria-label="${S.screen === 'talklist' ? '홈으로' : '목록으로'}">${ic(S.screen === 'talklist' ? 'home' : 'x')}${S.screen === 'talklist' ? '홈' : '목록'}</button><span class="sp"></span>${soundBtn(true)}</div>`;
 
+// 듣고 고르기: 상대 말의 영어·한국어를 숨기고 소리만 준다. 답한 뒤에 문장이 나타난다
+const hiddenMsg = l => `<div class="tmsg a"><div class="who">상대</div><div class="en" style="color:var(--muted)">소리를 듣고 알맞은 응답을 골라요</div>${sayBtn(l[1])}</div>`;
 function msgHtml(l, o){
   o = o || {};
   const me = l[0] === 'B';
@@ -2271,6 +2305,7 @@ function talklist(){
   <div class="sub">어디서, 어떤 상황의 말을 연습할까요?</div>
   ${all.length ? `<div class="cgrid" role="group" aria-label="회화 분류">${tile('all', '📚', '전체', all.length)}${cats.map(c => tile(c.id, c.e, c.n, all.filter(d => d.c === c.id).length)).join('')}</div>
     <button class="primary" onclick="talkQuiz()">${ic('chat')}${cur ? esc(cur.n) + ' ' : ''}응답 고르기 퀴즈<small>${cur ? esc(cur.d) : '상대 말에 어울리는 응답'} · 최대 10문제</small></button>
+    <button class="ghost" onclick="talkQuiz(true)">${ic('vol')}듣고 고르기 퀴즈 (영어 안 보여요)</button>
     ${ds.map(card).join('')}` : '<div class="empty" style="padding-top:60px">이 대상의 회화는 준비 중이에요.</div>'}`;
 }
 
@@ -2303,12 +2338,12 @@ function talkRole(id){
   const qs = d.l.map((l, i) => l[0] === 'B' ? talkQ(d, i, null) : null).filter(Boolean);
   S = {screen:'talkq', mode:'role', d, qs, i:0, right:0, streak:0, fb:null, missed:[]}; render();
 }
-function talkQuiz(){
+function talkQuiz(listen){
   const pool = [];
-  talkShown().forEach(d => d.l.forEach((l, i) => { if(l[0] === 'B') pool.push(talkQ(d, i, 2)); }));
+  talkShown().forEach(d => d.l.forEach((l, i) => { if(l[0] === 'B') pool.push(talkQ(d, i, listen === true ? 1 : 2)); }));
   const qs = shuffle(pool).slice(0, 10);
   if(!qs.length){ toast('이 대상의 회화는 준비 중이에요.', 2000); return; }
-  S = {screen:'talkq', mode:'quiz', d:null, qs, i:0, right:0, streak:0, fb:null, missed:[]}; render();
+  S = {screen:'talkq', mode:'quiz', listen:listen === true, d:null, qs, i:0, right:0, streak:0, fb:null, missed:[]}; render();
 }
 
 function talkAns(k){
@@ -2342,7 +2377,8 @@ function talkq(){
   SAY = [];
   const q = S.qs[S.i], fb = S.fb, mine = [ 'B', q.ans, q.ko ];
   const last = q.ctx[q.ctx.length - 1];
-  if(!fb && last) autoSay(last[1], 80);
+  if(S.listen && !fb && last) setTimeout(() => TTS.say(last[1]), 120);   // 듣고 고르기는 소리 설정과 상관없이 바로 들려 준다
+  else if(!fb && last) autoSay(last[1], 80);
   const opts = q.opts.map((o, k) => {
     let cls = '', mark = '';
     if(fb){
@@ -2362,10 +2398,10 @@ function talkq(){
     </div>
     <div class="stick"><button class="primary" onclick="talkNext()">${S.i + 1 >= S.qs.length ? '결과 보기' : '다음'}</button></div>`;
   return `${talkNav()}
-  <div class="row" style="margin-top:8px"><span class="meta">${S.mode === 'role' ? '역할극 · ' + esc(q.title) : '응답 고르기 · ' + esc(q.title)}</span>
+  <div class="row" style="margin-top:8px"><span class="meta">${S.mode === 'role' ? '역할극 · ' + esc(q.title) : (S.listen ? '듣고 고르기 · ' : '응답 고르기 · ') + esc(q.title)}</span>
     <span class="meta">${S.i + 1} / ${S.qs.length}</span></div>
   <div class="bar"><i style="width:${(S.i / S.qs.length * 100).toFixed(1)}%"></i></div>
-  <div class="tchat">${q.ctx.map(l => msgHtml(l)).join('')}
+  <div class="tchat">${q.ctx.map(l => (S.listen && !fb) ? hiddenMsg(l) : msgHtml(l)).join('')}
     ${fb ? msgHtml(mine) : '<div class="tmsg b ask"><div class="who">나</div><div class="en">내 차례! 알맞은 응답은?</div></div>'}</div>
   <div style="margin-top:14px">${opts}</div>${fbHtml}${spkSheetHtml()}`;
 }
@@ -2380,7 +2416,7 @@ function talkres(){
       <div style="margin-top:2px;font-size:14px;color:var(--muted)">${esc(q.ko)}</div>${sayBtn(q.ans)}</div>`).join('');
   return `${acc >= 60 ? confettiHtml() : ''}${talkNav()}
   <div class="resulthead">${mascot(acc >= 60 ? 'cheer' : '', 72)}<div><h1>${title}</h1>
-    <div class="meta" style="font-weight:600">${S.mode === 'role' ? esc(S.d.t) + ' 역할극' : (tcatOf(UI.tcat) ? tcatOf(UI.tcat).n + ' ' : '') + '응답 고르기 퀴즈'}</div></div></div>
+    <div class="meta" style="font-weight:600">${S.mode === 'role' ? esc(S.d.t) + ' 역할극' : (tcatOf(UI.tcat) ? tcatOf(UI.tcat).n + ' ' : '') + (S.listen ? '듣고 고르기 퀴즈' : '응답 고르기 퀴즈')}</div></div></div>
   <div class="card" style="margin-top:16px"><div class="stats">
     <div class="stat"><b style="color:var(--ok)">${S.right}/${n}</b><span>맞힌 문제</span></div>
     <div class="stat"><b style="color:var(--indigo)">${acc}%</b><span>정답률</span></div>
@@ -2389,7 +2425,7 @@ function talkres(){
   ${S.mode === 'role'
     ? `<button class="primary" onclick="talkRole('${S.d.id}')">${ic('chat')}다시 역할극 하기</button>
        <button class="ghost" onclick="talkView('${S.d.id}')">${ic('book')}완성된 대화 보기</button>`
-    : `<button class="primary" onclick="talkQuiz()">${ic('chat')}새 문제 풀기</button>`}
+    : `<button class="primary" onclick="talkQuiz(${S.listen ? 'true' : ''})">${ic('chat')}새 문제 풀기</button>`}
   <button class="ghost" onclick="talkBack()">회화 목록으로</button>
   ${missed ? `<h3 style="margin:22px 0 2px;font-size:19px">다시 볼 표현 ${S.missed.length}개</h3>${missed}` : ''}`;
 }
@@ -2432,6 +2468,31 @@ function gramItem(g){
 function openLibrary(){ LIB = {tab:'weak', level:0, q:'', st:''}; S = {screen:'library'}; render(); }
 function libTab(t){ LIB.tab = t; LIB.level = 0; LIB.q = ''; LIB.st = ''; render(); }
 
+// 학습 기록: 최근 7일 막대 + 요약 + 상태별 개수. 연속 접속 같은 압박 지표는 일부러 넣지 않는다
+function statsHtml(WORDS_T, GRAMMAR_T){
+  const h = histGet(), names = ['일', '월', '화', '수', '목', '금', '토'], days = [];
+  const key = d => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  for(let i = 6; i >= 0; i--){ const d = new Date(); d.setDate(d.getDate() - i); days.push({n:h[key(d)] || 0, lab:i ? names[d.getDay()] : '오늘', today:!i}); }
+  const max = Math.max(1, goalN(), ...days.map(d => d.n)), week = days.reduce((a, d) => a + d.n, 0);
+  let active = 0; for(let i = 0; i < 30; i++){ const d = new Date(); d.setDate(d.getDate() - i); if(h[key(d)]) active++; }
+  const sts = {'b-new':0, 'b-go':0, 'b-ok':0, 'b-bad':0};
+  WORDS_T.forEach(w => sts[statusOf(stat(w.id))[0]]++); GRAMMAR_T.forEach(g => sts[statusOf(stat('g:' + g.id))[0]]++);
+  const talkRuns = Object.values(talkProg()).reduce((a, c) => a + (c.runs || 0), 0);
+  return `<div class="card" style="margin-top:14px"><div class="stats">
+      <div class="stat"><b style="color:var(--indigo)">${days[6].n}</b><span>오늘</span></div>
+      <div class="stat"><b style="color:var(--indigo)">${week}</b><span>최근 7일</span></div>
+      <div class="stat"><b style="color:var(--indigo)">${active}</b><span>30일 중 학습한 날</span></div></div></div>
+    <div class="card" style="margin-top:12px"><div class="meta" style="font-weight:700">최근 7일 푼 문제 수 <small style="font-weight:400">(하루 목표 ${goalN()})</small></div>
+      <div class="sbars">${days.map(d => `<div class="sbar${d.today ? ' today' : ''}"><em>${d.n || ''}</em><i style="height:${Math.max(4, Math.round(d.n / max * 100))}%"></i><span>${d.lab}</span></div>`).join('')}</div></div>
+    <div class="card" style="margin-top:12px"><div class="meta" style="font-weight:700">내 단어·문법 상태</div>
+      <div class="stats" style="margin-top:8px">
+        <div class="stat"><b style="color:var(--ok)">${sts['b-ok']}</b><span>습득</span></div>
+        <div class="stat"><b style="color:var(--indigo)">${sts['b-go']}</b><span>학습중</span></div>
+        <div class="stat"><b style="color:var(--no)">${sts['b-bad']}</b><span>약점</span></div>
+        <div class="stat"><b style="color:var(--muted)">${sts['b-new']}</b><span>미학습</span></div></div></div>
+    <div class="meta" style="margin-top:12px">회화 역할극 ${talkRuns}번 · 누적 점수 ${P.total}점</div>`;
+}
+
 function library(){
   const T = TRACK(PICK.track);
   const WORDS_T = WORDS.filter(w => w.track === T.id), GRAMMAR_T = GRAMMAR.filter(g => g.track === T.id);
@@ -2457,13 +2518,15 @@ function library(){
       body = `<div class="empty">아직 틀린 문제가 없습니다.<br>퀴즈를 몇 번 풀고 나면<br>자주 틀리는 것만 여기 모입니다.
         <button class="primary" onclick="start()">퀴즈 시작하기</button></div>`;
     }
+  } else if(LIB.tab === 'stats'){
+    body = statsHtml(WORDS_T, GRAMMAR_T);
   } else if(LIB.tab === 'words'){
     body = WORDS_T.map(wordItem).join('');
   } else {
     body = GRAMMAR_T.map(gramItem).join('');
   }
 
-  const isList = LIB.tab !== 'weak';
+  const isList = LIB.tab === 'words' || LIB.tab === 'grammar';
   const filter = !isList ? '' : `
     ${T.id === 'work' ? `<div class="chips" id="libLevels">${lvBtn(0)}${lvBtn(1)}${lvBtn(2)}${lvBtn(3)}</div>` : ''}
     <div class="chips" id="libStatus">${stBtn('', '전체')}${stBtn('b-bad', '약점')}${stBtn('b-go', '학습중')}${stBtn('b-ok', '습득')}${stBtn('b-new', '미학습')}${LIB.tab === 'words' ? stBtn('fav', ic('star') + '즐겨찾기') : ''}</div>
@@ -2474,7 +2537,7 @@ function library(){
   <h1 style="font-size:28px;margin:12px 0 0">학습 노트</h1>
   <div class="sub" style="margin-bottom:0">${T.emoji} ${T.name} · 틀린 문제와 전체 목록</div>
   <div class="libbar">
-    <div class="tabs">${tab('weak','약점 노트')}${tab('words','단어 '+WORDS_T.length)}${tab('grammar','문법 '+GRAMMAR_T.length)}</div>
+    <div class="tabs">${tab('weak','약점 노트')}${tab('words','단어 '+WORDS_T.length)}${tab('grammar','문법 '+GRAMMAR_T.length)}${tab('stats','기록')}</div>
     ${isList ? '<input class="search" placeholder="단어나 뜻으로 검색" oninput="libSearch(this.value)">' : ''}
   </div>
   ${cta}
@@ -2491,6 +2554,16 @@ function weakQuiz(){
     .sort((a, b) => stat('g:'+b.id).w - stat('g:'+a.id).w).slice(0, sizeN() - ws.length);
   const qs = shuffle([...ws.map(w => build(w, 'MEANING')), ...gs.map(g => buildG(g))]);
   if(!qs.length){ toast('틀린 문제가 아직 없어요.', 2000); return; }
+  S = {screen:'quiz', deck:[], si:0, qs, i:0, score:0, streak:0, best:0, right:0, fb:null, wrong:[]};
+  render();
+}
+// 복습 시간이 된 항목만 모아서 바로 퀴즈 (단어·문법 합쳐 최대 한 세션 분량)
+function dueQuiz(){
+  const now = Date.now(), due = k => { const st = P.items[k]; return !!st && st.due <= now; };
+  const pool = shuffle([...WORDS.filter(w => w.track === PICK.track && due(w.id)).map(w => build(w, modeFor(P.items[w.id].box))),
+                        ...GRAMMAR.filter(g => g.track === PICK.track && due('g:' + g.id)).map(g => buildG(g))]);
+  const qs = pool.slice(0, sizeN());
+  if(!qs.length){ toast('지금 복습할 항목이 없어요.', 2000); return; }
   S = {screen:'quiz', deck:[], si:0, qs, i:0, score:0, streak:0, best:0, right:0, fb:null, wrong:[]};
   render();
 }
