@@ -194,6 +194,8 @@
   .sbar i{display:block; width:100%; border-radius:8px 8px 4px 4px; background:var(--indigo); opacity:.4}
   .sbar.today i{opacity:1}
   .sbar span{font-size:12px; font-weight:700; color:var(--muted)}
+  .apkbtn{display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; min-height:54px; text-decoration:none}
+  .insthelp small{display:block; margin-top:8px; color:var(--muted); line-height:1.5}
   .hero{margin-top:16px}
   .hero .big{font-size:15px; color:var(--muted); font-weight:700}
   .hero .big b{font-size:30px; color:var(--ink); font-weight:900; margin-right:4px}
@@ -591,7 +593,7 @@
 const WORDS = [], GRAMMAR = [];      // 선택한 트랙의 데이터만 data/<트랙>.js 에서 불러와 채운다
 const BY = {}, GB = {};
 const LOADED = new Set(), LOADING = {};
-const TRACK_COUNTS = {"toddler":{"w":1022,"g":203},"child":{"w":1002,"g":335},"elem":{"w":1000,"g":420},"mid":{"w":1002,"g":429},"high":{"w":1024,"g":407},"univ":{"w":1002,"g":416},"work":{"w":1003,"g":304}};   // tools/sync-counts.js 가 갱신 (홈의 개수 표시용)
+const TRACK_COUNTS = {"toddler":{"w":1910,"g":404},"child":{"w":1890,"g":680},"elem":{"w":1766,"g":852},"mid":{"w":1993,"g":857},"high":{"w":1489,"g":819},"univ":{"w":1060,"g":820},"work":{"w":1195,"g":611}};   // tools/sync-counts.js 가 갱신 (홈의 개수 표시용)
 function __bvqLoad(track, d){
   if(LOADED.has(track)) return;
   for(const w of d.words){ w.track = track; WORDS.push(w); BY[w.id] = w; }
@@ -817,7 +819,7 @@ const TRACK = id => TRACKS.find(t => t.id === id) || TRACKS[TRACKS.length-1];
 const TR_PREFIX = {td:'toddler', ch:'child', el:'elem', md:'mid', hs:'high', un:'univ'};
 const trackOfKey = k => { const m = /^(?:g:)?(td|ch|el|md|hs|un)_/.exec(k); return m ? TR_PREFIX[m[1]] : 'work'; };
 // 마지막으로 고른 트랙·유형을 기억한다. 처음 접속이면 트랙 선택창을 먼저 연다.
-let UI = { sheet: true, firstRun: true, flashSheet: false, setSheet: false, importSheet: false, scopeSheet: false };
+let UI = { sheet: true, firstRun: true, flashSheet: false, setSheet: false, importSheet: false, scopeSheet: false, installSheet: false };
 try{
   const sv = JSON.parse(store.get('bvq_pick') || 'null');
   if(sv && TRACKS.some(t => t.id === sv.track)){
@@ -1217,7 +1219,7 @@ function retryWrong(){
 
 window.addEventListener('keydown', e => {
   const t = e.target && e.target.tagName;
-  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet || UI.flashSheet || UI.setSheet || UI.scopeSheet || UI.spkSheet) return;
+  if(/INPUT|TEXTAREA|SELECT/.test(t) || UI.sheet || UI.flashSheet || UI.setSheet || UI.scopeSheet || UI.installSheet || UI.spkSheet) return;
   const go = e.key === 'Enter' || e.key === ' ';
   if(go && t === 'BUTTON') return;     // 버튼이 이미 자기 클릭을 처리한다
   if(S.screen === 'flash'){
@@ -1710,7 +1712,7 @@ function iosHintHtml(){
    앱이 한 화면짜리라서 가만두면 뒤로가기가 앱을 종료해 버린다. 홈이 아닌 화면이나 시트가 열려 있으면
    히스토리에 항목 하나를 쌓아 두고, 뒤로가기를 그 항목으로 받아 '한 단계 위'로만 올라가게 한다. */
 let NAVD = 0, NAVSKIP = 0;       // NAVSKIP: 우리가 직접 부른 history.back()이 일으킬 popstate 이벤트 수(사용자의 뒤로가기가 아니다)
-const navBase = () => S.screen === 'home' && !UI.sheet && !UI.flashSheet && !UI.setSheet && !UI.importSheet && !UI.scopeSheet;
+const navBase = () => S.screen === 'home' && !UI.sheet && !UI.flashSheet && !UI.setSheet && !UI.importSheet && !UI.scopeSheet && !UI.installSheet;
 function syncHistory(){
   if(typeof history === 'undefined' || !history.pushState) return;
   try{
@@ -1723,8 +1725,8 @@ function onBack(){
   if(NAVSKIP > 0){ NAVSKIP--; return; }                      // 위의 history.back()이 일으킨 이벤트는 무시 (그 직후 새로 쌓은 항목을 잘못 닫지 않게)
   if(!NAVD) return;
   NAVD = 0;
-  const layer = UI.sheet || UI.flashSheet || UI.setSheet || UI.importSheet || UI.scopeSheet || UI.spkSheet;
-  UI.sheet = UI.flashSheet = UI.setSheet = UI.importSheet = UI.scopeSheet = false; stopSpk(); UI.spkSheet = null; UI.firstRun = false;
+  const layer = UI.sheet || UI.flashSheet || UI.setSheet || UI.importSheet || UI.scopeSheet || UI.installSheet || UI.spkSheet;
+  UI.sheet = UI.flashSheet = UI.setSheet = UI.importSheet = UI.scopeSheet = UI.installSheet = false; stopSpk(); UI.spkSheet = null; UI.firstRun = false;
   if(!layer){                                                // 화면에서 뒤로 → 진행 상황을 지키고 홈으로
     if(S.screen === 'quiz' || S.screen === 'study'){ bank(); saveSession(); toast('홈으로 나왔어요. 이어서 하기로 계속할 수 있어요.', 2400); }
     else if(S.screen === 'flash'){ flcSave(); wakeOff(); }
@@ -1859,7 +1861,7 @@ function render(){
   const fbEl = ((S.screen === 'quiz' || S.screen === 'talkq') && S.fb && document.querySelector) ? document.querySelector('.fb') : null;
   if(fbEl && fbEl.scrollIntoView) fbEl.scrollIntoView({block:'start', behavior:'smooth'});
   else window.scrollTo(0,0);
-  if(S.screen === 'library') libFilter();
+  if(S.screen === 'library'){ libFilter(); libMore(); }
   syncHistory();
 }
 
@@ -1968,7 +1970,7 @@ function home(){
   ${installChipHtml()}
   ${ttsNotice()}
   ${sheet}
-  ${flashSheetHtml()}${themeSheetHtml()}${importSheetHtml()}${scopeSheet}`;
+  ${flashSheetHtml()}${themeSheetHtml()}${importSheetHtml()}${scopeSheet}${installSheetHtml()}`;
 }
 function toggleScope(v){ UI.scopeSheet = v; render(); }
 
@@ -2493,7 +2495,26 @@ function statsHtml(WORDS_T, GRAMMAR_T){
     <div class="meta" style="margin-top:12px">회화 역할극 ${talkRuns}번 · 누적 점수 ${P.total}점</div>`;
 }
 
-function library(){
+// 단어가 2,000개씩이라 목록은 80개만 먼저 그리고 나머지는 화면이 뜬 뒤 조금씩 채운다(full=true 면 한 번에: 검증용)
+function libBody(items, fn, full){
+  LIB.tok = (LIB.tok || 0) + 1;
+  LIB.rest = full ? null : {items, fn, i:80};
+  return items.slice(0, full ? items.length : 80).map(fn).join('');
+}
+function libMore(){
+  const r = LIB.rest; if(!r) return;
+  const step = () => {
+    const list = document.getElementById('libList');
+    if(!list || typeof list.insertAdjacentHTML !== 'function' || S.screen !== 'library' || LIB.rest !== r) return;
+    if(r.i >= r.items.length){ LIB.rest = null; libFilter(); return; }
+    list.insertAdjacentHTML('beforeend', r.items.slice(r.i, r.i + 150).map(r.fn).join(''));
+    r.i += 150; libFilter(); setTimeout(step, 16);
+  };
+  setTimeout(step, 30);
+}
+
+function library(full){
+  LIB.rest = null;
   const T = TRACK(PICK.track);
   const WORDS_T = WORDS.filter(w => w.track === T.id), GRAMMAR_T = GRAMMAR.filter(g => g.track === T.id);
   const tab = (t, name) => `<button class="tab ${LIB.tab===t?'on':''}" onclick="libTab('${t}')">${name}</button>`;
@@ -2521,9 +2542,9 @@ function library(){
   } else if(LIB.tab === 'stats'){
     body = statsHtml(WORDS_T, GRAMMAR_T);
   } else if(LIB.tab === 'words'){
-    body = WORDS_T.map(wordItem).join('');
+    body = libBody(WORDS_T, wordItem, full === true);
   } else {
-    body = GRAMMAR_T.map(gramItem).join('');
+    body = libBody(GRAMMAR_T, gramItem, full === true);
   }
 
   const isList = LIB.tab === 'words' || LIB.tab === 'grammar';
@@ -2632,27 +2653,42 @@ window.addEventListener('appinstalled', () => {
   toast('홈 화면에 추가됐습니다. 이제 아이콘으로 바로 열 수 있습니다.', 3600);
 });
 
-/* ---------- 앱 설치 안내 (홈의 얇은 칩 + 설정의 단계별 안내) ---------- */
-const installWanted = () => !isStandalone() && store.get('bvq_instno') !== '1' && typeof location !== 'undefined' && location.protocol.indexOf('http') === 0;
+/* ---------- 앱 설치 안내 (홈의 칩 → 설치 시트, 설정에도 같은 패널) ---------- */
+const APK_URL = 'https://github.com/GCODE77/english/releases/download/android-latest/English.apk';
+const isApp = () => isStandalone() || (typeof window !== 'undefined' && !!window.Capacitor);   // 이미 설치돼 앱으로 실행 중
+const installWanted = () => !isApp() && store.get('bvq_instno') !== '1' && typeof location !== 'undefined' && location.protocol.indexOf('http') === 0;
 function installChipHtml(){
   if(!installWanted()) return '';
-  return `<div class="instchip"><button class="instgo" onclick="installFlow()">${ic('get')}앱으로 설치 · 홈 화면에 추가</button>
+  return `<div class="instchip"><button class="instgo" onclick="installFlow()">${ic('get')}앱 설치 · 홈 화면 추가 · APK</button>
     <button class="link" onclick="store.set('bvq_instno','1');render()" aria-label="설치 안내 닫기">닫기</button></div>`;
 }
-// 설치 창을 띄울 수 있으면(안드로이드 크롬 등) 바로 띄우고, 아니면 설정의 단계별 안내를 연다
-function installFlow(){ if(deferredPrompt) installApp(); else toggleSetSheet(true); }
+function toggleInstall(v){ UI.installSheet = v; if(v) UI.setSheet = false; render(); }
+function installFlow(){ toggleInstall(true); }
+// 설치 방법 두 가지: ① 홈 화면에 추가(PWA, 모든 폰) ② 안드로이드 앱(APK) 내려받기
 function installSectionHtml(){
-  if(isStandalone()) return `<div class="insthelp ok">${ic('check') || ''}앱으로 실행 중이에요. 홈 화면 아이콘으로 바로 열 수 있어요.</div>`;
+  if(isApp()) return `<div class="insthelp ok">앱으로 실행 중이에요. 홈 화면 아이콘으로 바로 열 수 있어요.</div>`;
   const steps = isIOS()
     ? `<ol><li>사파리 아래쪽 <b>공유 버튼(□↑)</b>을 누르세요</li><li><b>홈 화면에 추가</b>를 고르세요</li><li>오른쪽 위 <b>추가</b>를 누르면 끝이에요</li></ol><small>아이폰은 크롬이 아니라 <b>사파리</b>에서만 설치돼요.</small>`
     : `<ol><li>크롬·삼성 인터넷 오른쪽 위 <b>메뉴(⋮ 또는 ≡)</b>를 누르세요</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 고르세요</li><li><b>설치</b>를 누르면 아이콘이 생겨요</li></ol><small>PC 크롬은 주소창 오른쪽의 설치 아이콘(⊕)을 누르면 돼요.</small>`;
-  return `<div class="insthelp"><b>앱으로 설치하기</b>
-    <div class="instsub">주소창 없이 앱처럼 열리고, 인터넷이 없어도 쓸 수 있어요.</div>
-    ${deferredPrompt ? `<button class="primary" style="margin-top:10px" onclick="installApp()">${ic('get')}지금 설치하기</button>` : steps}</div>`;
+  return `<div class="insthelp"><b>① 홈 화면에 추가</b>
+    <div class="instsub">주소창 없이 앱처럼 열리고, 인터넷이 없어도 쓸 수 있어요. (아이폰·안드로이드 모두)</div>
+    ${deferredPrompt ? `<button class="primary" style="margin-top:10px" onclick="installApp()">${ic('get')}홈 화면에 추가하기</button>` : steps}</div>
+  ${isIOS() ? '' : `<div class="insthelp"><b>② 안드로이드 앱(APK) 받기</b>
+    <div class="instsub">설치 파일을 내려받아 설치해요. 안드로이드 폰 전용이에요.</div>
+    <a class="primary apkbtn" href="${APK_URL}" download>${ic('get')}APK 내려받기 (약 6MB)</a>
+    <small>설치할 때 <b>'출처를 알 수 없는 앱 설치'</b>를 한 번 허용해야 해요. 앱을 새로 받아 설치하면 이 브라우저의 학습 기록은 따로 시작되니, 먼저 설정 &gt; 기록 &gt; <b>다른 기기로 보내기</b>로 백업해 두세요.</small></div>`}`;
+}
+function installSheetHtml(){
+  if(!UI.installSheet) return '';
+  return `<div class="sheetbg" onclick="toggleInstall(false)">
+    <div class="sheet" role="dialog" aria-label="앱 설치" onclick="event.stopPropagation()">
+      <div class="row"><h2>앱으로 설치하기</h2><button class="link" onclick="toggleInstall(false)">닫기</button></div>
+      ${installSectionHtml()}
+    </div></div>`;
 }
 async function installApp(){
   if(!deferredPrompt){
-    toggleSetSheet(true);
+    toggleInstall(true);
     return;
   }
   deferredPrompt.prompt();
