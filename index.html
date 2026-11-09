@@ -593,7 +593,7 @@
 const WORDS = [], GRAMMAR = [];      // 선택한 트랙의 데이터만 data/<트랙>.js 에서 불러와 채운다
 const BY = {}, GB = {};
 const LOADED = new Set(), LOADING = {};
-const TRACK_COUNTS = {"toddler":{"w":1910,"g":404},"child":{"w":1890,"g":680},"elem":{"w":1766,"g":852},"mid":{"w":1993,"g":857},"high":{"w":1489,"g":819},"univ":{"w":1060,"g":820},"work":{"w":1195,"g":611}};   // tools/sync-counts.js 가 갱신 (홈의 개수 표시용)
+const TRACK_COUNTS = {"toddler":{"w":1910,"g":404},"child":{"w":1935,"g":680},"elem":{"w":1990,"g":852},"mid":{"w":1993,"g":857},"high":{"w":2067,"g":819},"univ":{"w":1693,"g":820},"work":{"w":1993,"g":611}};   // tools/sync-counts.js 가 갱신 (홈의 개수 표시용)
 function __bvqLoad(track, d){
   if(LOADED.has(track)) return;
   for(const w of d.words){ w.track = track; WORDS.push(w); BY[w.id] = w; }
